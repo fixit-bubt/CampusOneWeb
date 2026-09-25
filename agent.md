@@ -368,3 +368,17 @@ The web and mobile applications share the exact same backend database (`xhgpxvyq
 - **Dhaka Local Time (UTC+6):** All date comparisons (`events.date`, `jobs.deadline`, `lost_found_items.item_date`) must respect Dhaka UTC+6 to prevent day drift between midnight and 6 AM.
 - **Dynamic Ramadan Season:** Prayer time displays dynamically detect the 9th Islamic Hijri month (`Intl.DateTimeFormat('en-u-ca-islamic-umalqura')`) to show fasting schedules during Ramadan without hardcoding.
 
+---
+
+## 13. Brand Identity & Memory Synchronization Mandate
+
+### 13.1 CampusOne Brand Identity
+- **Mobile Companion:** The mobile app is branded **CampusOne** featuring the official royal blue squircle emblem (unified C1 monogram with academic graduation cap) and modern geometric two-tone wordmark ("Campus" in midnight navy, "One" in royal blue).
+- **Web App:** FixIt serves as the campus management and administrative desktop counterpart, sharing the exact same Supabase backend and data models.
+
+### 13.2 Memory Synchronization Rule
+Whenever the user instructs to "update memorys", the agent MUST synchronously update ALL memory references across both projects:
+1. `CampusOne/AGENTS.md` & `CampusOne/CampusOne/AGENTS.md`
+2. `CampusOne/CLAUDE.md` & `CampusOne/CampusOne/CLAUDE.md`
+3. `fixit-campus/AGENTS.md`, `fixit-campus/agent.md`, and `fixit-campus/CLAUDE.md`
+
