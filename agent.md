@@ -74,6 +74,14 @@ University faculty actively scrutinize the source code for signs of AI generatio
 - On this system, running raw `.ps1` scripts is disabled by execution policy (`PSSecurityException`).
 - Always run npm commands via `npm.cmd` (e.g., `npm.cmd run build`, `npm.cmd run dev`) or `npx.cmd`.
 
+### 3.4 Synchronized Memory Maintenance ("update memorys")
+- When the user gives the trigger command **"update memorys"** (or "update memories"):
+  - Update and synchronize **all** memory files across the workspace:
+    1. `AGENTS.md` and `agent.md` in workspace root (`c:\Users\dracu\Desktop\fix it sdp\`)
+    2. `AGENTS.md` and `agent.md` in web repo root (`fixit-campus/`)
+    3. `CLAUDE.md` in `fixit-campus/`
+  - Ensure any new architectural decisions, features, schema changes, bug fixes, mobile parity items, and workflow rules are accurately recorded across all of them so no document drifts.
+
 ---
 
 ## 4. Tech Stack & Dependencies

@@ -79,3 +79,5 @@ Route order matters: literal paths (`/jobs/new`, `/faculty/saved`) must be check
 - This is a solo SDP (senior design project) repo with a small set of contributors whose git identity is remapped for attribution purposes; don't infer team structure from `git log` alone without checking recent context.
 - Commit messages: keep `-m` bodies short, single-line, and free of parentheses/quotes — long or punctuation-heavy multi-line bodies have broken PowerShell arg passing and tripped the commit-safety classifier in this environment before.
 - A sibling React Native/Expo app ("CampusOne") shares this project's exact Supabase backend and is a useful reference for expected behavior when this web client's behavior is in doubt, but it lives in a separate repo.
+- Synchronized memory updates: When asked to "update memorys" (or "update memories"), update and keep all memory documents (AGENTS.md and agent.md across root and fixit-campus/, plus CLAUDE.md) fully synchronized with latest architecture, schema, and mobile parity details.
+
