@@ -35,7 +35,7 @@ This document is the single, authoritative reference for any AI agent or develop
 ## 2. Repositories, Environments & Backend Reference
 
 ### 2.1 Git Remotes & Branching
-- **Active Web Repo:** `https://github.com/fixit-bubt/fixit-campus.git` (`main` branch)
+- **Active Web Repo:** `https://github.com/fixit-bubt/CampusOneWeb.git` (formerly `fixit-campus.git`, branch: `main`)
 - **Local Working Directory:** `c:\Users\dracu\Desktop\fix it sdp\fixit-campus`
 - **Deployment:** Vercel automatically builds and deploys every push to `main`.
 - **Branch Protection:** `main` has PR protection enabled in GitHub; programmatic pushes in this environment use admin bypass.
