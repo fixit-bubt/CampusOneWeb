@@ -347,3 +347,16 @@ Before submitting code or pushing to `main`:
 3. No hardcoded raw Tailwind colors (`slate-*`, `blue-600`) remain in modified screens; all styles use semantic tokens (`ink`, `surface`, `brd`, `brand`).
 4. Commit messages are single-line, terse, and contain **zero AI co-author trailers**.
 5. Git push is executed **only upon explicit user request**.
+
+---
+
+## 12. Sibling Mobile App Parity & Shared UX Standards (CampusOne)
+
+The web and mobile applications share the exact same backend database (`xhgpxvyqrufbbuivttmi`) and core business logic.
+
+### 12.1 Shared Data & Feature Architecture
+- **Lost & Found Photos:** `lost_found_items.photo_url` is uploaded to the Supabase `photos` bucket (`photos/lostfound/{user_id}/...`) and consumed symmetrically by both web and mobile client interfaces.
+- **Direct Contact System:** Web and mobile both enforce privacy-first contact reveal through security definer RPCs (`listing_contact`, `ride_contact`, `donor_contact`, `blood_requester_contact`, `claim_contact`). Contact details unlock direct calling and WhatsApp messaging without manual copy-pasting.
+- **Dhaka Local Time (UTC+6):** All date comparisons (`events.date`, `jobs.deadline`, `lost_found_items.item_date`) must respect Dhaka UTC+6 to prevent day drift between midnight and 6 AM.
+- **Dynamic Ramadan Season:** Prayer time displays dynamically detect the 9th Islamic Hijri month (`Intl.DateTimeFormat('en-u-ca-islamic-umalqura')`) to show fasting schedules during Ramadan without hardcoding.
+
