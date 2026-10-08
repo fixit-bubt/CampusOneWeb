@@ -396,3 +396,31 @@ Whenever the user instructs to "update memorys", the agent MUST synchronously up
 - **Zero AI Tells:** Zero em-dashes `-` in user-facing UI copy and i18n keys; clean human comments only; no box-drawing banners.
 - **Theme Contrast:** Dynamic badge background tokens (`pillBg`) enforced across all status chips and pills in both light and dark mode.
 
+---
+
+## 15. Sibling Mobile Information Architecture & Accordion Parity (CampusOne)
+
+### 15.1 Home & Settings Screen Scope
+- **Home Quick Actions:** Kept strictly to the core 4 actions: Reports, Bus, Study, and Medical. No tool promos (PDF Maker, Cover Page Generator).
+- **Settings Integrity:** Settings contains only preferences and account management. Document utilities remain in Academics.
+
+### 15.2 Explore Categories & Accordion UX
+- **Categories:** Academics, Campus Life, Services, and Community match web's `AppShell.jsx` nav structure.
+- **Default State:** Collapsed by default (`defaultOpen = false`) to avoid displaying 20+ features at once.
+- **Accordion Parity:** Mobile uses exclusive accordion behavior matching web `AppShell.jsx` (`useNavAccordion`), keeping exactly one section open at a time and toggling shut on second tap.
+
+---
+
+## 16. Admin & Staff Operations Architecture (Full Parity)
+
+### 16.1 Staff Maintenance Mechanics
+- **Staff Workload:** Live workload counters (`Assigned`, `In Progress`, `Resolved`) shared across both clients.
+- **Decline Dispatch:** When assigned staff declines a report, `decline_report` RPC resets `assigned_staff_id = null` and `status = 'Open'` for re-triage.
+- **Maintenance Scope:** Staff views are scoped strictly to facilities operations (`Bus`, `Prayer`, `Announcements`, `Medical`, `Marketplace`, `Ride Share`, `Blood Donation`). Coursework and student-only directories are excluded.
+
+### 16.2 Administrator Operations
+- **Smart Dispatch:** Reports match staff by trade expertise (`Electrical`, `Plumbing`, `Cleanliness`, `IT / Network`, `Furniture`, `Safety / Security`, `Other`).
+- **Management Portals:** Unified across both clients: Reports triage, Staff & Admin management, Student-to-Executive promotions (CR / President), Faculty directory maintenance, Study Hub catalog curation, Club administration, and Job moderation.
+
+
+
