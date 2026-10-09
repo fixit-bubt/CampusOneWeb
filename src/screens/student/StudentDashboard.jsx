@@ -79,28 +79,28 @@ const FREQUENT_FEATURES = [
     title: "Study Hub",
     path: "/study-hub",
     icon: BookMarked,
-    color: "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20",
+    color: "bg-surface-2 text-ink border-brd",
   },
   {
     id: "routines",
     title: "Routines",
     path: "/routines",
     icon: Clock,
-    color: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20",
+    color: "bg-surface-2 text-ink border-brd",
   },
   {
     id: "cover-page",
     title: "Cover Page",
     path: "/cover-page",
     icon: FileText,
-    color: "bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/20",
+    color: "bg-surface-2 text-ink border-brd",
   },
   {
     id: "cgpa",
     title: "CGPA Calc",
     path: "/cgpa",
     icon: Calculator,
-    color: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20",
+    color: "bg-surface-2 text-ink border-brd",
   },
 ];
 
@@ -114,7 +114,7 @@ const DEFAULT_COMMUNITY_NEWS = [
     date: "Upcoming",
     image: "/events/hackathon-2026.jpg",
     icon: CalendarDays,
-    badgeColor: "bg-pink-500/10 text-pink-600 border-pink-500/20 dark:text-pink-400",
+    badgeColor: "bg-surface-2 text-ink-2 border-brd",
     path: "/events",
   },
   {
@@ -126,7 +126,7 @@ const DEFAULT_COMMUNITY_NEWS = [
     date: "Official",
     image: "/announcements/exam-routine.jpg",
     icon: Megaphone,
-    badgeColor: "bg-amber-500/10 text-amber-600 border-amber-500/20 dark:text-amber-400",
+    badgeColor: "bg-surface-2 text-ink-2 border-brd",
     path: "/routines",
   },
   {
@@ -138,7 +138,7 @@ const DEFAULT_COMMUNITY_NEWS = [
     date: "Notice",
     image: "/announcements/convocation-2026.jpg",
     icon: Megaphone,
-    badgeColor: "bg-amber-500/10 text-amber-600 border-amber-500/20 dark:text-amber-400",
+    badgeColor: "bg-surface-2 text-ink-2 border-brd",
     path: "/announcements",
   },
   {
@@ -150,7 +150,7 @@ const DEFAULT_COMMUNITY_NEWS = [
     date: "Club Feed",
     image: null,
     icon: Users,
-    badgeColor: "bg-purple-500/10 text-purple-600 border-purple-500/20 dark:text-purple-400",
+    badgeColor: "bg-surface-2 text-ink-2 border-brd",
     path: "/clubs",
   },
 ];
@@ -190,9 +190,7 @@ export default function StudentDashboard() {
         rawDate: a.date || "",
         image: a.image || a.imageUrl || null,
         icon: Megaphone,
-        badgeColor: a.priority === "Urgent"
-          ? "bg-rose-500/10 text-rose-600 border-rose-500/20 dark:text-rose-400"
-          : "bg-amber-500/10 text-amber-600 border-amber-500/20 dark:text-amber-400",
+        badgeColor: "bg-surface-2 text-ink-2 border-brd",
         path: `/announcements/${a.id}`,
       });
     });
@@ -209,7 +207,7 @@ export default function StudentDashboard() {
         rawDate: p.createdAt ? p.createdAt.split("T")[0] : "",
         image: p.imageUrl || null,
         icon: Users,
-        badgeColor: "bg-purple-500/10 text-purple-600 border-purple-500/20 dark:text-purple-400",
+        badgeColor: "bg-surface-2 text-ink-2 border-brd",
         path: p.clubId ? `/clubs/${p.clubId}` : "/clubs",
       });
     });
@@ -225,7 +223,7 @@ export default function StudentDashboard() {
         rawDate: e.date || "",
         image: e.banner || e.bannerUrl || null,
         icon: CalendarDays,
-        badgeColor: "bg-pink-500/10 text-pink-600 border-pink-500/20 dark:text-pink-400",
+        badgeColor: "bg-surface-2 text-ink-2 border-brd",
         path: e.id ? `/events/${e.id}` : "/events",
       });
     });
@@ -241,7 +239,7 @@ export default function StudentDashboard() {
         rawDate: b.dateNeeded || "",
         image: null,
         icon: Heart,
-        badgeColor: "bg-red-500/10 text-red-600 border-red-500/20 dark:text-red-400",
+        badgeColor: "bg-surface-2 text-ink-2 border-brd",
         path: "/blood",
       });
     });
@@ -747,11 +745,11 @@ export default function StudentDashboard() {
         </div>
       </div>
 
-      {/* Frequently Used Options — 4 square shape buttons in same horizontal line */}
+      {/* Frequently Used Options - 4 square shape buttons in same horizontal line */}
       <div className="mt-3 sm:mt-3.5">
         <div className="mb-2 flex items-center justify-between">
           <div className="flex items-center gap-1.5">
-            <Sparkles size={14} className="text-brand" />
+            <Sparkles size={14} className="text-ink-3" />
             <h3 className="text-xs font-bold uppercase tracking-[0.06em] text-ink-3">
               Frequently used
             </h3>
@@ -767,12 +765,12 @@ export default function StudentDashboard() {
                 key={feat.id}
                 type="button"
                 onClick={() => navigate(feat.path)}
-                className="group flex aspect-square flex-col items-center justify-center rounded-xl border border-brd bg-surface p-2 text-center shadow-2xs transition-all duration-200 hover:border-brand hover:shadow-xs active:scale-95"
+                className="group flex aspect-square flex-col items-center justify-center rounded-xl border border-brd bg-surface p-2 text-center shadow-2xs transition-all duration-200 hover:border-ink-3 hover:shadow-xs active:scale-95"
               >
                 <span className={`flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center rounded-xl border ${feat.color} transition-transform duration-200 group-hover:scale-105`}>
-                  <FeatIcon size={18} className="sm:size-[22px]" />
+                  <FeatIcon size={18} className="sm:size-[22px] text-ink" />
                 </span>
-                <span className="mt-1.5 sm:mt-2 text-[11px] sm:text-xs font-bold text-ink truncate w-full group-hover:text-brand transition-colors">
+                <span className="mt-1.5 sm:mt-2 text-[11px] sm:text-xs font-bold text-ink truncate w-full transition-colors">
                   {feat.title}
                 </span>
               </button>
@@ -781,11 +779,11 @@ export default function StudentDashboard() {
         </div>
       </div>
 
-      {/* Community Updates — News System */}
+      {/* Community Updates - News System */}
       <div className="mt-3.5 sm:mt-4">
         <div className="mb-2.5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-1.5">
-            <Newspaper size={15} className="text-brand" />
+            <Newspaper size={15} className="text-ink-3" />
             <h3 className="text-xs font-bold uppercase tracking-[0.06em] text-ink-3">
               Community updates
             </h3>
@@ -799,7 +797,7 @@ export default function StudentDashboard() {
                 onClick={() => setNewsFilter(tab)}
                 className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition-all ${
                   newsFilter === tab
-                    ? "bg-brand text-white shadow-xs"
+                    ? "bg-ink text-surface shadow-xs dark:bg-neutral-100 dark:text-neutral-900"
                     : "border border-brd bg-surface text-ink-3 hover:text-ink hover:bg-surface-2"
                 }`}
               >
@@ -822,7 +820,7 @@ export default function StudentDashboard() {
                 <div
                   key={item.id}
                   onClick={() => navigate(item.path)}
-                  className="group relative flex items-start gap-3 rounded-xl border border-brd bg-surface p-3 sm:p-3.5 transition-all duration-200 hover:border-brand/70 hover:shadow-xs cursor-pointer"
+                  className="group relative flex items-start gap-3 rounded-xl border border-brd bg-surface p-3 sm:p-3.5 transition-all duration-200 hover:border-ink-3 hover:shadow-xs cursor-pointer"
                 >
                   {/* Thumbnail / Category Icon */}
                   {item.image ? (
@@ -835,7 +833,7 @@ export default function StudentDashboard() {
                     </div>
                   ) : (
                     <div className={`flex h-14 w-14 sm:h-16 sm:w-16 shrink-0 flex-col items-center justify-center rounded-lg border ${item.badgeColor} p-1 text-center`}>
-                      <ItemIcon size={18} className="mb-1" />
+                      <ItemIcon size={18} className="mb-1 text-ink-3" />
                       <span className="text-[8px] sm:text-[9px] font-bold uppercase tracking-wider line-clamp-1">{item.category}</span>
                     </div>
                   )}
@@ -858,7 +856,7 @@ export default function StudentDashboard() {
                       )}
                     </div>
 
-                    <h4 className="text-xs sm:text-sm font-bold text-ink leading-snug line-clamp-1 group-hover:text-brand transition-colors">
+                    <h4 className="text-xs sm:text-sm font-bold text-ink leading-snug line-clamp-1 transition-colors">
                       {item.title}
                     </h4>
 
@@ -868,7 +866,7 @@ export default function StudentDashboard() {
                   </div>
 
                   {/* Right Arrow */}
-                  <div className="hidden sm:flex h-full items-center self-center pl-1 text-ink-3 group-hover:text-brand">
+                  <div className="hidden sm:flex h-full items-center self-center pl-1 text-ink-3 group-hover:text-ink">
                     <ChevronRight size={15} />
                   </div>
                 </div>
