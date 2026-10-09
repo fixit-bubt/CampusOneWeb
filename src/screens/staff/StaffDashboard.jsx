@@ -23,14 +23,14 @@ export default function StaffDashboard() {
         subtitle={`Your maintenance queue${currentUser?.dept ? ` · ${currentUser.dept}` : ""}.`}
       />
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-2.5 sm:gap-3 sm:grid-cols-3">
         <StatCard label="Assigned to Me" value={mine.length} icon={ClipboardCheck} tone="blue" />
         <StatCard label="In Progress" value={count("In Progress")} icon={Loader} tone="amber" />
         <StatCard label="Resolved by Me" value={count("Resolved")} icon={CircleCheck} tone="emerald" />
       </div>
 
-      <div className="mt-8">
-        <div className="mb-3 flex items-center justify-between">
+      <div className="mt-4 sm:mt-5">
+        <div className="mb-2 flex items-center justify-between">
           <h3 className="text-xs font-bold uppercase tracking-[0.06em] text-ink-3">Active work</h3>
           {mine.length > 0 && (
             <Link to="/staff/assigned" className="text-base font-semibold text-brand hover:text-brand-700">View all assigned</Link>
@@ -49,7 +49,7 @@ export default function StaffDashboard() {
         )}
       </div>
 
-      <CampusToday className="mt-8" />
+      <CampusToday className="mt-4 sm:mt-5" />
     </AppShell>
   );
 }

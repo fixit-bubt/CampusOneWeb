@@ -20,15 +20,15 @@ export default function AdminDashboard() {
     <AppShell activeKey="dashboard" title="Dashboard">
       <PageHeader title="Admin overview" subtitle="Everything happening across campus, at a glance." />
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
         <StatCard label="Total reports" value={reports.length} icon={FileText} tone="slate" />
         <StatCard label="Open" value={count("Open")} icon={CircleDot} tone="amber" />
         <StatCard label="In Progress" value={count("In Progress")} icon={Loader} tone="blue" />
         <StatCard label="Resolved" value={count("Resolved")} icon={CircleCheck} tone="emerald" />
       </div>
 
-      <div className="mt-8">
-        <div className="mb-3 flex items-center justify-between">
+      <div className="mt-4 sm:mt-5">
+        <div className="mb-2 flex items-center justify-between">
           <div>
             <h3 className="text-xs font-bold uppercase tracking-[0.06em] text-ink-3">Needs assignment</h3>
             <p className="text-xs text-ink-3">Open reports waiting for a staff member.</p>
@@ -44,7 +44,7 @@ export default function AdminDashboard() {
         )}
       </div>
 
-      <CampusToday className="mt-8" />
+      <CampusToday className="mt-4 sm:mt-5" />
 
       <AssignModal report={assignTarget} onClose={() => setAssignTarget(null)} />
     </AppShell>

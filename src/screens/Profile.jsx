@@ -118,9 +118,9 @@ export default function Profile() {
 
   return (
     <AppShell activeKey="profile" title="Profile">
-      <div className="mx-auto max-w-xl space-y-4 px-2 sm:px-4 py-2">
+      <div className="mx-auto max-w-xl space-y-2.5 sm:space-y-3 px-2 sm:px-4 py-1.5 sm:py-2">
         {/* Simple Identity Card */}
-        <Card className="p-4 sm:p-5">
+        <Card className="p-3.5 sm:p-4">
           <div className="flex items-center gap-3.5">
             <Avatar name={form.name} src={form.avatar} size={52} />
             <div className="min-w-0 flex-1">
@@ -147,7 +147,7 @@ export default function Profile() {
           </div>
 
           {showPhotoUpload && (
-            <div className="mt-4 pt-4 border-t border-brd">
+            <div className="mt-3 pt-3 border-t border-brd">
               <FileUpload
                 id="pf-photo"
                 value={form.avatar}
@@ -158,8 +158,8 @@ export default function Profile() {
         </Card>
 
         {/* Edit Details Form */}
-        <form onSubmit={submit} className="space-y-4">
-          <Card className="p-4 sm:p-5 space-y-3.5">
+        <form onSubmit={submit} className="space-y-2.5 sm:space-y-3">
+          <Card className="p-3.5 sm:p-4 space-y-3">
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label="Full Name" htmlFor="pf-name" required error={errors.name}>
                 <Input id="pf-name" value={form.name} error={!!errors.name} onChange={set("name")} />
@@ -242,7 +242,7 @@ export default function Profile() {
         </form>
 
         {/* Collapsible Change Password */}
-        <Card className="p-4 sm:p-5">
+        <Card className="p-3.5 sm:p-4">
           <button
             type="button"
             onClick={() => setShowPassword((v) => !v)}

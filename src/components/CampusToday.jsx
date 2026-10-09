@@ -43,8 +43,8 @@ export function CampusToday({ className = "" }) {
   const widgets = WIDGETS.filter((w) => w.keys.some((k) => navKeys.has(k)));
   return (
     <div className={className}>
-      <h3 className="mb-3 text-xs font-bold uppercase tracking-[0.06em] text-ink-3">Campus today</h3>
-      <div className="grid gap-4 sm:grid-cols-2">
+      <h3 className="mb-2 text-xs font-bold uppercase tracking-[0.06em] text-ink-3">Campus today</h3>
+      <div className="grid gap-2.5 sm:gap-3 sm:grid-cols-2">
         {widgets.map(({ keys, Widget }) => (
           <Widget key={keys[0]} />
         ))}

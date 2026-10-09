@@ -930,7 +930,7 @@ export function AppShell({ activeKey, title, children }) {
 // PageHeader — title + subtitle + optional action, used at top of content
 export function PageHeader({ title, subtitle, action }) {
   return (
-    <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="mb-3.5 sm:mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <h2 className="text-3xl font-bold tracking-tight text-ink sm:text-4xl">{title}</h2>
         {subtitle && <p className="mt-1 text-base text-ink-2">{subtitle}</p>}

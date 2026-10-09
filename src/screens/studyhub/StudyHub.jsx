@@ -624,11 +624,11 @@ export function StudyHubBrowse() {
       ) : branches.length === 0 ? (
         <EmptyState icon="GraduationCap" title="No departments yet" message="Departments will appear here once they're set up." />
       ) : (
-        <div className="space-y-8">
+        <div className="space-y-4 sm:space-y-5">
           {branches.map(({ branch, depts }) => (
             <section key={branch}>
-              <h3 className="mb-3 text-base font-semibold text-ink">{branch}</h3>
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              <h3 className="mb-2 text-base font-semibold text-ink">{branch}</h3>
+              <div className="grid gap-2.5 sm:gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 {depts.map((d) => <DepartmentCard key={d.id} dept={d} count={studyIntakesIn(d.id).length} />)}
               </div>
             </section>
@@ -1681,7 +1681,7 @@ function MembersTab({ section, members, onAct, actBusy }) {
   const plain = approved.filter((m) => m.role === "member");
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 sm:space-y-5">
       <section>
         <h3 className="mb-3 text-base font-semibold text-ink">Join requests {pending.length > 0 && <span className="text-ink-3">· {pending.length}</span>}</h3>
         {pending.length === 0 ? (
@@ -1763,7 +1763,7 @@ function SettingsTab({ section, intake, onTogglePublic, toggleBusy }) {
   const closesAt = vote ? new Date(vote.closesAt).toLocaleDateString("en-BD", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : null;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 sm:space-y-5">
       {/* Join code */}
       <section>
         <h3 className="mb-3 text-base font-semibold text-ink">Join code</h3>

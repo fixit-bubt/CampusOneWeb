@@ -196,7 +196,7 @@ export default function StudentDashboard() {
   return (
     <AppShell activeKey="dashboard" title="Dashboard">
       {/* 1. Search Field (placed before the announcement cards, sleek rectangular shape) */}
-      <div className="relative z-10 mb-4 pt-1">
+      <div className="relative z-10 mb-2.5 pt-1">
         <div className="relative flex items-center">
           <Search size={14} className="pointer-events-none absolute left-2.5 text-ink-3" />
           <input
@@ -252,7 +252,7 @@ export default function StudentDashboard() {
 
       {/* 2. Auto Changing Cards for Announcements and Events (smooth rounded banner) */}
       <div
-        className="relative mb-6 cursor-pointer select-none touch-pan-y"
+        className="relative mb-2.5 sm:mb-3 cursor-pointer select-none touch-pan-y"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
         onClick={() => navigate(activeCard.path)}
@@ -284,7 +284,7 @@ export default function StudentDashboard() {
         </div>
 
         {/* Pagination Indicators (Sleek thin lines) */}
-        <div className="mt-2.5 flex items-center justify-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+        <div className="mt-1.5 flex items-center justify-center gap-1.5" onClick={(e) => e.stopPropagation()}>
           {combinedSlides.map((_, idx) => (
             <button
               key={idx}
@@ -569,10 +569,10 @@ export default function StudentDashboard() {
         </div>
       </div>
 
-      <div className="mt-6">
+      <div className="mt-2.5 sm:mt-3">
         <button
           onClick={() => navigate("/lost-found")}
-          className="group flex w-full items-center gap-3.5 sm:gap-4 rounded-lg border border-brd bg-surface p-4 sm:p-5 text-left shadow-sm transition-colors hover:border-brand hover:bg-brand-50"
+          className="group flex w-full items-center gap-3.5 sm:gap-4 rounded-lg border border-brd bg-surface p-3.5 sm:p-4 text-left shadow-sm transition-colors hover:border-brand hover:bg-brand-50"
         >
           <span className="flex h-11 w-11 items-center justify-center rounded-md bg-surface-3 text-ink-2">
             <PackageSearch size={22} />
@@ -585,8 +585,8 @@ export default function StudentDashboard() {
         </button>
       </div>
 
-      <div className="mt-8">
-        <div className="mb-3 flex items-center justify-between">
+      <div className="mt-3.5 sm:mt-4">
+        <div className="mb-2 flex items-center justify-between">
           <h3 className="text-xs font-bold uppercase tracking-[0.06em] text-ink-3">Recent reports</h3>
           {mine.length > 0 && (
             <Link to="/reports" className="text-base font-semibold text-brand hover:text-brand-700">View all</Link>
@@ -614,7 +614,7 @@ export default function StudentDashboard() {
         )}
       </div>
 
-      <CampusToday className="mt-8" />
+      <CampusToday className="mt-3.5 sm:mt-4" />
     </AppShell>
   );
 }
