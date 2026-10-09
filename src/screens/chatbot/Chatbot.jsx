@@ -33,11 +33,11 @@ export default function Chatbot({ conversationId }) {
 
   return (
     <AppShell activeKey="chatbot" title="AI Assistant">
-      <div className="mx-auto flex h-[calc(100vh-7.5rem)] sm:h-[calc(100vh-8.5rem)] w-full max-w-2xl flex-col">
+      <div className="flex flex-1 min-h-0 w-full flex-col overflow-hidden">
         {/* Clean floating conversation card */}
-        <div className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-brd bg-surface">
+        <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-2xl border border-brd bg-surface shadow-xs">
           {/* Header */}
-          <div className="flex shrink-0 items-center justify-between border-b border-brd px-4 py-3 sm:px-5">
+          <div className="flex shrink-0 items-center justify-between border-b border-brd px-3.5 py-2.5 sm:px-5 sm:py-3">
             <div className="flex items-center gap-2.5">
               <button
                 onClick={() => navigate("/dashboard")}

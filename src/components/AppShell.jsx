@@ -600,11 +600,11 @@ export function AppLayout({ children }) {
 
   if (!currentUser) return <>{children}</>;
   const go = (p) => { setDrawerOpen(false); navigate(p); };
-  const navBadges = { messages: totalUnreadMessages };
+  const isChatbotMain = path === "/chatbot" || (path.startsWith("/chatbot/") && path !== "/chatbot/history");
 
   return (
     <LayoutContext.Provider value={{ openDrawer: () => setDrawerOpen(true) }}>
-      <div className="min-h-screen bg-bg overflow-x-hidden w-full max-w-full">
+      <div className={`bg-bg w-full max-w-full ${isChatbotMain ? "h-screen h-[100dvh] max-h-screen max-h-[100dvh] overflow-hidden flex flex-col" : "min-h-screen overflow-x-hidden"}`}>
         {/* Mobile top header — matching navbar dark blue gradient with 3-dot menu on left, centered CampusOne + tagline, notifications on right */}
         <header className="sticky top-0 z-30 flex h-11 w-full items-center justify-between border-b border-[#1d3d7d]/80 bg-gradient-to-r from-[#0a1b42] via-[#0f2862] to-[#0a1b42] px-3 text-white shadow-xs backdrop-blur-md xl:hidden">
           {/* Left: 3-dot button to open the menu drawer */}
@@ -747,7 +747,9 @@ export function AppLayout({ children }) {
         )}
 
         {/* Main column — full width now that the nav is overhead, not beside. */}
-        <div className="w-full max-w-full overflow-x-hidden pb-24 xl:pb-0">{children}</div>
+        <div className={`w-full max-w-full ${isChatbotMain ? "flex-1 min-h-0 flex flex-col overflow-hidden pb-[68px] xl:pb-4" : "overflow-x-hidden pb-24 xl:pb-0"}`}>
+          {children}
+        </div>
 
         {/* Mobile bottom navigation bar — Borderless luxury overlay */}
         {(() => {
@@ -888,6 +890,8 @@ export function AppLayout({ children }) {
 // accepted for backward-compat but unused (active nav is route-derived).
 export function AppShell({ activeKey, title, children }) {
   const { currentUser, dataError, retryData } = useApp();
+  const path = useHashRoute();
+  const isChatbotMain = path === "/chatbot" || (path.startsWith("/chatbot/") && path !== "/chatbot/history");
   if (!currentUser) return null;
 
   return (
@@ -911,7 +915,15 @@ export function AppShell({ activeKey, title, children }) {
 
       {/* Content — matches the capsule's max width so page content lines up
             with the nav above it rather than drifting wider. */}
-      <main className="mx-auto w-full max-w-[110rem] overflow-x-hidden px-4 pb-6 pt-2 sm:px-6 sm:pb-8 sm:pt-3">{children}</main>
+      <main
+        className={`mx-auto w-full ${
+          isChatbotMain
+            ? "max-w-2xl flex-1 min-h-0 flex flex-col overflow-hidden px-2 sm:px-4 pt-1 sm:pt-2 pb-1 sm:pb-2"
+            : "max-w-[110rem] overflow-x-hidden px-4 pb-6 pt-2 sm:px-6 sm:pb-8 sm:pt-3"
+        }`}
+      >
+        {children}
+      </main>
     </>
   );
 }
