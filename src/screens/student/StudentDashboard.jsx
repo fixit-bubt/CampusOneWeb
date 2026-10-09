@@ -4,8 +4,6 @@ import { useApp } from "../../data/store.jsx";
 import { navigate, Link } from "../../lib/router.jsx";
 import { Button, Card, EmptyState, StatCard, Loading } from "../../components/ui.jsx";
 import { AppShell } from "../../components/AppShell.jsx";
-import { ReportListRow } from "../../components/ReportListRow.jsx";
-import { CampusToday } from "../../components/CampusToday.jsx";
 import { usePrayerSchedule, prayerState } from "../prayer/Prayer.jsx";
 import { nextDeparture, minutesToHHMM, fmtTime, fmtCountdown, toMinutes, useTick } from "../../components/featureKit.jsx";
 import { fmtDate } from "../../lib/helpers.js";
@@ -74,110 +72,36 @@ const DEFAULT_DASHBOARD_SLIDES = [
   },
 ];
 
-// Sets of 4 frequently used campus features that rotate automatically
-const FREQUENT_FEATURE_SETS = [
-  [
-    {
-      id: "study-hub",
-      title: "Study Hub",
-      sub: "Lecture notes & books",
-      path: "/study-hub",
-      icon: BookMarked,
-      color: "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20",
-    },
-    {
-      id: "routines",
-      title: "Class Routines",
-      sub: "Routine & exam timing",
-      path: "/routines",
-      icon: Clock,
-      color: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20",
-    },
-    {
-      id: "cover-page",
-      title: "Cover Page",
-      sub: "Assignment & lab PDF",
-      path: "/cover-page",
-      icon: FileText,
-      color: "bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/20",
-    },
-    {
-      id: "cgpa",
-      title: "CGPA Calc",
-      sub: "Grade & semester GPA",
-      path: "/cgpa",
-      icon: Calculator,
-      color: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20",
-    },
-  ],
-  [
-    {
-      id: "lost-found",
-      title: "Lost & Found",
-      sub: "Post or claim items",
-      path: "/lost-found",
-      icon: PackageSearch,
-      color: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
-    },
-    {
-      id: "rides",
-      title: "Campus Rides",
-      sub: "Student ride sharing",
-      path: "/rides",
-      icon: Car,
-      color: "bg-lime-500/10 text-lime-600 dark:text-lime-400 border-lime-500/20",
-    },
-    {
-      id: "marketplace",
-      title: "Marketplace",
-      sub: "Buy & sell student items",
-      path: "/marketplace",
-      icon: ShoppingBag,
-      color: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
-    },
-    {
-      id: "blood",
-      title: "Blood Registry",
-      sub: "Emergency donor list",
-      path: "/blood",
-      icon: Heart,
-      color: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20",
-    },
-  ],
-  [
-    {
-      id: "chatbot",
-      title: "Fixi AI",
-      sub: "Campus AI companion",
-      path: "/chatbot",
-      icon: Sparkles,
-      color: "bg-brand/10 text-brand border-brand/20",
-    },
-    {
-      id: "clubs",
-      title: "Clubs & Events",
-      sub: "Student communities",
-      path: "/clubs",
-      icon: Users,
-      color: "bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/20",
-    },
-    {
-      id: "jobs",
-      title: "Student Jobs",
-      sub: "Internships & vacancies",
-      path: "/jobs",
-      icon: Briefcase,
-      color: "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20",
-    },
-    {
-      id: "reports",
-      title: "Report Issue",
-      sub: "Campus maintenance",
-      path: "/reports/new",
-      icon: Wrench,
-      color: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
-    },
-  ],
+// 4 frequently used campus features (square shaped, horizontal line)
+const FREQUENT_FEATURES = [
+  {
+    id: "study-hub",
+    title: "Study Hub",
+    path: "/study-hub",
+    icon: BookMarked,
+    color: "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20",
+  },
+  {
+    id: "routines",
+    title: "Routines",
+    path: "/routines",
+    icon: Clock,
+    color: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20",
+  },
+  {
+    id: "cover-page",
+    title: "Cover Page",
+    path: "/cover-page",
+    icon: FileText,
+    color: "bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/20",
+  },
+  {
+    id: "cgpa",
+    title: "CGPA Calc",
+    path: "/cgpa",
+    icon: Calculator,
+    color: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20",
+  },
 ];
 
 const DEFAULT_COMMUNITY_NEWS = [
@@ -247,19 +171,6 @@ export default function StudentDashboard() {
   if (!currentUser) return null;
   const mine = reports.filter((r) => r.studentId === currentUser.id);
   const count = (s) => mine.filter((r) => r.status === s).length;
-  const recent = [...mine].sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? "")).slice(0, 5);
-
-  // Frequently used options auto-rotation state
-  const [frequentSetIdx, setFrequentSetIdx] = useState(0);
-  const [isHoveredFrequent, setIsHoveredFrequent] = useState(false);
-
-  useEffect(() => {
-    if (isHoveredFrequent) return;
-    const timer = setInterval(() => {
-      setFrequentSetIdx((prev) => (prev + 1) % FREQUENT_FEATURE_SETS.length);
-    }, 4800);
-    return () => clearInterval(timer);
-  }, [isHoveredFrequent]);
 
   // News system category filter state
   const [newsFilter, setNewsFilter] = useState("All");
@@ -836,63 +747,33 @@ export default function StudentDashboard() {
         </div>
       </div>
 
-      {/* Frequently Used Options — 4 auto-changing features */}
-      <div
-        className="mt-3 sm:mt-3.5"
-        onMouseEnter={() => setIsHoveredFrequent(true)}
-        onMouseLeave={() => setIsHoveredFrequent(false)}
-      >
+      {/* Frequently Used Options — 4 square shape buttons in same horizontal line */}
+      <div className="mt-3 sm:mt-3.5">
         <div className="mb-2 flex items-center justify-between">
           <div className="flex items-center gap-1.5">
             <Sparkles size={14} className="text-brand" />
             <h3 className="text-xs font-bold uppercase tracking-[0.06em] text-ink-3">
-              Frequently used options
+              Frequently used
             </h3>
-          </div>
-          {/* Pagination Indicators */}
-          <div className="flex items-center gap-1">
-            {FREQUENT_FEATURE_SETS.map((_, idx) => (
-              <button
-                key={idx}
-                type="button"
-                onClick={() => setFrequentSetIdx(idx)}
-                aria-label={`Slide ${idx + 1}`}
-                className="group p-0.5 focus:outline-none"
-              >
-                <span
-                  className={`block h-1.5 rounded-full transition-all duration-300 ${
-                    frequentSetIdx === idx
-                      ? "w-5 bg-brand"
-                      : "w-2 bg-ink/20 dark:bg-white/20 group-hover:bg-brand/50"
-                  }`}
-                />
-              </button>
-            ))}
           </div>
         </div>
 
-        {/* 4 Cards Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5">
-          {FREQUENT_FEATURE_SETS[frequentSetIdx].map((feat) => {
+        {/* 4 Square-shaped buttons in 1 horizontal line */}
+        <div className="grid grid-cols-4 gap-2 sm:gap-2.5">
+          {FREQUENT_FEATURES.map((feat) => {
             const FeatIcon = feat.icon;
             return (
               <button
                 key={feat.id}
                 type="button"
                 onClick={() => navigate(feat.path)}
-                className="group flex flex-col items-start rounded-xl border border-brd bg-surface p-2.5 sm:p-3 text-left shadow-2xs transition-all duration-200 hover:border-brand hover:shadow-xs active:scale-[0.98]"
+                className="group flex aspect-square flex-col items-center justify-center rounded-xl border border-brd bg-surface p-2 text-center shadow-2xs transition-all duration-200 hover:border-brand hover:shadow-xs active:scale-95"
               >
-                <div className="flex w-full items-center justify-between mb-2">
-                  <span className={`inline-flex h-8 w-8 items-center justify-center rounded-lg border ${feat.color}`}>
-                    <FeatIcon size={16} />
-                  </span>
-                  <ChevronRight size={13} className="text-ink-3 opacity-0 transition-opacity group-hover:opacity-100 group-hover:text-brand" />
-                </div>
-                <span className="font-bold text-xs sm:text-sm text-ink truncate w-full group-hover:text-brand transition-colors">
-                  {feat.title}
+                <span className={`flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center rounded-xl border ${feat.color} transition-transform duration-200 group-hover:scale-105`}>
+                  <FeatIcon size={18} className="sm:size-[22px]" />
                 </span>
-                <span className="text-[10px] sm:text-[11px] text-ink-3 truncate w-full mt-0.5">
-                  {feat.sub}
+                <span className="mt-1.5 sm:mt-2 text-[11px] sm:text-xs font-bold text-ink truncate w-full group-hover:text-brand transition-colors">
+                  {feat.title}
                 </span>
               </button>
             );
@@ -996,37 +877,6 @@ export default function StudentDashboard() {
           </div>
         )}
       </div>
-
-      <div className="mt-3.5 sm:mt-4">
-        <div className="mb-2 flex items-center justify-between">
-          <h3 className="text-xs font-bold uppercase tracking-[0.06em] text-ink-3">Recent reports</h3>
-          {mine.length > 0 && (
-            <Link to="/reports" className="text-base font-semibold text-brand hover:text-brand-700">View all</Link>
-          )}
-        </div>
-        {dataLoading ? (
-          <Loading />
-        ) : recent.length === 0 ? (
-          <EmptyState
-            icon={FileText}
-            title="No reports yet"
-            message="When you report a campus issue, it'll show up here so you can track its progress."
-            // A button rather than a pointer at some other control: "View all"
-            // above is hidden while the student has no reports, so this is their
-            // only way into the report flow from the dashboard — and copy that
-            // names a nav row goes stale every time the sidebar is regrouped.
-            action={<Button icon={CirclePlus} onClick={() => navigate("/reports/new")}>Report an Issue</Button>}
-          />
-        ) : (
-          <Card className="divide-y divide-brd overflow-hidden">
-            {recent.map((r) => (
-              <ReportListRow key={r.id} report={r} onOpen={() => navigate(`/reports/${r.id}`)} />
-            ))}
-          </Card>
-        )}
-      </div>
-
-      <CampusToday className="mt-3.5 sm:mt-4" />
     </AppShell>
   );
 }
