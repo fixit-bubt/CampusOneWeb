@@ -711,9 +711,8 @@ export function AppLayout({ children }) {
 
         {/* Floating nav capsule — desktop only (xl and up). On mobile, navigation is at the bottom bar */}
         <div className="sticky top-0 z-30 hidden px-3 pb-2 pt-3 sm:px-6 sm:pt-4 xl:block shrink-0">
-          {/* Width cap is shared with <main> below so the capsule and the page
-              content line up cleanly centered in the viewport. */}
-          <div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-1 rounded-full border border-[#1d3d7d]/80 bg-gradient-to-r from-[#0a1b42]/95 via-[#0f2862]/95 to-[#0a1b42]/95 px-3 shadow-lg shadow-black/20 backdrop-blur-md sm:px-4 text-white">
+          {/* Width cap allows all nav items, dropdowns and controls to breathe without collapsing. */}
+          <div className="mx-auto flex h-16 w-full max-w-[110rem] items-center gap-1 rounded-full border border-[#1d3d7d]/80 bg-gradient-to-r from-[#0a1b42]/95 via-[#0f2862]/95 to-[#0a1b42]/95 px-3 shadow-lg shadow-black/20 backdrop-blur-md sm:px-4 text-white">
             <button
               onClick={() => setDrawerOpen(true)}
               aria-label="Open menu"

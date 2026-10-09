@@ -42,7 +42,7 @@ export function PublicNav({ active, overlay = false }) {
   return (
     <div className={`${overlay ? "fixed inset-x-0 top-0" : "sticky top-0"} z-40 px-3 pb-2 pt-3 sm:px-6 sm:pt-4`}>
       {/* Width matches the signed-in app's capsule so the two read as one system. */}
-      <div className="mx-auto flex w-full max-w-6xl items-center gap-3 rounded-full border border-[#1d3d7d]/80 bg-gradient-to-r from-[#0a1b42]/95 via-[#0f2862]/95 to-[#0a1b42]/95 px-3 py-2 shadow-lg shadow-black/20 backdrop-blur-md text-white">
+      <div className="mx-auto flex w-full max-w-[110rem] items-center gap-3 rounded-full border border-[#1d3d7d]/80 bg-gradient-to-r from-[#0a1b42]/95 via-[#0f2862]/95 to-[#0a1b42]/95 px-3 py-2 shadow-lg shadow-black/20 backdrop-blur-md text-white">
         <button onClick={() => navigate("/")} aria-label="CampusOne home" className="shrink-0 px-1">
           <Logo onDark />
         </button>
@@ -76,7 +76,7 @@ export function PublicNav({ active, overlay = false }) {
         </div>
       </div>
       {/* Mobile / tablet nav — its own scrolling capsule under the main one. */}
-      <div className="mx-auto mt-2 flex max-w-6xl gap-1 overflow-x-auto rounded-full border border-[#1d3d7d]/80 bg-gradient-to-r from-[#0a1b42]/95 via-[#0f2862]/95 to-[#0a1b42]/95 px-2 py-1.5 shadow-md shadow-black/20 backdrop-blur-md xl:hidden text-white">
+      <div className="mx-auto mt-2 flex max-w-[110rem] gap-1 overflow-x-auto rounded-full border border-[#1d3d7d]/80 bg-gradient-to-r from-[#0a1b42]/95 via-[#0f2862]/95 to-[#0a1b42]/95 px-2 py-1.5 shadow-md shadow-black/20 backdrop-blur-md xl:hidden text-white">
         {NAV.map((l) => (
           <button
             key={l.path}
