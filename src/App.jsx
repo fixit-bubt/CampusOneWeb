@@ -59,6 +59,7 @@ import CoverPage from "./screens/coverpage/CoverPage.jsx";
 import Cgpa from "./screens/cgpa/Cgpa.jsx";
 import { AcademicCalendar } from "./screens/calendar/Calendar.jsx";
 import { Routines } from "./screens/routines/Routines.jsx";
+import AcademicTools from "./screens/tools/AcademicTools.jsx";
 
 // PDF Maker is the one lazily-loaded screen: it pulls in pdf-lib + pdf.js
 // (~500KB gzipped between them), which would otherwise sit in the main bundle
@@ -251,6 +252,9 @@ function AuthedRoutes({ path }) {
   if (path === "/bus/new") return <RequireRole role="Admin"><BusRouteForm /></RequireRole>;
   if ((m = matchRoute("/bus/:id/edit", path))) return <RequireRole role="Admin"><BusRouteForm id={m.id} /></RequireRole>;
   if ((m = matchRoute("/bus/:id", path))) return <RequireAuth><BusDetail id={m.id} /></RequireAuth>;
+
+  // ---- Academic Tools Directory (any signed-in user) ----
+  if (path === "/tools") return <RequireAuth><AcademicTools /></RequireAuth>;
 
   // ---- Cover Page Generator (students only) ----
   if (path === "/cover-page") return <RequireRole role="Student"><CoverPage /></RequireRole>;
