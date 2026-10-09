@@ -452,6 +452,7 @@ The mobile and web applications are actively pitched and presented to BUBT admin
 - **Unified Branding:** Both web and mobile applications are officially branded **CampusOne**.
 - **Visual Identity:** Two-tone wordmark (`Campus` in primary text, `One` in emerald green `text-emerald-400` / `#34d399`), paired with the compact tagline `"Full campus in one app"`.
 - **Academic Utilities & Study Hub:** Centralized `AcademicTools.jsx` at `#/tools`, simplified student view on `#/study-hub`, and compact, image-free AI assistant chatbot interface.
+- **Announcement Banner Photo Rule:** An announcement (or event) cannot be displayed in the hero carousel banner unless it has an attached photo. Colored background gradients are strictly eliminated behind banner slides in favor of neutral backdrops.
 
 ### 15.2 Memory Synchronization Rule
 Whenever the user instructs to "update memorys", the agent MUST synchronously update ALL memory references across the workspace:

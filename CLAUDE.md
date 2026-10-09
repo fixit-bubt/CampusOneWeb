@@ -52,9 +52,10 @@ Screen Component  →  useApp()  →  src/data/store.jsx  →  Supabase (Postgre
   - **Sticky Top Header (`h-11`)**: 3-line hamburger menu button on left, centered two-tone `CampusOne` branding (`Campus` + emerald `One`) with tagline (`Full campus in one app`), and notification bell on right.
   - **Bottom Navigation Bar**: 5 primary tabs: Home (`/dashboard`), Study Hub (`/study-hub`), AI Orb (`/chatbot`), Academic Tools (`/tools`), and Profile (`/profile`).
 
-### Academic Tools & Study Hub
+### Academic Tools, Study Hub & Dashboard
 - `#/tools` (`AcademicTools.jsx`): Central academic utility directory linking Cover Page Generator, CGPA Calculator, Class Routines, and Tri-Semester Academic Calendar.
 - `#/study-hub` (`StudyHub.jsx`): Clean, unified student view with real-time course search, accurate material/question/book aggregates, and streamlined tabbed content views without redundant filter rows.
+- **Announcement Banner Photo Rule**: An announcement (or event) cannot be displayed in the hero carousel banner unless it has an attached photo. Colored background gradients are strictly eliminated behind banner slides in favor of neutral backdrops.
 
 ### Chat / AI Assistant
 

@@ -35,7 +35,6 @@ const DEFAULT_DASHBOARD_SLIDES = [
     subtitle: "Campus Auditorium & CSE Lab 402 · 09:30 AM",
     path: "/events",
     btnText: "View Event",
-    gradient: "from-blue-600 via-indigo-600 to-brand-700",
     icon: CalendarDays,
     image: "/events/hackathon-2026.jpg",
   },
@@ -47,7 +46,6 @@ const DEFAULT_DASHBOARD_SLIDES = [
     subtitle: "Controller of Examinations · All Depts",
     path: "/routines",
     btnText: "Check Routine",
-    gradient: "from-amber-500 via-orange-500 to-rose-600",
     icon: Clock,
     image: "/announcements/exam-routine.jpg",
   },
@@ -59,7 +57,6 @@ const DEFAULT_DASHBOARD_SLIDES = [
     subtitle: "Office of the Registrar · Graduating Students",
     path: "/announcements",
     btnText: "Read Notice",
-    gradient: "from-violet-600 via-purple-600 to-brand",
     icon: Megaphone,
     image: "/announcements/convocation-2026.jpg",
   },
@@ -71,7 +68,6 @@ const DEFAULT_DASHBOARD_SLIDES = [
     subtitle: "Building 2 Main Lobby · Rover Scout Group",
     path: "/blood",
     btnText: "Participate",
-    gradient: "from-emerald-600 via-teal-600 to-cyan-700",
     icon: Sparkles,
     image: "/events/blood-drive.jpg",
   },
@@ -119,12 +115,13 @@ export default function StudentDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
 
-  // Combined slides for events & announcements — only use real photos attached to the item
+  // Combined slides for events & announcements — strictly require a real photo
   const combinedSlides = useMemo(() => {
     const list = [];
     if (events && events.length > 0) {
-      events.slice(0, 4).forEach((e, i) => {
+      events.forEach((e, i) => {
         const realBanner = e.banner || e.bannerUrl || e.banner_url || null;
+        if (!realBanner) return; // rule: cannot be shown in banner without a photo
         list.push({
           id: `ev-${e.id || i}`,
           type: "Event",
@@ -133,15 +130,15 @@ export default function StudentDashboard() {
           subtitle: `${e.venue || "Campus"} ${e.time ? `· ${e.time}` : ""}`,
           path: e.id ? `/events/${e.id}` : "/events",
           btnText: "View Event",
-          gradient: i % 2 === 0 ? "from-amber-500 via-orange-500 to-rose-600" : "from-emerald-600 via-teal-600 to-cyan-700",
           icon: CalendarDays,
           image: realBanner,
         });
       });
     }
     if (announcements && announcements.length > 0) {
-      announcements.slice(0, 4).forEach((a, i) => {
-        const realImage = a.image || (a.attachmentUrl && /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(a.attachmentUrl) ? a.attachmentUrl : null) || null;
+      announcements.forEach((a, i) => {
+        const realImage = a.image || a.imageUrl || a.image_url || (a.attachmentUrl && /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(a.attachmentUrl) ? a.attachmentUrl : null) || null;
+        if (!realImage) return; // rule: an announcement cannot be shown in banner if it doesn't have a photo
         list.push({
           id: `ann-${a.id || i}`,
           type: "Notice",
@@ -150,7 +147,6 @@ export default function StudentDashboard() {
           subtitle: a.department ? `${a.department} Department` : "BUBT Announcement",
           path: a.id ? `/announcements/${a.id}` : "/announcements",
           btnText: "Read Notice",
-          gradient: i % 2 === 0 ? "from-blue-600 via-indigo-600 to-brand-700" : "from-violet-600 via-purple-600 to-brand",
           icon: Megaphone,
           image: realImage,
         });
@@ -261,8 +257,8 @@ export default function StudentDashboard() {
         onTouchEnd={handleTouchEnd}
         onClick={() => navigate(activeCard.path)}
       >
-        <div className={`relative min-h-[160px] overflow-hidden rounded-2xl border border-white/20 bg-gradient-to-br ${activeCard.gradient} p-4 sm:p-5 text-white shadow-md transition-all duration-500 hover:opacity-95`}>
-          {/* Full background photo if present */}
+        <div className="relative min-h-[160px] overflow-hidden rounded-2xl border border-brd bg-black p-4 sm:p-5 text-white shadow-md transition-all duration-500 hover:opacity-95">
+          {/* Full background photo */}
           {activeCard.image && (
             <>
               <img
@@ -270,15 +266,7 @@ export default function StudentDashboard() {
                 alt={activeCard.title}
                 className="absolute inset-0 h-full w-full object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/55 to-black/30" />
-            </>
-          )}
-
-          {/* Atmospheric accents if no photo */}
-          {!activeCard.image && (
-            <>
-              <div className="pointer-events-none absolute -right-6 -top-6 h-36 w-36 rounded-full bg-white/10 blur-xl" />
-              <div className="pointer-events-none absolute -bottom-8 -left-8 h-36 w-36 rounded-full bg-black/10 blur-xl" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/55 to-black/25" />
             </>
           )}
 
@@ -286,7 +274,7 @@ export default function StudentDashboard() {
           <div className="relative z-10 flex min-h-[130px] flex-col justify-between">
             <div>
               <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 rounded-lg bg-white/20 px-2.5 py-0.5 text-[10px] sm:text-[11px] font-bold tracking-wide text-white backdrop-blur-md">
+                <span className="inline-flex items-center gap-1.5 rounded-lg bg-black/40 border border-white/20 px-2.5 py-0.5 text-[10px] sm:text-[11px] font-bold tracking-wide text-white backdrop-blur-md">
                   <ActiveIcon size={12} />
                   {activeCard.tag}
                 </span>
