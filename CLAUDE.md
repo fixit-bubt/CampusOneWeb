@@ -480,8 +480,14 @@ Whenever the user instructs to "update memorys" (or "update memories"), the agen
 ## 18. Navigation & Screen Information Architecture (Explore & Tools Placement)
 
 ### 18.1 Home Screen Integrity (`HomeScreen.tsx`)
+- **Zero Redundant Notification Clutter:** Notifications belong strictly in the dedicated top-right **Bell Icon** (with live unread badge count) linking to `NotificationsScreen`. Redundant notification widgets—specifically the legacy top blue Spotlight banner (`1 new alert / From reports, clubs & more`) and the inline `RECENT ALERTS` card list—are permanently eliminated from the Home screen.
+- **Home Screen Flow (Student):**
+  1. TopBar (Avatar, Greeting, Language switch, Theme toggle, Bell Icon with live unread badge).
+  2. Quick Actions row (`Reports`, `Bus`, `Study`, `Medical`) positioned cleanly at the top (`marginTop: 14`).
+  3. My Reports (`+ New Report` / `See All`).
+  4. Campus Today (`CampusToday.tsx` live transit, prayer times, notices, events, and urgent blood request carousel).
 - **Quick Actions Row:** Strictly contains the 4 core campus actions: `Reports`, `Bus`, `Study`, and `Medical`.
-- **Zero Misplaced Tool Promos:** Document tools (PDF Maker, Cover Page Generator) must never be inserted on the Home screen. Home must stay clean and jump directly to `My Reports` and `Recent Alerts`.
+- **Zero Misplaced Tool Promos:** Document tools (PDF Maker, Cover Page Generator) must never be inserted on the Home screen.
 
 ### 18.2 Settings Screen Scope (`SettingsScreen.tsx`)
 - **Settings Only:** Settings is strictly reserved for user account management and app preferences (`Dark Mode`, `Language`, `Notifications`, `Share App`, `About`, `Change Password`, `Sign Out`).
