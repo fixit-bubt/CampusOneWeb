@@ -371,18 +371,19 @@ export default function StudentDashboard() {
 
   return (
     <AppShell activeKey="dashboard" title="Dashboard">
-      {/* 1. Search Field (placed before the announcement cards, sleek rectangular shape) */}
-      <div className="relative z-10 mb-2.5 pt-1">
-        <div className="relative flex items-center">
-          <Search size={14} className="pointer-events-none absolute left-2.5 text-ink-3" />
-          <input
-            type="text"
-            value={searchQuery}
-            onFocus={() => setSearchOpen(true)}
-            onChange={(e) => { setSearchQuery(e.target.value); setSearchOpen(true); }}
-            placeholder="Search campus features, notices, events, routines..."
-            className="h-8 w-full rounded border border-brd bg-surface pl-8 pr-7 text-xs text-ink placeholder:text-ink-3 shadow-xs transition-all focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
-          />
+      <div className="mx-auto max-w-3xl">
+        {/* 1. Search Field (placed before the announcement cards, sleek rectangular shape) */}
+        <div className="relative z-10 mb-2.5 pt-1">
+          <div className="relative flex items-center">
+            <Search size={14} className="pointer-events-none absolute left-2.5 text-ink-3" />
+            <input
+              type="text"
+              value={searchQuery}
+              onFocus={() => setSearchOpen(true)}
+              onChange={(e) => { setSearchQuery(e.target.value); setSearchOpen(true); }}
+              placeholder="Search campus features, notices, events, routines..."
+              className="h-8 w-full rounded border border-brd bg-surface pl-8 pr-7 text-xs text-ink placeholder:text-ink-3 shadow-xs transition-all focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+            />
           {searchQuery && (
             <button
               onClick={() => { setSearchQuery(""); setSearchOpen(false); }}
@@ -875,6 +876,7 @@ export default function StudentDashboard() {
           </div>
         )}
       </div>
-    </AppShell>
-  );
+    </div>
+  </AppShell>
+);
 }

@@ -37,7 +37,7 @@ export function ItemCard({ item, onOpen }) {
       onClick={onOpen}
       className="group flex flex-col overflow-hidden rounded-xl border border-brd bg-surface text-left shadow-2xs transition-all duration-200 hover:border-ink-3 hover:shadow-xs active:scale-[0.99]"
     >
-      <div className="relative h-32 sm:h-44 w-full overflow-hidden bg-surface-2">
+      <div className="relative h-32 sm:h-36 md:h-40 w-full overflow-hidden bg-surface-2">
         <ItemPhoto item={item} className="h-full w-full transition-transform duration-300 group-hover:scale-105" />
         <div className="absolute left-2 top-2 sm:left-2.5 sm:top-2.5">
           <ItemTypeBadge type={item.type} />

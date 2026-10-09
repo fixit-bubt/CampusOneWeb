@@ -117,115 +117,117 @@ export default function LostFoundBrowse() {
 
   return (
     <AppShell activeKey="lost-found" title="Lost & Found">
-      <PageHeader
-        title="Lost & Found"
-        subtitle="Report lost belongings or help reunite found items with classmates."
-        action={<Button icon={Plus} onClick={() => navigate("/lost-found/new")}>Post an Item</Button>}
-      />
+      <div className="mx-auto max-w-5xl">
+        <PageHeader
+          title="Lost & Found"
+          subtitle="Report lost belongings or help reunite found items with classmates."
+          action={<Button icon={Plus} onClick={() => navigate("/lost-found/new")}>Post an Item</Button>}
+        />
 
-      {/* Screen Toolbar: Outside Search + Filter Button */}
-      <div className="mb-3 flex items-center gap-2">
-        {/* Search input outside */}
-        <div className="relative flex-1">
-          <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-3" />
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            aria-label="Search items"
-            placeholder="Search items, locations..."
-            className="h-10 w-full rounded-lg border border-brd bg-surface pl-9 pr-8 text-xs sm:text-sm text-ink placeholder:text-ink-3 shadow-2xs transition-colors focus:border-ink-2 focus:outline-none focus:ring-1 focus:ring-ink-2"
-          />
-          {query && (
+        {/* Screen Toolbar: Outside Search + Filter Button */}
+        <div className="mb-3 flex items-center gap-2">
+          {/* Search input outside */}
+          <div className="relative flex-1">
+            <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-3" />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              aria-label="Search items"
+              placeholder="Search items, locations..."
+              className="h-10 w-full rounded-lg border border-brd bg-surface pl-9 pr-8 text-xs sm:text-sm text-ink placeholder:text-ink-3 shadow-2xs transition-colors focus:border-ink-2 focus:outline-none focus:ring-1 focus:ring-ink-2"
+            />
+            {query && (
+              <button
+                type="button"
+                onClick={() => setQuery("")}
+                aria-label="Clear search"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-ink-3 hover:text-ink"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
+
+          {/* Filter Button */}
+          <button
+            type="button"
+            onClick={handleOpenFilters}
+            className={`inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg border px-3 text-xs sm:text-sm font-semibold transition-colors shadow-2xs ${
+              appliedFilterCount > 0
+                ? "border-ink bg-surface-2 text-ink dark:border-neutral-400"
+                : "border-brd bg-surface text-ink-2 hover:bg-surface-2 hover:text-ink"
+            }`}
+          >
+            <SlidersHorizontal size={15} className="text-ink-2" />
+            <span>Filters</span>
+            {appliedFilterCount > 0 && (
+              <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-ink px-1 text-[10px] font-bold text-surface">
+                {appliedFilterCount}
+              </span>
+            )}
+          </button>
+        </div>
+
+        {/* Item count & active filter status */}
+        <div className="mb-3 flex items-center justify-between text-xs text-ink-3">
+          <span>
+            Showing <strong className="font-semibold text-ink">{filtered.length}</strong> {filtered.length === 1 ? "item" : "items"}
+            {appliedFilterCount > 0 && (
+              <span className="ml-1 text-ink-3">
+                ({activeTab !== "all" ? `${TYPE_OPTIONS.find((t) => t.id === activeTab)?.label}` : ""}
+                {category !== "All" ? ` · ${category}` : ""}
+                {status !== "Active" ? ` · ${status}` : ""})
+              </span>
+            )}
+          </span>
+
+          {isFiltered && (
             <button
               type="button"
-              onClick={() => setQuery("")}
-              aria-label="Clear search"
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-ink-3 hover:text-ink"
+              onClick={clearFilters}
+              className="inline-flex items-center gap-1 font-semibold text-ink-2 hover:text-ink hover:underline"
             >
-              <X size={14} />
+              <RotateCcw size={11} className="text-ink-3" />
+              <span>Reset</span>
             </button>
           )}
         </div>
 
-        {/* Filter Button */}
-        <button
-          type="button"
-          onClick={handleOpenFilters}
-          className={`inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg border px-3 text-xs sm:text-sm font-semibold transition-colors shadow-2xs ${
-            appliedFilterCount > 0
-              ? "border-ink bg-surface-2 text-ink dark:border-neutral-400"
-              : "border-brd bg-surface text-ink-2 hover:bg-surface-2 hover:text-ink"
-          }`}
-        >
-          <SlidersHorizontal size={15} className="text-ink-2" />
-          <span>Filters</span>
-          {appliedFilterCount > 0 && (
-            <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-ink px-1 text-[10px] font-bold text-surface">
-              {appliedFilterCount}
-            </span>
-          )}
-        </button>
-      </div>
-
-      {/* Item count & active filter status */}
-      <div className="mb-3 flex items-center justify-between text-xs text-ink-3">
-        <span>
-          Showing <strong className="font-semibold text-ink">{filtered.length}</strong> {filtered.length === 1 ? "item" : "items"}
-          {appliedFilterCount > 0 && (
-            <span className="ml-1 text-ink-3">
-              ({activeTab !== "all" ? `${TYPE_OPTIONS.find((t) => t.id === activeTab)?.label}` : ""}
-              {category !== "All" ? ` · ${category}` : ""}
-              {status !== "Active" ? ` · ${status}` : ""})
-            </span>
-          )}
-        </span>
-
-        {isFiltered && (
-          <button
-            type="button"
-            onClick={clearFilters}
-            className="inline-flex items-center gap-1 font-semibold text-ink-2 hover:text-ink hover:underline"
-          >
-            <RotateCcw size={11} className="text-ink-3" />
-            <span>Reset</span>
-          </button>
-        )}
-      </div>
-
-      {/* Grid & States */}
-      {dataLoading ? (
-        <Loading />
-      ) : items.length === 0 ? (
-        <EmptyState
-          icon={PackageSearch}
-          title="Nothing here yet"
-          message="Be the first to post a lost or found item - use “Post an Item” above."
-          action={<Button icon={Plus} onClick={() => navigate("/lost-found/new")}>Post an Item</Button>}
-        />
-      ) : filtered.length === 0 ? (
-        activeTab === "my-posts" && counts["my-posts"] === 0 ? (
+        {/* Grid & States */}
+        {dataLoading ? (
+          <Loading />
+        ) : items.length === 0 ? (
           <EmptyState
             icon={PackageSearch}
-            title="You haven't posted any items yet"
-            message="When you report something lost or found, your posts will show up here."
+            title="Nothing here yet"
+            message="Be the first to post a lost or found item - use “Post an Item” above."
             action={<Button icon={Plus} onClick={() => navigate("/lost-found/new")}>Post an Item</Button>}
           />
+        ) : filtered.length === 0 ? (
+          activeTab === "my-posts" && counts["my-posts"] === 0 ? (
+            <EmptyState
+              icon={PackageSearch}
+              title="You haven't posted any items yet"
+              message="When you report something lost or found, your posts will show up here."
+              action={<Button icon={Plus} onClick={() => navigate("/lost-found/new")}>Post an Item</Button>}
+            />
+          ) : (
+            <EmptyState
+              icon={SearchX}
+              title="No matching items found"
+              message="Try searching for something else or clearing your filters."
+              action={<Button variant="secondary" onClick={clearFilters}>Reset Filters</Button>}
+            />
+          )
         ) : (
-          <EmptyState
-            icon={SearchX}
-            title="No matching items found"
-            message="Try searching for something else or clearing your filters."
-            action={<Button variant="secondary" onClick={clearFilters}>Reset Filters</Button>}
-          />
-        )
-      ) : (
-        <div className="grid grid-cols-2 gap-2.5 sm:gap-4">
-          {filtered.map((i) => (
-            <ItemCard key={i.id} item={i} onOpen={() => navigate(`/lost-found/${i.id}`)} />
-          ))}
-        </div>
-      )}
+          <div className="grid grid-cols-2 gap-2.5 sm:gap-3.5 md:grid-cols-3 lg:grid-cols-4">
+            {filtered.map((i) => (
+              <ItemCard key={i.id} item={i} onOpen={() => navigate(`/lost-found/${i.id}`)} />
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Filter Modal */}
       <Modal
