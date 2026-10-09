@@ -553,13 +553,58 @@ export function SquareLoader({ scale = 0.45, className = "" }) {
   );
 }
 
-// Centered loading state for list/dashboard areas while data loads.
-export function Loading({ className = "", scale = 0.45 }) {
+// ---------------------------------------------------------------------------
+// Skeletons — sleek pulsers for in-card and in-list content loading.
+// Prevents spinner clutter and layout jumps when data arrives.
+// ---------------------------------------------------------------------------
+export function Skeleton({ className = "" }) {
+  return <div className={`animate-pulse rounded-md bg-surface-3/80 dark:bg-surface-2/90 ${className}`} />;
+}
+
+export function ListSkeleton({ rows = 3, className = "" }) {
   return (
-    <div className={`flex items-center justify-center py-14 ${className}`} role="status" aria-label="Loading...">
-      <SquareLoader scale={scale} />
+    <Card className={`divide-y divide-brd overflow-hidden ${className}`}>
+      {[...Array(rows)].map((_, i) => (
+        <div key={i} className="flex items-center gap-3.5 p-3.5 sm:p-4">
+          <Skeleton className="h-10 w-10 shrink-0 rounded-md" />
+          <div className="min-w-0 flex-1 space-y-2">
+            <Skeleton className="h-3.5 w-1/3 min-w-[100px]" />
+            <Skeleton className="h-3 w-3/5 min-w-[160px]" />
+          </div>
+          <Skeleton className="h-5 w-16 shrink-0 rounded-full" />
+        </div>
+      ))}
+    </Card>
+  );
+}
+
+export function GridSkeleton({ count = 4, className = "grid gap-3 sm:grid-cols-2" }) {
+  return (
+    <div className={className}>
+      {[...Array(count)].map((_, i) => (
+        <Card key={i} className="flex items-center gap-3.5 p-4 sm:p-5">
+          <Skeleton className="h-11 w-11 shrink-0 rounded-md" />
+          <div className="min-w-0 flex-1 space-y-2">
+            <Skeleton className="h-4 w-1/2" />
+            <Skeleton className="h-3 w-3/4" />
+          </div>
+        </Card>
+      ))}
     </div>
   );
+}
+
+// In-content loading: renders a sleek skeleton card to avoid spinner clutter.
+// Set variant="spinner" for compact chasing-square loader.
+export function Loading({ className = "", rows = 3, variant = "list", scale = 0.45 }) {
+  if (variant === "spinner") {
+    return (
+      <div className={`flex items-center justify-center py-10 ${className}`} role="status" aria-label="Loading...">
+        <SquareLoader scale={scale} />
+      </div>
+    );
+  }
+  return <ListSkeleton rows={rows} className={className} />;
 }
 
 // Full-page animated square loader for app initialization / page reload
