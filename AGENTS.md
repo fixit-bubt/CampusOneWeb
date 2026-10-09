@@ -23,7 +23,7 @@ This document is the single, authoritative reference for any AI agent or develop
   - **Student Jobs:** Campus recruitment, internships, bookmarks, deadlines.
   - **Campus Directories:** Student directory with connection requests, faculty/staff directory.
   - **Campus Info:** Bus schedules, prayer/masjid times, clinic/doctor directory.
-  - **Tools & Utilities:** CGPA calculator, PDF tools, academic calendar.
+  - **Tools & Utilities:** CGPA calculator, PDF tools, academic calendar, academic tools hub.
   - **Role System:** Student, Staff, and Admin dashboards and permissions are identical across both platforms.
 
 ---
@@ -32,6 +32,7 @@ This document is the single, authoritative reference for any AI agent or develop
 
 ### 2.1 Git Remotes
 - **Target Repo (Active):** `https://github.com/fixit-bubt/CampusOneAndroid.git` (branch: `main`)
+- **Web Repo (Active):** `https://github.com/fixit-bubt/CampusOneWeb.git` (branch: `main`)
 - **Stale Repos (DO NOT TOUCH):** `nawyajmorshed/CampusOne`, `fixit-bubt/CampusOne`
 - **STRICT PROHIBITION:** Never touch or push to any repository containing `evergreen`, `evergreenweb`, or personal non-CampusOne repositories.
 
@@ -44,6 +45,7 @@ This document is the single, authoritative reference for any AI agent or develop
 ### 2.3 Working Directories
 - **React Native Project Root:** `c:\Users\dracu\Desktop\CampusOne\CampusOne`
 - **Outer Wrapper / Workspace:** `c:\Users\dracu\Desktop\CampusOne` (contains Capstone Thesis Word document and backup files)
+- **Web App Root:** `c:\Users\dracu\Desktop\fix it sdp\fixit-campus`
 
 ---
 
@@ -53,6 +55,7 @@ This document is the single, authoritative reference for any AI agent or develop
 1. **NO AI Footprint:** NEVER add `Co-Authored-By: Claude`, `Co-Authored-By: Antigravity`, or any AI/Anthropic/Google trailer in commit messages.
 2. **Commit Author:** Commits must reflect ONLY the user as author.
 3. **Commit Cadence:** Commit and push after each completed, reviewed feature/screen increment. Do not batch multiple unrelated features into massive commits.
+4. **Push Policy:** Never run `git push` unless explicitly asked by the user with the word "push".
 
 ### 3.2 Code Craft & "No AI Tells"
 The app is graded and reviewed by university teachers who actively check for AI-generated code and copy.
@@ -73,23 +76,24 @@ The app is graded and reviewed by university teachers who actively check for AI-
 
 | Layer | Technology | Details |
 |---|---|---|
-| **Framework** | React Native 0.85.3 + Expo SDK 56.0.15 | TypeScript 6, React 19.2.3 |
-| **Navigation** | React Navigation 7 | Native Stack + Bottom Tabs |
+| **Mobile Framework** | React Native 0.85.3 + Expo SDK 56.0.15 | TypeScript 6, React 19.2.3 |
+| **Web Framework** | React 19 + Vite 6 + Tailwind CSS | JavaScript, HashRouter |
+| **Mobile Navigation** | React Navigation 7 | Native Stack + Bottom Tabs |
 | **Backend / DB** | Supabase JS v2.107.0 | PostgreSQL 15, Auth, Storage, Realtime, Edge Functions |
 | **Push Notifications** | Direct FCM v1 | Firebase project `campusone-853e6` + `send-push` edge function |
 | **AI Assistant** | Google Gemini | `gemini-flash-lite-latest` via Supabase Edge Function (`chat`) |
 | **PDF Processing** | `pdf-lib` + vendored `pdf.js` | On-device assembly + hidden offscreen WebView rasterizer |
 | **Storage / Cache** | `@react-native-async-storage/async-storage` & `expo-secure-store` | Session persistence and preferences |
-| **Icons** | `@expo/vector-icons` (Feather) | Strict semantic iconography |
+| **Icons** | `@expo/vector-icons` (Feather) & `lucide-react` (Web) | Strict semantic iconography |
 | **Theme / Design** | Custom Design System | Plus Jakarta Sans + Hind Siliguri (Bangla), dark-mode tokens |
 
 ---
 
 ## 5. Design System & UI/UX Principles
 
-All visual styles must strictly flow from `src/theme/`. **Never hardcode hex colors, arbitrary spacing, or font families in screen components.**
+All visual styles must strictly flow from `src/theme/` (mobile) or `src/index.css` / CSS custom variables (web). **Never hardcode hex colors, arbitrary spacing, or font families in screen components.**
 
-### 5.1 Tokens & Imports
+### 5.1 Tokens & Imports (Mobile)
 - **Import Location:** `import { useTheme } from '../hooks/useTheme'; import { SectorColors, FontFamily, FontSize, Spacing, Radius, Layout } from '../theme';`
 - **Dynamic Semantic Colors (`C.*`):** `C.bg`, `C.surface`, `C.border`, `C.text`, `C.textMuted`, `C.brand`, `C.success`, `C.warn`, `C.danger` (`#d63d35`).
 - **Feature Sector Accents (`SectorColors`):** Use `SectorColors.<sector>` for feature tiles and icons (`reports`, `bus`, `study`, `medical`, `blood`, `ride`, `prayer`, `jobs`, `market`, `clubs`, `events`, `announce`, `lostfound`, `directory`, `faculty`, `pdfmaker`).
@@ -102,9 +106,7 @@ All visual styles must strictly flow from `src/theme/`. **Never hardcode hex col
 
 ---
 
-## 6. Expo SDK 56 & Android Quirks
-
-Expo SDK 56 enforces Android 15 edge-to-edge mode. This breaks two standard React Native conventions:
+## 6. Expo SDK 56, Android Quirks & Web Shell Architecture
 
 ### 6.1 KeyboardAvoidingView on Android
 - **Old Broken Pattern:** `behavior={Platform.OS === 'ios' ? 'padding' : undefined}` relies on native `adjustResize`, which fails in edge-to-edge mode.
@@ -117,20 +119,24 @@ Expo SDK 56 enforces Android 15 edge-to-edge mode. This breaks two standard Reac
   {data.length === 0 ? <EmptyView /> : <FlatList inverted data={data} ... />}
   ```
 
-### 6.3 Floating Nav Capsule & Responsive Shell (`AppShell.jsx`)
+### 6.3 WebView Transparent Background Bleed
+- Modern Android WebViews render `rgba(0,0,0,0)` transparently if the target webpage (such as BUBT's Annex portal) lacks an explicit background color.
+- **Rule:** Always set explicit opaque `backgroundColor: '#fff'` on the `WebView` component (`style={{ backgroundColor: '#fff' }}`), preventing the app's dark theme from bleeding through.
+
+### 6.4 Floating Nav Capsule & Responsive Shell (`AppShell.jsx`)
 - **Nav Capsule:** The classic vertical sidebar was eliminated. Desktop navigation renders inside a floating horizontal capsule pill centered at the top of the viewport.
 - **CRITICAL Breakpoint is `xl` (≥ 1280px):**
   - At `xl` and above: Floating capsule displays logo, grouped menu dropdowns (`Academics`, `Campus Life`, `Community`, `Services`, `Manage`), and account profile controls.
   - Below `xl` (< 1280px): The layout switches to mobile navigation:
-    - **Top Header (`h-11`):** Left 3-line hamburger menu button (`Menu`) triggering drawer, centered two-tone `CampusOne` branding (`Campus` + emerald `One`) with a compact tagline (`Full campus in one app`), and notification bell on right with unread badge.
-    - **Bottom Navigation Bar:** 5 primary tabs: Home (`/dashboard`), Study Hub (`/study-hub`), AI Orb (`/chatbot`), Academic Tools (`/tools`), and Profile (`/profile`). Replaced the drawer trigger with direct 1-tap profile navigation.
+    - **Top Header (`h-11`):** Left menu button triggering drawer, centered two-tone `CampusOne` branding (`Campus` + emerald `One`) with a compact tagline (`Full campus in one app`), and notification bell on right with unread badge.
+    - **Bottom Navigation Bar:** 5 primary tabs: Home (`/dashboard`), Study Hub (`/study-hub`), Cosmic AI Orb (`/chatbot`), Academic Tools (`/tools`), and Profile (`/profile`). Replaced the drawer trigger with direct 1-tap profile navigation.
   - **LOAD-BEARING RULE:** Never use `lg` for the capsule breakpoint! At `lg` (1024px), Admin nav items overflow horizontally and intercept clicks intended for the account dropdown.
   - **LOAD-BEARING RULE:** Never set `overflow-hidden` or `overflow-x-auto` on the nav container element. Any overflow setting clips the dropdown panels that hang below the bar, rendering them completely invisible.
-- **Sticky Offsets:** Top floating capsule consumes 84–88px of vertical clearance on desktop; mobile sticky top header consumes 44px (`h-11`). Sticky elements (e.g., CoverPage preview, public CGPA cards) must use `top-24` or higher to clear the capsule.
+- **Sticky Offsets:** Top floating capsule consumes 84-88px of vertical clearance on desktop; mobile sticky top header consumes 44px (`h-11`). Sticky elements (e.g., CoverPage preview, public CGPA cards) must use `top-24` or higher to clear the capsule.
 
 ---
 
-## 7. Design System, Tokens & UI Components
+## 7. Web Design System, Tokens & UI Components
 
 ### 7.1 Typography
 Configured in `src/index.css` via `@fontsource/plus-jakarta-sans` and `@fontsource/hind-siliguri`:
@@ -186,23 +192,7 @@ Each feature domain has a dedicated accent color for iconography, category chips
 
 ---
 
-## 8. Database Schema & Ground-Truth Reference
-
-### 8.1 Database Migration Engine & Deployment Rule
-- All schema DDL, RLS policies, indexes, and triggers reside sequentially in `supabase/migrations/` (`0001_init.sql` through `0087_seed_announcements_and_events.sql`).
-- **TO APPLY A NEW MIGRATION:**
-  ```bash
-  supabase db query --linked --file supabase/migrations/00NN_name.sql
->>>>>>> Stashed changes
-  ```
-
-### 6.3 WebView Transparent Background Bleed
-- Modern Android WebViews render `rgba(0,0,0,0)` transparently if the target webpage (such as BUBT's Annex portal) lacks an explicit background color.
-- **Rule:** Always set explicit opaque `backgroundColor: '#fff'` on the `WebView` component (`style={{ backgroundColor: '#fff' }}`), preventing the app's dark theme from bleeding through.
-
----
-
-## 7. Dhaka Local Time Rule (UTC+6)
+## 8. Dhaka Local Time Rule (UTC+6)
 
 - Dhaka is UTC+6. Between 00:00 and 06:00 Dhaka time, UTC date calculations return yesterday's date.
 - **Rule:** For date-only comparisons, filters, and stamps (`events.date`, `jobs.deadline`, `lost_found_items.item_date`), ALWAYS use `localToday()` from `src/utils/format.ts`.
@@ -211,11 +201,18 @@ Each feature domain has a dedicated accent color for iconography, category chips
 
 ---
 
-## 8. Database Schema & Ground-Truth Rules
+## 9. Database Schema & Ground-Truth Rules
 
 The live Supabase database (`xhgpxvyqrufbbuivttmi`) is the single source of truth.
 
-### 8.1 Ground-Truth Table Names & Columns
+### 9.1 Database Migration Engine & Deployment Rule
+- All schema DDL, RLS policies, indexes, and triggers reside sequentially in `supabase/migrations/` (`0001_init.sql` through `0087_seed_announcements_and_events.sql`).
+- **TO APPLY A NEW MIGRATION:**
+  ```bash
+  supabase db query --linked --file supabase/migrations/00NN_name.sql
+  ```
+
+### 9.2 Ground-Truth Table Names & Columns
 
 | Domain | Table Name (DO NOT GUESS) | Key Columns & Gotchas |
 |---|---|---|
@@ -231,12 +228,12 @@ The live Supabase database (`xhgpxvyqrufbbuivttmi`) is the single source of trut
 | **Medical** | `doctors` & `appointments` | Clinic is walk-in / directory only. Doctors: `room`. Appointments: `student_id`, `slot`, `date`. |
 | **Account Deletion** | `delete_own_account()` RPC | SECURITY DEFINER. Removes dependent records and caller from `auth.users` (cascading to `profiles`). Revoked from anon; authenticated only. |
 
-### 8.2 Profiles RLS & Display Names
+### 9.3 Profiles RLS & Display Names
 - `profiles` RLS policy (`profiles_select_self_admin_or_matched`) returns **ONLY the caller's own row** (or admin/matched lost-and-found counterpart).
 - **Rule:** Never query `.from('profiles').select(...)` or embed `profiles!user_id(full_name)` for other users — it silently returns `null` or blank names.
 - **Solution:** Always use `peopleService.ts` (`fetchPeople` / `loadPeople` / `personName`), backed by the cached SECURITY DEFINER RPC `directory_profiles()`.
 
-### 8.3 Security Definer Functions
+### 9.4 Security Definer Functions
 - In Supabase, default ACLs grant `anon` execute permissions on functions created by `postgres`.
 - **Rule:** Every new `SECURITY DEFINER` function must explicitly revoke anon permissions:
   ```sql
@@ -244,7 +241,7 @@ The live Supabase database (`xhgpxvyqrufbbuivttmi`) is the single source of trut
   GRANT EXECUTE ON FUNCTION public.my_function(...) TO authenticated;
   ```
 
-### 8.4 Supabase JS v2 Mutations
+### 9.5 Supabase JS v2 Mutations
 - Supabase JS v2 **never throws errors automatically**.
 - **Rule:** Always check and handle errors explicitly:
   ```typescript
@@ -256,7 +253,7 @@ The live Supabase database (`xhgpxvyqrufbbuivttmi`) is the single source of trut
   ```
 - Always implement loading, empty, and retry states. Never silently swallow errors.
 
-### 8.5 Refresh on Focus
+### 9.6 Refresh on Focus
 - Screens fetching dynamic data must refresh when focused to prevent stale lists after edits/inserts:
   ```typescript
   useFocusEffect(
@@ -268,14 +265,14 @@ The live Supabase database (`xhgpxvyqrufbbuivttmi`) is the single source of trut
 
 ---
 
-## 9. Role System & Navigation Architecture
+## 10. Role System & Navigation Architecture
 
-### 9.1 Role Hierarchy & Policy
+### 10.1 Role Hierarchy & Policy
 - **Roles:** `'student'` | `'staff'` | `'admin'`
 - **Role Promotion Rule:** Students are **NEVER promoted to staff or admin** in the app. Students may only be elevated to **CR** (`study_section_members.role = 'cr'`) or **Club President** (`club_set_president` RPC).
 - The `ManageUsersScreen` role toggle only switches `Staff ↔ Admin`.
 
-### 9.2 Bottom Navigation Structure
+### 10.2 Bottom Navigation Structure
 - **Home:** Role-adaptive tab:
   - Admin → `AdminDashboardScreen`
   - Staff → `StaffDashboardScreen`
@@ -285,10 +282,10 @@ The live Supabase database (`xhgpxvyqrufbbuivttmi`) is the single source of trut
 - **Annex:** BUBT student portal in-app WebView.
 - **Settings:** Profile, preferences, language toggle, notification settings.
 
-### 9.3 Student Onboarding Gate
+### 10.3 Student Onboarding Gate
 In `RootNavigator.tsx`, students who have not completed onboarding (`!profile?.student_id`) are redirected to `OnboardingScreen` before reaching the main app.
 
-### 9.4 Role Resolution & Auth State Integrity (Anti-Flash Architecture)
+### 10.4 Role Resolution & Auth State Integrity (Anti-Flash Architecture)
 - **Profile Load Race Elimination:** In `authStore.ts`, `SET_SESSION` resets `profileLoaded: false` and `profile: null` on any new session or account switch. `SET_PROFILE` only marks `profileLoaded: true` when `profile !== null`. On sign-out, state is cleanly cleared via `SIGN_OUT`.
 - **Pre-Navigation Role Await:** `signIn()` proactively awaits `fetchProfile(userId)` before resolving, ensuring the caller stays in busy/loading state until the role is resolved.
 - **Navigator Gate:** `RootNavigator.tsx` blocks on `if (loading || (session && (!profileLoaded || !profile)))` with a clean splash/loader, guaranteeing `AppNavigator` never mounts before the user's role is confirmed.
@@ -298,31 +295,35 @@ In `RootNavigator.tsx`, students who have not completed onboarding (`!profile?.s
 
 ---
 
-## 10. Specialized Features
+## 11. Specialized Features
 
-### 10.1 AI Chatbot
-- **Service:** `src/services/chatbotService.ts` → `src/screens/chatbot/ChatbotScreen.tsx`
+### 11.1 AI Chatbot
+- **Service:** `src/services/chatbotService.ts` (Mobile) / `src/screens/chatbot/chatCore.jsx` (Web)
 - **Edge Function:** `supabase/functions/chat/index.ts`
 - **Model:** Google Gemini (`gemini-flash-lite-latest`), API key securely stored in Supabase secrets.
 - **Grounding Tools (10 tools):** Bus routes, prayer times, lost & found, clubs, rides, class routines, events, blood requests, jobs, faculty directory. CGPA calculations are solved directly by system prompt.
-- **Streaming:** SSE streaming using `expo/fetch` (standard React Native `fetch` cannot stream response bodies).
+- **Streaming:** SSE streaming using `expo/fetch` (Mobile) and Web fetch streams.
 - **Security:** Validates caller's JWT directly in the Edge Function; student-only restriction enforced server-side.
 
-### 10.2 PDF Maker
+### 11.2 PDF Maker
 - **Location:** `src/screens/pdfmaker/`
 - **Architecture:** 100% on-device native `pdf-lib` for document generation + hidden offscreen WebView running vendored `pdf.js` (`assets/pdfjs/*.txt`) for rasterizing page thumbnails.
 - **Capabilities:** Photos to PDF, PDF Merge, Organize/Reorder Pages, Compress.
 - **Zero Schema Change:** Does not touch Supabase or upload files.
 
-### 10.3 Direct FCM Push Notifications
+### 11.3 Direct FCM Push Notifications
 - **Firebase Project:** `campusone-853e6`
 - **Mechanism:** Trigger on `notifications` table (`trg_push_on_notification`) → `pg_net` HTTP post → `send-push` Edge Function → Google Service Account OAuth → FCM v1.
 - **Device Registration:** Handled via `register_push_token` RPC in `src/lib/push.ts`.
 - **Diagnosis:** If push fails, check `push_tokens` table and `net._http_response` first. `{"sent": 0}` means the target user has no registered device token.
 
+### 11.4 Academic Tools Directory (`AcademicTools.jsx` & `#/tools`)
+- **Directory Hub:** Centralized utilities screen hosting Cover Page Generator, PDF Maker, and CGPA Calculator.
+- **Custom Pins & Web Bookmarks:** Allows students to pin frequently visited campus features or custom external URLs to their quick-access grid, stored client-side in `localStorage`.
+
 ---
 
-## 11. Android Build, Signing & Deployment
+## 12. Android Build, Signing & Deployment
 
 - **Keystore File:** `campusone-release.keystore` (located in the repo root).
 - **Alias & Password:** Configured in `android/app/build.gradle` (`signingConfigs.release` with alias `campusone` and password `campusone2026`).
@@ -362,21 +363,20 @@ In `RootNavigator.tsx`, students who have not completed onboarding (`!profile?.s
 
 ---
 
-## 12. Capstone Project Thesis Report
+## 13. Capstone Project Thesis Report
 
 - **Document Location:** `c:\Users\dracu\Desktop\CampusOne\Copy of Capstone_Project_Report_Format-DOCX (1).docx` (Backup: `...BACKUP.docx`).
-- **Current State:** Chapters 1–4 completed (Introduction, Background Study, Methodology, Implementation & Result Analysis). Chapters 5–6 (Constraints/Milestones, Conclusion) remain template placeholders.
+- **Current State:** Chapters 1-4 completed (Introduction, Background Study, Methodology, Implementation & Result Analysis). Chapters 5-6 (Constraints/Milestones, Conclusion) remain template placeholders.
 - **Report Strategy:** Mobile app and Web app are presented as **one unified system** with two client interfaces sharing a single backend.
 - **Editing Tool:** Edit using `python-docx` (`pip show python-docx` is available). Always confirm scope before altering document structure.
 
 ---
 
-## 13. UI/UX & Institutional Polish Standards (Varsity Pitch Ready)
+## 14. UI/UX & Institutional Polish Standards (Varsity Pitch Ready)
 
-<<<<<<< Updated upstream
 The mobile and web applications are actively pitched and presented to BUBT administration, department heads, and academic review committees. The following design and implementation patterns are strictly mandatory across all screens:
 
-### 13.1 Native Direct Contact Flow (`ContactSheet.tsx`)
+### 14.1 Native Direct Contact Flow (`ContactSheet.tsx`)
 - **Prohibition:** NEVER display raw, un-dialable system dialogs (`Alert.alert("Name", "+880...")`) for phone numbers.
 - **Pattern:** Use `ContactSheet` from `src/components/ui/ContactSheet.tsx`.
 - **Capabilities:**
@@ -391,44 +391,44 @@ The mobile and web applications are actively pitched and presented to BUBT admin
   - `BloodScreen.tsx`: Triggered upon donor contact reveal (`donor_contact`) and urgent patient requester contact reveal.
   - `LostFoundDetailScreen.tsx`: Triggered upon approved claim contact unlock (`claim_contact`).
 
-### 13.2 Visual Media Pipeline & Attachments
+### 14.2 Visual Media Pipeline & Attachments
 - **Lost & Found Photos:**
   - `LostFoundBrowseScreen.tsx`: Render 52×52 rounded cover thumbnail with category icon fallback.
   - `LostFoundDetailScreen.tsx`: Render 190dp hero image card with anchored status badge (`Lost` in crimson / `Found` in emerald).
   - `PostItemFormScreen.tsx`: Support image picking via `expo-image-picker`, preview thumbnail with Change/Remove actions, and upload to public `photos` bucket via `uploadPhoto(uri, 'lostfound', user.id)`.
 
-### 13.3 Home Live Status Carousel (`CampusToday.tsx`)
-- Replaced cramped 2-column flex-wrapped grid with a horizontal snap carousel (210dp card width, 13.5px bold title, 11.5px subtitle, sector accent pill).
-- Surfaces next bus to campus, next prayer azan, latest campus announcement, upcoming event, open jobs count, and urgent blood requests.
+### 14.3 Home Live Status Carousel & Bus/Prayer Cards
+- **Mobile (`CampusToday.tsx`):** Horizontal snap carousel (210dp card width, 13.5px bold title, 11.5px subtitle, sector accent pill). Surfaces next bus, next prayer, campus announcements, upcoming events, open jobs, urgent blood requests.
+- **Web ([`StudentDashboard.jsx`](file:///c:/Users/dracu/Desktop/fix%20it%20sdp/fixit-campus/src/screens/student/StudentDashboard.jsx)):** Bus card with transit grid SVG and prayer card with Islamic geometric star mosaic SVG, showing departure/azan timings and real-time wait progress bars.
 
-### 13.4 Real-World Logistics & Time Display
+### 14.4 Real-World Logistics & Time Display
 - **12-Hour Bus Departures:** Always format military time (e.g. `13:30`) to human 12-hour AM/PM format (e.g. `01:30 PM`) using `format12Hour` helper. Always safeguard route stops (`(r.stops ?? []).length`).
 - **Dynamic Ramadan Detection:** In `PrayerScreen.tsx`, never hardcode fasting banners. Use `isRamadanNow()` checking Hijri calendar month 9 via `Intl.DateTimeFormat('en-u-ca-islamic-umalqura')`.
 
-### 13.5 AI Assistant Onboarding (`ChatbotScreen.tsx`)
+### 14.5 AI Assistant Onboarding (`ChatbotScreen.tsx`)
 - Never present an empty blank screen. Present 4 varsity-focused starter prompt chips (Bus routes, prayer times, CGPA calculation, campus jobs) that pre-fill the composer on tap.
 
-### 13.6 Navigation & Dashboard Layout Integrity
+### 14.6 Navigation & Dashboard Layout Integrity
 - Strictly enforce AGENTS.md Rule 5.2 (full-width rows with left icon, bold title, and right chevron).
 - In `AdminDashboardScreen.tsx`, all 7 management destinations use full-width rows to prevent orphaned cards.
 
-### 13.7 Theme-Aware Dark Mode Tokens (`pillBg`)
+### 14.7 Theme-Aware Dark Mode Tokens (`pillBg`)
 - Never use hardcoded light pastel constants (`Accent.tealBg = #e4f5f4`, `greenBg = #e8f8f0`, `grayBg = #f0f2f6`) on cards or badges in dark mode.
 - Use `pillBg(fgHex, isDark)` from `src/theme/colors.ts`, generating `${fgHex}2e` on dark and `${fgHex}18` on light.
 
 ---
 
-## 14. Official Logo & Brand Assets (Google Play Ready)
+## 15. Official Logo & Brand Assets (Google Play Ready)
 
-### 14.1 Visual Brand Identity
+### 15.1 Visual Brand Identity
 - **Mark:** Royal blue squircle container (`#0D3ECF` to `#1B52F8` gradient) featuring a unified C1 monogram:
   - Sweeping 3D beveled letter "C".
   - Upright numeral "1" embedded in center space.
   - Academic graduation mortarboard cap with hanging tassel.
-- **Typography:** Modern geometric sans-serif wordmark "CampusOne" — "Campus" in deep midnight navy (`#0A1C3D`), "One" in royal blue (`#1B52F8`).
+- **Typography:** Modern geometric sans-serif wordmark "CampusOne" - "Campus" in deep midnight navy (`#0A1C3D`), "One" in royal blue (`#1B52F8`).
 - **Zero AI / Generic Icon Tells:** All generic `@expo/vector-icons` `school` hats and placeholder icons are strictly purged. The official mark is used universally.
 
-### 14.2 Asset Registry & Directory Locations
+### 15.2 Asset Registry & Directory Locations
 - **Master App Icon:** `assets/icon.png` (1024×1024 transparent PNG).
 - **Google Play Console Upload:** `assets/playstore-icon.png` & `assets/playstore-icon-full.png` (512×512 PNG, formatted to official Google Play store requirements).
 - **Android Adaptive Icon Layers:**
@@ -442,66 +442,67 @@ The mobile and web applications are actively pitched and presented to BUBT admin
   - Mipmaps: `mipmap-*/ic_launcher.webp`, `ic_launcher_round.webp`, `ic_launcher_foreground.webp`, `ic_launcher_background.webp`, `ic_launcher_monochrome.webp` across all 5 densities.
   - Background colors: `values/colors.xml` (`splashscreen_background`, `iconBackground` set to `#ffffff`).
 
-### 14.3 In-App UI Components
+### 15.3 In-App UI Components
 - `src/components/ui/Logo.tsx`: `LogoMark` renders `assets/logo-mark.png` with dynamic `size` and elevation `shadow`. Also exports `LogoFull` and `LogoText`.
 - `Brand` component in `LandingScreen.tsx` wraps `LogoMark`, automatically providing the new logo to `LandingScreen`, `LoginScreen`, `RegisterScreen`, `OnboardingScreen`, `ResetPasswordScreen`, `VerifyEmailScreen`, and `TopBar`.
 
-## 15. Unified Brand Identity & Memory Synchronization Mandate
+---
 
-### 15.1 CampusOne Brand Identity
+## 16. Unified Brand Identity & Memory Synchronization Mandate
+
+### 16.1 CampusOne Brand Identity
 - **Unified Branding:** Both web and mobile applications are officially branded **CampusOne**.
 - **Visual Identity:** Two-tone wordmark (`Campus` in primary text, `One` in emerald green `text-emerald-400` / `#34d399`), paired with the compact tagline `"Full campus in one app"`.
-- **Academic Utilities & Study Hub:** Centralized `AcademicTools.jsx` at `#/tools`, simplified student view on `#/study-hub`, and compact, image-free AI assistant chatbot interface.
+- **Academic Utilities & Study Hub:** Centralized `AcademicTools.jsx` at `#/tools`, simplified student view on `#/study-hub`, and compact, text-focused AI assistant chatbot interface.
 - **Announcement Banner Photo Rule:** An announcement (or event) cannot be displayed in the hero carousel banner unless it has an attached photo. Colored background gradients are strictly eliminated behind banner slides in favor of neutral backdrops.
 
-### 15.2 Memory Synchronization Rule
-Whenever the user instructs to "update memorys", the agent MUST synchronously update ALL memory references across the workspace:
+### 16.2 Memory Synchronization Rule
+Whenever the user instructs to "update memorys" (or "update memories"), the agent MUST synchronously update ALL memory references across the workspace:
 1. `AGENTS.md` and `agent.md`
 2. `CLAUDE.md`
 
 ---
 
-## 16. Google Play Store Readiness & Institutional Audit Standards
+## 17. Google Play Store Readiness & Institutional Audit Standards
 
-### 16.1 AndroidManifest Permissions & Queries
+### 17.1 AndroidManifest Permissions & Queries
 - **Forbidden Unused Permissions:** `RECORD_AUDIO` and `SYSTEM_ALERT_WINDOW` must never be present in `android/app/src/main/AndroidManifest.xml`. Google Play Console flags them as high-risk policy violations for campus companion apps.
 - **Intent Queries:** `<queries>` block in `AndroidManifest.xml` must declare `intent.action.DIAL` (`tel:`) and `intent.action.SENDTO` (`mailto:`) for deterministic external resolution on Android 11+ (API 30+).
 
-### 16.2 Academic Scrutiny & Brand Consistency
+### 17.2 Academic Scrutiny & Brand Consistency
 - **Varsity Code Identifier:** `UNIVERSITY_NAME = 'BUBT'` in `src/constants/app.ts` (strictly never placeholder or other varsity codes like `'DIU'`).
 - **Exported Document Footers:** Generated PDFs and cover pages must output `Generated by CampusOne` in `CoverPageFormScreen.tsx`.
-- **Zero AI Tells:** 0 em-dashes `—` in user-facing microcopy/i18n; no ASCII box-drawing comments (`// ───`); no AI header comments (`// Matches design...`).
+- **Zero AI Tells:** 0 em-dashes `-` in user-facing microcopy/i18n; no ASCII box-drawing comments (`// ---`); no AI header comments (`// Matches design...`).
 - **Theme Polish:** `pillBg(fgHex, isDark)` with default `isDark = false` applied across all status badges and pills, ensuring zero blinding pastels in dark mode.
 
 ---
 
-## 17. Navigation & Screen Information Architecture (Explore & Tools Placement)
+## 18. Navigation & Screen Information Architecture (Explore & Tools Placement)
 
-### 17.1 Home Screen Integrity (`HomeScreen.tsx`)
+### 18.1 Home Screen Integrity (`HomeScreen.tsx`)
 - **Quick Actions Row:** Strictly contains the 4 core campus actions: `Reports`, `Bus`, `Study`, and `Medical`.
 - **Zero Misplaced Tool Promos:** Document tools (PDF Maker, Cover Page Generator) must never be inserted on the Home screen. Home must stay clean and jump directly to `My Reports` and `Recent Alerts`.
 
-### 17.2 Settings Screen Scope (`SettingsScreen.tsx`)
+### 18.2 Settings Screen Scope (`SettingsScreen.tsx`)
 - **Settings Only:** Settings is strictly reserved for user account management and app preferences (`Dark Mode`, `Language`, `Notifications`, `Share App`, `About`, `Change Password`, `Sign Out`).
 - **Zero Utility Dumps:** Utility tools or document generators must never be embedded inside Settings.
 
-### 17.3 Explore Screen Categories & Accordion UX (`ExploreScreen.tsx` & `CollapsibleSection.tsx`)
-- **Categorization:** High-level grouping matches the web sidebar:
+### 18.3 Explore Screen Categories & Accordion UX (`ExploreScreen.tsx` & `CollapsibleSection.tsx`)
+- **Categorization:** High-level grouping matches the web navigation:
   - **Academics:** Study Hub, Class Routines, Academic Calendar, Faculty, Cover Page Generator, CGPA Calculator, and PDF Maker.
   - **Campus Life:** Clubs, Events, Announcements, Prayer Times, Jobs & Internships.
   - **Services:** Medical Center, Bus Schedule, Lost & Found.
   - **Community:** Student Marketplace, Ride Share, Blood Donation, Student Directory.
   - **Top Pinned Cards:** AI Assistant and Campus Issues.
 - **Default State (Collapsed):** All categories start **collapsed by default** (`defaultOpen = false`). When the user taps the Explore tab, only the category headers are visible, preventing an overwhelming 20+ item wall.
-- **Accordion Behavior:** Tapping any category smoothly expands it (`chevD` `v`) and closes other open categories, keeping the screen compact and matching the web application (`AppShell.jsx`) 1:1. Tapping an open category collapses it back (`chevR` `>`).
-- **Feather Icon Reliability:** Directly uses `name={isOpen ? 'chevD' : 'chevR'}` instead of fragile CSS/style rotation transforms on font components.
+- **Accordion Behavior:** Tapping any category smoothly expands it and closes other open categories, keeping the screen compact and matching the web application (`AppShell.jsx`) 1:1. Tapping an open category collapses it back.
 - **Admin Dashboard Integrity:** `AdminDashboardScreen.tsx` explicitly sets `defaultOpen={true}` on its single Manage section to maintain visibility on the dashboard.
 
 ---
 
-## 18. Admin & Staff Operations Architecture (Full Audit Reference)
+## 19. Admin & Staff Operations Architecture (Full Audit Reference)
 
-### 18.1 Staff Workflow & Dispatch Mechanics
+### 19.1 Staff Workflow & Dispatch Mechanics
 - **Staff Home Routing:** Role `'staff'` lands directly on `StaffDashboardScreen.tsx` with live workload counters (`Assigned`, `In Progress`, `Resolved`).
 - **Issue Lifecycle Actions:**
   - `Start Work`: Optimistically updates issue status from `Open` to `In Progress`.
@@ -510,7 +511,7 @@ Whenever the user instructs to "update memorys", the agent MUST synchronously up
 - **Cross-RLS Reporter Resolution:** Staff queries use `fetchPeople` via `directory_profiles()` to retrieve student reporter names without hitting `profiles` RLS blockades.
 - **Maintenance-Focused Explore:** Staff accounts are filtered to maintenance-relevant sectors (`bus`, `prayer`, `announce`, `medical`, `market`, `ride`, `blood`). Academic tools, student directories, anonymous boards, and chatbot are excluded.
 
-### 18.2 Administrator Operations & Security Rules
+### 19.2 Administrator Operations & Security Rules
 - **Admin Home Routing:** Role `'admin'` lands on `AdminDashboardScreen.tsx` with high-level triage counters (`Open`, `In Progress`, `Resolved`).
 - **Smart Trade-Matching Dispatch:** Reports are classified into trades (`Electrical`, `Plumbing`, `Cleanliness`, `IT / Network`, `Furniture`, `Safety / Security`, `Other`). The assignment modal sorts staff whose `expertise` matches the report trade to the top, flags them with a `Match` pill, and displays their active workload count.
 - **7 Core Management Hubs:**
@@ -521,7 +522,3 @@ Whenever the user instructs to "update memorys", the agent MUST synchronously up
   - `ManageFacultyScreen`: Teacher profile patching, contact details, research tags, and photos.
   - `StudyHubScreen`: Academic catalogue management, intake/section provisioning, and CR review.
   - `ManageClubsScreen`: Club creation, status toggle, and atomic presidential assignment (`club_set_president` RPC).
-
-
-
-
