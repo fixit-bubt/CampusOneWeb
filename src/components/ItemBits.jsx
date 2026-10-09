@@ -30,21 +30,30 @@ export function ItemCard({ item, onOpen }) {
   return (
     <button
       onClick={onOpen}
-      className="group flex flex-col overflow-hidden rounded-lg border border-brd bg-surface text-left shadow-sm transition-all hover:border-brd-2 hover:shadow-md"
+      className="group flex flex-col overflow-hidden rounded-xl border border-brd bg-surface text-left shadow-2xs transition-all duration-200 hover:border-brand hover:shadow-xs active:scale-[0.99]"
     >
-      <div className="relative h-40 w-full overflow-hidden">
-        <ItemPhoto item={item} className="h-full w-full transition-transform group-hover:scale-105" />
-        <div className="absolute left-3 top-3"><ItemTypeBadge type={item.type} /></div>
+      <div className="relative h-44 w-full overflow-hidden bg-surface-2">
+        <ItemPhoto item={item} className="h-full w-full transition-transform duration-300 group-hover:scale-105" />
+        <div className="absolute left-2.5 top-2.5"><ItemTypeBadge type={item.type} /></div>
         {item.status === "Resolved" && (
-          <div className="absolute right-3 top-3"><Badge tone="slate">Resolved</Badge></div>
+          <div className="absolute right-2.5 top-2.5"><Badge tone="slate">Resolved</Badge></div>
         )}
       </div>
-      <div className="flex flex-1 flex-col p-4">
-        <p className="text-xs font-semibold text-ink-3">{item.category}</p>
-        <h3 className="mt-0.5 line-clamp-1 text-base font-bold text-ink">{item.title}</h3>
-        <div className="mt-2 flex flex-col gap-1 text-xs text-ink-3">
-          <span className="inline-flex items-center gap-1.5"><MapPin size={13} className="text-ink-3" />{item.location}</span>
-          <span className="inline-flex items-center gap-1.5"><Calendar size={13} className="text-ink-3" />{fmtDate(item.date)}</span>
+      <div className="flex flex-1 flex-col p-3.5 sm:p-4">
+        <div className="flex items-center justify-between gap-2 mb-1">
+          <span className="text-[11px] font-semibold text-ink-3 uppercase tracking-wider">{item.category}</span>
+          <span className="text-[11px] text-ink-3">{fmtDate(item.date)}</span>
+        </div>
+        <h3 className="line-clamp-1 text-sm sm:text-base font-bold text-ink group-hover:text-brand transition-colors">{item.title}</h3>
+        {item.description && (
+          <p className="mt-1 line-clamp-2 text-xs text-ink-2 leading-relaxed">{item.description}</p>
+        )}
+        <div className="mt-2.5 pt-2 border-t border-brd flex items-center justify-between text-xs text-ink-3">
+          <span className="inline-flex items-center gap-1.5 truncate max-w-[200px]">
+            <MapPin size={13} className="text-ink-3 shrink-0" />
+            <span className="truncate">{item.location || "Campus"}</span>
+          </span>
+          <span className="text-[11px] font-semibold text-brand group-hover:underline shrink-0">View Details</span>
         </div>
       </div>
     </button>
