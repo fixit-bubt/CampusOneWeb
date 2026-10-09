@@ -319,7 +319,7 @@ In `RootNavigator.tsx`, students who have not completed onboarding (`!profile?.s
 
 ### 11.4 Academic Tools Directory (`AcademicTools.jsx` & `#/tools`)
 - **Directory Hub:** Centralized utilities screen hosting Cover Page Generator, PDF Maker, and CGPA Calculator.
-- **Custom Pins & Web Bookmarks:** Allows students to pin frequently visited campus features or custom external URLs to their quick-access grid, stored client-side in `localStorage`.
+- **Custom Pins & Web Bookmarks:** Allows students to pin frequently visited campus features or custom external URLs to their quick-access grid. Synced across devices via `profiles.pinned_tools` (jsonb in migration `0088`), with automatic migration from device `localStorage` and offline caching.
 
 ---
 

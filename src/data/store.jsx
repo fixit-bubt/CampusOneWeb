@@ -41,6 +41,7 @@ function toUser(p) {
     // migration hasn't been applied yet, matching the server's column default.
     allowDms: p.allow_dms ?? true,
     joined: day(p.created_at),
+    pinnedTools: Array.isArray(p.pinned_tools) ? p.pinned_tools : [],
   };
 }
 
@@ -1480,6 +1481,19 @@ export function AppProvider({ children }) {
     const { data } = await supabase.from("profiles").select("*").eq("id", currentUser.id).single();
     if (data) setCurrentUser(toUser(data));
     await refreshUsers();
+    return { ok: true };
+  }
+
+  // Update pinned academic tools for the signed-in user
+  async function updatePinnedTools(toolsList) {
+    if (!currentUser) return { ok: false, error: "Not signed in." };
+    const cleanList = Array.isArray(toolsList) ? toolsList : [];
+    const { error } = await supabase
+      .from("profiles")
+      .update({ pinned_tools: cleanList })
+      .eq("id", currentUser.id);
+    if (error) return { ok: false, error: error.message };
+    setCurrentUser((c) => ({ ...c, pinnedTools: cleanList }));
     return { ok: true };
   }
 
@@ -3529,7 +3543,7 @@ export function AppProvider({ children }) {
     userById, dashboardPath, staffList,
     createReport, updateReport, setReportStatus, assignReport, deleteReport,
     campusIssues, reloadCampusIssues: loadCampusIssues, toggleReportVote, setReportBoardVisibility, reportVoteCounts,
-    setRole, updateProfile, changePassword, addItem, updateItem, deleteItem, addClaim, setClaimStatus, getContact, getProofUrl,
+    setRole, updateProfile, updatePinnedTools, changePassword, addItem, updateItem, deleteItem, addClaim, setClaimStatus, getContact, getProofUrl,
     getStudentDirectory, sendConnectionRequest, respondConnection, cancelConnectionRequest,
   };
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

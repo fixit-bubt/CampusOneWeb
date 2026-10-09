@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   FileBadge,
   FileStack,
@@ -25,6 +25,7 @@ import {
 import { navigate } from "../../lib/router.jsx";
 import { AppShell, PageHeader } from "../../components/AppShell.jsx";
 import { Modal, Button, Input, Field } from "../../components/ui.jsx";
+import { useApp } from "../../data/store.jsx";
 
 // Core default tools (always available)
 const DEFAULT_TOOLS = [
@@ -163,7 +164,25 @@ const ICON_MAP = {
 const STORAGE_KEY = "campusone.pinnedTools";
 
 export default function AcademicTools() {
-  const [pinnedTools, setPinnedTools] = useState([]);
+  const { currentUser, updatePinnedTools } = useApp();
+  const [pinnedTools, setPinnedTools] = useState(() => {
+    if (Array.isArray(currentUser?.pinnedTools) && currentUser.pinnedTools.length > 0) {
+      return currentUser.pinnedTools;
+    }
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+    } catch {
+      // ignore parsing errors
+    }
+    return [];
+  });
+
   const [modalOpen, setModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("features"); // 'features' | 'custom'
 
@@ -172,28 +191,52 @@ export default function AcademicTools() {
   const [customUrl, setCustomUrl] = useState("");
   const [formError, setFormError] = useState("");
 
-  // Load pinned tools from localStorage
+  const autoMigratedRef = useRef(false);
+
+  // Sync between user profile in Supabase and local cache
   useEffect(() => {
+    if (!currentUser) return;
+    const dbTools = Array.isArray(currentUser.pinnedTools) ? currentUser.pinnedTools : [];
+
+    let localTools = [];
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
-          setPinnedTools(parsed);
-        }
+        if (Array.isArray(parsed)) localTools = parsed;
       }
     } catch {
       // ignore parsing errors
     }
-  }, []);
 
-  // Save pinned tools to localStorage
+    if (dbTools.length > 0) {
+      // Database has user's tools -> ensure local state and local cache match
+      setPinnedTools(dbTools);
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(dbTools));
+      } catch {
+        // ignore storage errors
+      }
+    } else if (localTools.length > 0 && !autoMigratedRef.current) {
+      // Phone/browser had tools saved locally before cloud sync was added -> auto-migrate to DB
+      autoMigratedRef.current = true;
+      setPinnedTools(localTools);
+      if (updatePinnedTools) {
+        updatePinnedTools(localTools);
+      }
+    }
+  }, [currentUser?.id, currentUser?.pinnedTools, updatePinnedTools]);
+
+  // Save pinned tools to state, localStorage, and Supabase
   const savePinned = (newList) => {
     setPinnedTools(newList);
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(newList));
     } catch {
       // ignore storage errors
+    }
+    if (updatePinnedTools) {
+      updatePinnedTools(newList);
     }
   };
 
