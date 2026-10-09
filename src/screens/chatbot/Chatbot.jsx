@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import { ArrowLeft, Sparkles, History, Trash2 } from "lucide-react";
+import { ArrowLeft, Sparkles, History, Trash2, Plus } from "lucide-react";
 import { navigate, Link } from "../../lib/router.jsx";
 import { supabase } from "../../lib/supabase.js";
 import { AppShell } from "../../components/AppShell.jsx";
-import { Card, Button, Modal, useToast } from "../../components/ui.jsx";
+import { Button, Modal, useToast } from "../../components/ui.jsx";
 import { useChatSession, MessageList, Composer } from "./chatCore.jsx";
 
 // Chatbot student-only gate lives server-side too (the edge function checks
@@ -26,53 +26,83 @@ export default function Chatbot({ conversationId }) {
     navigate("/chatbot/history");
   }
 
+  function handleNewChat() {
+    chat.reset();
+    navigate("/chatbot");
+  }
+
   return (
     <AppShell activeKey="chatbot" title="AI Assistant">
-      <Card className="flex flex-col h-[calc(100vh-8.5rem)] sm:h-[calc(100vh-11rem)]">
-        <div className="flex shrink-0 items-center gap-3 border-b border-brd px-4 py-3">
-          <button onClick={() => navigate("/dashboard")} aria-label="Back" className="inline-flex h-9 w-9 items-center justify-center rounded-md text-ink-3 hover:bg-surface-2">
-            <ArrowLeft size={18} />
-          </button>
-          <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-100 text-brand-700">
-            <Sparkles size={18} />
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="truncate font-bold text-ink">AI Assistant</p>
-            <p className="truncate text-xs text-ink-3">Ask about bus, prayer times, clubs, jobs, faculty…</p>
+      <div className="mx-auto flex h-[calc(100vh-7.5rem)] sm:h-[calc(100vh-8.5rem)] w-full max-w-2xl flex-col">
+        {/* Clean floating conversation card */}
+        <div className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-brd bg-surface">
+          {/* Header */}
+          <div className="flex shrink-0 items-center justify-between border-b border-brd px-4 py-3 sm:px-5">
+            <div className="flex items-center gap-2.5">
+              <button
+                onClick={() => navigate("/dashboard")}
+                aria-label="Back"
+                title="Back"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-xl text-ink-3 transition-colors hover:bg-surface-2 hover:text-ink"
+              >
+                <ArrowLeft size={18} />
+              </button>
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-brand/10 text-brand">
+                <Sparkles size={16} />
+              </div>
+              <h2 className="text-base font-bold text-ink">AI Assistant</h2>
+            </div>
+
+            <div className="flex items-center gap-1">
+              <button
+                onClick={handleNewChat}
+                title="New chat"
+                aria-label="New chat"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-xl text-ink-3 transition-colors hover:bg-surface-2 hover:text-ink"
+              >
+                <Plus size={18} />
+              </button>
+
+              <Link
+                to="/chatbot/history"
+                title="History"
+                aria-label="History"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-xl text-ink-3 transition-colors hover:bg-surface-2 hover:text-ink"
+              >
+                <History size={18} />
+              </Link>
+
+              {chat.convId && (
+                <button
+                  onClick={() => setConfirmDelete(true)}
+                  aria-label="Delete"
+                  title="Delete"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-xl text-ink-3 transition-colors hover:bg-danger-bg hover:text-danger"
+                >
+                  <Trash2 size={17} />
+                </button>
+              )}
+            </div>
           </div>
-          {chat.convId && (
-            <button
-              onClick={() => setConfirmDelete(true)}
-              aria-label="Delete this conversation"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-md text-ink-3 hover:bg-danger-bg hover:text-danger"
-            >
-              <Trash2 size={18} />
-            </button>
-          )}
-          <Link to="/chatbot/history" className="inline-flex h-9 w-9 items-center justify-center rounded-md text-ink-3 hover:bg-surface-2" aria-label="Chat history">
-            <History size={18} />
-          </Link>
+
+          {/* Transcript */}
+          <MessageList
+            messages={chat.messages}
+            streamText={chat.streamText}
+            loadingHistory={chat.loadingHistory}
+            onPickSuggestion={(s) => chat.send(s)}
+          />
+
+          {/* Clean Composer */}
+          <Composer
+            text={chat.text}
+            setText={chat.setText}
+            sending={chat.sending}
+            send={chat.send}
+            stop={chat.stop}
+          />
         </div>
-
-        <MessageList
-          messages={chat.messages}
-          streamText={chat.streamText}
-          loadingHistory={chat.loadingHistory}
-          emptyHint="Ask me anything about campus — bus routes, prayer times, clubs, jobs, faculty, or your CGPA."
-          onPickSuggestion={(s) => chat.send(s)}
-        />
-
-        <Composer
-          text={chat.text}
-          setText={chat.setText}
-          image={chat.image}
-          pickImage={chat.pickImage}
-          clearImage={chat.clearImage}
-          sending={chat.sending}
-          send={chat.send}
-          stop={chat.stop}
-        />
-      </Card>
+      </div>
 
       <Modal
         open={confirmDelete}

@@ -64,7 +64,7 @@ export default function ChatbotHistory() {
         ) : rows.length === 0 ? (
           <EmptyState icon={Sparkles} title="No conversations yet" message="Start a new chat with the AI assistant to see it here." />
         ) : (
-          <Card className="divide-y divide-brd">
+          <div className="space-y-2">
             {rows.map((c) => (
               <div
                 key={c.id}
@@ -72,25 +72,26 @@ export default function ChatbotHistory() {
                 tabIndex={0}
                 onClick={() => navigate(`/chatbot/${c.id}`)}
                 onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); navigate(`/chatbot/${c.id}`); } }}
-                className="flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left hover:bg-surface-2"
+                className="group flex w-full cursor-pointer items-center gap-3.5 rounded-2xl border border-brd bg-surface px-4 py-3.5 text-left shadow-2xs transition-all hover:border-brand/40 hover:bg-surface-2/60"
               >
-                <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-100 text-brand-700">
+                <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand/10 text-brand shadow-2xs">
                   <Sparkles size={16} />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-semibold text-ink">{c.title || "New chat"}</p>
+                  <p className="truncate font-semibold text-ink transition-colors group-hover:text-brand">{c.title || "New chat"}</p>
                   <p className="text-xs text-ink-3">{timeAgo(c.updated_at)}</p>
                 </div>
                 <button
                   onClick={(e) => { e.stopPropagation(); setConfirmDel(c); }}
                   aria-label="Delete conversation"
-                  className="shrink-0 rounded-md p-2 text-ink-3 hover:bg-danger-bg hover:text-danger"
+                  title="Delete conversation"
+                  className="shrink-0 rounded-xl p-2 text-ink-3 transition-colors hover:bg-danger-bg hover:text-danger opacity-80 group-hover:opacity-100"
                 >
-                  <Trash2 size={15} />
+                  <Trash2 size={16} />
                 </button>
               </div>
             ))}
-          </Card>
+          </div>
         )}
       </div>
 

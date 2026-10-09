@@ -88,7 +88,7 @@ export default function ChatWidget() {
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-40 sm:bottom-6 sm:right-6">
+    <div className="fixed bottom-20 right-4 z-40 hidden xl:flex xl:bottom-6 sm:right-6">
       {open && (
         <div
           id="chat-widget-panel"
@@ -173,9 +173,6 @@ export default function ChatWidget() {
               <Composer
                 text={chat.text}
                 setText={chat.setText}
-                image={chat.image}
-                pickImage={chat.pickImage}
-                clearImage={chat.clearImage}
                 sending={chat.sending}
                 send={chat.send}
                 stop={chat.stop}

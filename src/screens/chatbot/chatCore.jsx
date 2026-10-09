@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useLayoutEffect } from "react";
-import { Send, Sparkles, Image as ImageIcon, X, Square, Copy, Check } from "lucide-react";
+import { Send, Sparkles, X, Square, Copy, Check } from "lucide-react";
 import { useApp } from "../../data/store.jsx";
 import { supabase } from "../../lib/supabase.js";
 import { streamChat } from "../../lib/chatbotApi.js";
@@ -317,6 +317,7 @@ export function RichText({ body }) {
 }
 
 // Scrolling transcript. `emptyHint` lets the widget run a shorter blurb than
+// Scrolling transcript. `emptyHint` lets the widget run a shorter blurb than
 // the full page without forking the component; `onPickSuggestion` turns the
 // empty state into tappable conversation starters.
 export function MessageList({ messages, streamText, loadingHistory, emptyHint, onPickSuggestion, className = "" }) {
@@ -327,18 +328,19 @@ export function MessageList({ messages, streamText, loadingHistory, emptyHint, o
 
   if (loadingHistory) return <Loading className="flex-1" />;
   return (
-    <div ref={listRef} className={`flex-1 overflow-y-auto px-4 py-3 ${className}`}>
+    <div ref={listRef} className={`flex-1 overflow-y-auto px-3.5 py-3 sm:px-5 ${className}`}>
       {messages.length === 0 && !streamText ? (
-        <div className="flex h-full flex-col items-center justify-center gap-3 text-center text-ink-3">
-          <Sparkles size={26} />
-          <p className="max-w-xs text-md">{emptyHint}</p>
+        <div className="flex h-full min-h-[14rem] flex-col items-center justify-center px-4 py-6 text-center">
+          <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50 text-brand dark:bg-brand-950/50">
+            <Sparkles size={20} />
+          </div>
           {onPickSuggestion && (
-            <div className="mt-1 flex flex-wrap justify-center gap-2">
+            <div className="flex flex-wrap justify-center gap-1.5 max-w-sm">
               {CHAT_SUGGESTIONS.map((s) => (
                 <button
                   key={s}
                   onClick={() => onPickSuggestion(s)}
-                  className="rounded-full border border-brd bg-surface px-3 py-1.5 text-xs font-semibold text-ink-2 transition-colors hover:border-brand hover:bg-brand-50 hover:text-brand"
+                  className="rounded-full border border-brd bg-surface px-2.5 py-1 text-xs text-ink-2 transition-colors hover:border-brand hover:text-brand"
                 >
                   {s}
                 </button>
@@ -347,20 +349,17 @@ export function MessageList({ messages, streamText, loadingHistory, emptyHint, o
           )}
         </div>
       ) : (
-        <>
+        <div className="space-y-2 py-1">
           {messages.map((m) => <Bubble key={m.id} role={m.role} body={m.body} imageUrl={m.image_url} />)}
           {streamText && <Bubble role="model" body={streamText} pending />}
-        </>
+        </div>
       )}
     </div>
   );
 }
 
-// Attach + textarea + send. `compact` trims it for the narrow widget panel.
-// While a reply streams, Send becomes Stop.
-export function Composer({ text, setText, image, pickImage, clearImage, sending, send, stop, compact = false, autoFocus = false }) {
-  const fileInputRef = useRef(null);
-
+// Text input + send. Simple, compact, and responsive.
+export function Composer({ text, setText, sending, send, stop, compact = false, autoFocus = false }) {
   function onKeyDown(e) {
     if (e.key === "Enter" && !e.shiftKey && !IS_TOUCH) {
       e.preventDefault();
@@ -369,60 +368,44 @@ export function Composer({ text, setText, image, pickImage, clearImage, sending,
   }
 
   return (
-    <div className={`shrink-0 border-t border-brd ${compact ? "p-2" : "p-3"}`}>
-      {image && (
-        <div className="mb-2 flex items-center gap-2">
-          <div className="relative">
-            <img src={image.previewUrl} alt="" className="h-14 w-14 rounded-md object-cover" />
-            <button
-              type="button"
-              onClick={clearImage}
-              aria-label="Remove image"
-              className="absolute -right-1.5 -top-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-surface text-ink-3 shadow-sm hover:text-danger"
-            >
-              <X size={12} />
-            </button>
-          </div>
-        </div>
-      )}
-      <div className="flex items-end gap-2">
-        <input ref={fileInputRef} type="file" accept="image/*" onChange={pickImage} className="hidden" />
-        <button
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={sending}
-          title="Attach a photo"
-          aria-label="Attach a photo"
-          className={`inline-flex shrink-0 items-center justify-center rounded-md text-ink-3 hover:bg-surface-2 hover:text-ink-2 disabled:opacity-50 ${compact ? "h-10 w-10" : "h-11 w-11"}`}
-        >
-          <ImageIcon size={19} />
-        </button>
-        <Textarea
-          rows={1}
+    <div className={`shrink-0 border-t border-brd bg-surface ${compact ? "p-2" : "p-2.5 sm:p-3"}`}>
+      <div className="flex items-center gap-2">
+        <input
+          type="text"
           value={text}
           autoFocus={autoFocus}
           onChange={(e) => setText(e.target.value.slice(0, 4000))}
           onKeyDown={onKeyDown}
-          placeholder="Message the assistant…"
-          className={`flex-1 ${compact ? "max-h-24 min-h-[2.5rem]" : "max-h-32 min-h-[2.75rem]"}`}
+          placeholder="Message…"
+          className="h-9 flex-1 rounded-lg border border-brd bg-surface px-3 text-sm text-ink placeholder:text-ink-3 focus:border-brand focus:outline-hidden"
           disabled={sending}
         />
         {sending && stop ? (
-          <Button icon={Square} variant="secondary" onClick={stop} className="shrink-0" title="Stop generating">
-            {!compact && <span className="hidden sm:inline">Stop</span>}
-          </Button>
+          <button
+            type="button"
+            onClick={stop}
+            title="Stop"
+            className="inline-flex h-9 px-3 shrink-0 items-center justify-center rounded-lg border border-brd bg-surface-2 text-xs font-semibold text-ink hover:bg-surface"
+          >
+            Stop
+          </button>
         ) : (
-          <Button icon={Send} loading={sending} disabled={!text.trim() && !image} onClick={() => send()} className="shrink-0">
-            {!compact && <span className="hidden sm:inline">Send</span>}
-          </Button>
+          <button
+            type="button"
+            onClick={() => send()}
+            disabled={!text.trim()}
+            title="Send"
+            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand text-white hover:bg-brand-700 disabled:opacity-40 transition-colors"
+          >
+            <Send size={15} />
+          </button>
         )}
       </div>
     </div>
   );
 }
 
-// Copy-to-clipboard for an assistant reply. Falls back silently on browsers
-// that block the clipboard API (or serve the app over plain http).
+// Copy-to-clipboard for an assistant reply.
 function CopyButton({ body }) {
   const [copied, setCopied] = useState(false);
   useEffect(() => {
@@ -438,9 +421,9 @@ function CopyButton({ body }) {
       onClick={copy}
       aria-label={copied ? "Copied" : "Copy reply"}
       title={copied ? "Copied" : "Copy reply"}
-      className="mt-1 inline-flex h-6 w-6 items-center justify-center rounded text-ink-3 opacity-0 transition-opacity hover:bg-surface-2 hover:text-ink-2 focus:opacity-100 group-hover:opacity-100"
+      className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded text-ink-3 opacity-0 transition-opacity hover:bg-surface-2 hover:text-ink-2 focus:opacity-100 group-hover:opacity-100"
     >
-      {copied ? <Check size={13} /> : <Copy size={13} />}
+      {copied ? <Check size={12} /> : <Copy size={12} />}
     </button>
   );
 }
@@ -448,26 +431,31 @@ function CopyButton({ body }) {
 export function Bubble({ role, body, imageUrl, pending }) {
   const mine = role === "user";
   return (
-    <div className={`group flex gap-2 py-1 ${mine ? "justify-end" : "justify-start"}`}>
+    <div className={`group flex gap-2 py-0.5 ${mine ? "justify-end" : "justify-start"}`}>
       {!mine && (
-        <span className="mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-100 text-brand-700">
-          <Sparkles size={14} />
+        <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand dark:bg-brand-950/50">
+          <Sparkles size={13} />
         </span>
       )}
-      <div className="flex max-w-[78%] flex-col items-start">
+      <div className={`flex flex-col ${mine ? "items-end" : "items-start"} max-w-[85%] sm:max-w-[75%]`}>
         <div
-          className={`w-full rounded-2xl px-3.5 py-2 text-md leading-relaxed break-words ${
-            mine ? "whitespace-pre-wrap bg-brand text-white" : "bg-surface-2 text-ink"
+          className={`rounded-2xl px-3.5 py-1.5 text-sm leading-relaxed break-words ${
+            mine
+              ? "whitespace-pre-wrap bg-brand text-white"
+              : "border border-brd bg-surface text-ink"
           }`}
         >
           {imageUrl && (
-            <img src={imageUrl} alt="Attached" className={`max-h-64 rounded-lg object-cover ${body ? "mb-2" : ""}`} />
+            <img src={imageUrl} alt="Attached" className={`max-h-52 rounded-lg object-cover ${body ? "mb-1.5" : ""}`} />
           )}
-          {/* User text is shown verbatim; only assistant replies get markdown. */}
           {mine ? body : <RichText body={body} />}
-          {pending && <span className="ml-0.5 inline-block h-3.5 w-1.5 animate-pulse bg-current align-middle" />}
+          {pending && <span className="ml-1 inline-block h-3 w-1.5 animate-pulse bg-brand align-middle" />}
         </div>
-        {!mine && !pending && body && <CopyButton body={body} />}
+        {!mine && !pending && body && (
+          <div className="mt-0.5 flex items-center px-1 opacity-0 transition-opacity group-hover:opacity-100">
+            <CopyButton body={body} />
+          </div>
+        )}
       </div>
     </div>
   );
