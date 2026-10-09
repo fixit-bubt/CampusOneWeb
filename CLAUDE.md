@@ -134,6 +134,15 @@ All visual styles must strictly flow from `src/theme/` (mobile) or `src/index.cs
   - **LOAD-BEARING RULE:** Never set `overflow-hidden` or `overflow-x-auto` on the nav container element. Any overflow setting clips the dropdown panels that hang below the bar, rendering them completely invisible.
 - **Sticky Offsets:** Top floating capsule consumes 84-88px of vertical clearance on desktop; mobile sticky top header consumes 44px (`h-11`). Sticky elements (e.g., CoverPage preview, public CGPA cards) must use `top-24` or higher to clear the capsule.
 
+### 6.5 Public Navigation Capsule & Landing Architecture (`Explore.jsx` & `Landing.jsx`)
+- **Landing Hero Video:** Uses HTML5 autoplaying background (`src/assets/hero-bg.mp4`) with `autoPlay`, `loop`, `muted`, `playsInline`, and static fallback poster (`bubt-campus.jpg`). Theme-aware overlay `.hero-photo-veil` guarantees WCAG contrast across light and dark modes.
+- **Public Navigation Links (`EXPLORE_NAV`):** Strictly limited to 5 essentials: `Bus Schedule` (`/explore/bus`), `Cover Page` (`/explore/cover-page`), `CGPA` (`/explore/cgpa`), `Prayer` (`/explore/prayer`), and `Faculty` (`/explore/faculty`).
+- **Responsive Capsule Layout:**
+  - Desktop / Tablet (`md` and above): Links render centered inside the top floating capsule (`hidden md:flex`).
+  - Mobile (< `md`): Secondary sub-capsule renders links as a compact, centered pill (`w-fit mx-auto`).
+  - **No Scrollbar / Non-Slidable:** Mobile sub-capsule must never use `overflow-x-auto` or slider tracks. Utilizes `.no-scrollbar` and tight padding (`px-2 py-1 text-xs sm:text-sm`).
+- **Top Card Mobile Constraint:** Logo uses `size="sm"` on public nav (`Logo size="sm" onDark`). Auth buttons use `size="sm"` and `!rounded-full` (`!h-8 !rounded-full !px-3`) so Sign Up / Log In buttons never poke out or overflow the curved capsule boundaries on narrow viewports.
+
 ---
 
 ## 7. Web Design System, Tokens & UI Components

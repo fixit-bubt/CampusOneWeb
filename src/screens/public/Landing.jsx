@@ -1,36 +1,33 @@
 import React from "react";
-import { ArrowRight, GraduationCap, ClipboardList, Search, CalendarDays, Store, Stethoscope, Megaphone, CalendarRange, Bus, Moon, Clock, FileText, Calculator } from "lucide-react";
+import { ArrowRight, GraduationCap, ClipboardList, Search, CalendarDays, Store, Stethoscope, Moon, FileText, Calculator, Bus } from "lucide-react";
 import { navigate } from "../../lib/router.jsx";
 import { Button, Badge, Card } from "../../components/ui.jsx";
 import { Logo } from "../../components/Brand.jsx";
 import { ACCENT_TILE } from "../../components/featureKit.jsx";
 import { PublicNav, EXPLORE_NAV } from "./Explore.jsx";
 import campusPhoto from "../../assets/bubt-campus.jpg";
+import heroVideo from "../../assets/hero-bg.mp4";
 import { useT } from "../../i18n/index.js";
 
 // Icons for the "no account needed" grid — keyed by EXPLORE_NAV path so the
 // list can't drift out of sync with the actual public routes.
 const EXPLORE_ICONS = {
-  "/explore/faculty": GraduationCap,
-  "/explore/events": CalendarDays,
-  "/explore/announcements": Megaphone,
-  "/explore/calendar": CalendarRange,
   "/explore/bus": Bus,
-  "/explore/prayer": Moon,
-  "/explore/routines": Clock,
   "/explore/cover-page": FileText,
   "/explore/cgpa": Calculator,
+  "/explore/prayer": Moon,
+  "/explore/faculty": GraduationCap,
 };
 
 // Landing cards reuse the in-app sector accents so each feature keeps its
 // signature color from the first impression on.
 const FEATURES = [
-  { Icon: ClipboardList, tone: "reports", title: "Report campus issues", body: "Flag a broken light, a leaking tap, or dead Wi-Fi in seconds — then track it from Open to Resolved." },
-  { Icon: Search, tone: "lostfound", title: "Lost & Found", body: "Post what you've lost or found, browse the board, and claim items — contact stays private until the poster approves." },
+  { Icon: ClipboardList, tone: "reports", title: "Report campus issues", body: "Flag a broken light, a leaking tap, or dead Wi-Fi in seconds, then track it from Open to Resolved." },
+  { Icon: Search, tone: "lostfound", title: "Lost & Found", body: "Post what you've lost or found, browse the board, and claim items. Contact stays private until the poster approves." },
   { Icon: GraduationCap, tone: "faculty", title: "Faculty directory", body: "Browse 400+ BUBT teachers across all 13 departments, find a supervisor by research area, and save the ones you need." },
-  { Icon: CalendarDays, tone: "events", title: "Campus life", body: "Live bus schedules, daily prayer times, upcoming events, and official announcements — all in one place." },
+  { Icon: CalendarDays, tone: "events", title: "Campus life", body: "Live bus schedules, daily prayer times, upcoming campus events, and official announcements, all in one place." },
   { Icon: Store, tone: "market", title: "Student community", body: "Buy and sell in the marketplace, share rides, find blood donors, and connect with your classmates." },
-  { Icon: Stethoscope, tone: "medical", title: "Medical center", body: "Browse the campus doctor directory — see who's available, their specialties, and visiting hours at a glance." },
+  { Icon: Stethoscope, tone: "medical", title: "Medical center", body: "Browse the campus doctor directory. See who's available, their specialties, and visiting hours at a glance." },
 ];
 
 const STATS = [
@@ -48,7 +45,17 @@ export default function Landing() {
           photo runs to the top of the window; in normal flow the nav's own
           padding showed as a band of page background above the image. */}
       <section className="relative overflow-hidden">
-        <img src={campusPhoto} alt="" aria-hidden="true" className="hero-photo absolute inset-0 h-full w-full object-cover object-[50%_30%]" />
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          poster={campusPhoto}
+          aria-hidden="true"
+          className="hero-photo absolute inset-0 h-full w-full object-cover object-center"
+        >
+          <source src={heroVideo} type="video/mp4" />
+        </video>
         <div className="hero-photo-veil absolute inset-0" />
         <div className="hero-glow absolute inset-0" />
 
@@ -56,9 +63,8 @@ export default function Landing() {
             this file used to carry a near-identical copy. */}
         <PublicNav overlay />
 
-        {/* Top padding clears the overlaid capsule: ~80px of bar on desktop, plus
-            the second scrolling nav row that appears below xl. */}
-        <div className="relative mx-auto max-w-6xl px-6 pb-16 pt-44 sm:pb-20 sm:pt-40 xl:pt-32">
+        {/* Top padding clears the overlaid capsule */}
+        <div className="relative mx-auto max-w-6xl px-6 pb-16 pt-36 sm:pb-20 md:pt-28">
           <div className="mx-auto max-w-2xl text-center">
             <Badge tone="blue" icon={GraduationCap} className="mb-6">{t.landing.badge}</Badge>
             <h1 className="text-[40px] leading-[1.08] font-extrabold tracking-tight text-ink sm:text-[54px]">
@@ -104,7 +110,7 @@ export default function Landing() {
               Try it before you sign up
             </h2>
             <p className="mt-3 text-lg leading-relaxed text-ink-2">
-              These pages are open to everyone — no login required.
+              These pages are open to everyone - no login required.
             </p>
           </div>
           <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
@@ -136,7 +142,7 @@ export default function Landing() {
               One login. Every campus service.
             </h2>
             <p className="mt-3 text-lg leading-relaxed text-ink-2">
-              A quick look at what's inside — each tool built around how BUBT actually runs.
+              A quick look at what's inside, each tool built around how BUBT actually runs.
             </p>
           </div>
           <div className="mt-12 grid gap-6 md:grid-cols-3 lg:gap-8">
@@ -170,7 +176,7 @@ export default function Landing() {
               Ready to get started?
             </h2>
             <p className="relative mx-auto mt-3 max-w-md text-lg leading-relaxed text-white/80">
-              Create an account and get your whole campus in one place — issues, faculty, buses, market, and more.
+              Create an account and get your whole campus in one place: issues, faculty, buses, market, and more.
             </p>
             <button
               onClick={() => navigate("/register")}

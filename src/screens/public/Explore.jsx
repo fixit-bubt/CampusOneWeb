@@ -17,15 +17,11 @@ import { CgpaBody } from "../cgpa/Cgpa.jsx";
 // ============================================================================
 
 export const EXPLORE_NAV = [
-  { label: "Faculty", path: "/explore/faculty" },
-  { label: "Events", path: "/explore/events" },
-  { label: "Notices", path: "/explore/announcements" },
-  { label: "Calendar", path: "/explore/calendar" },
-  { label: "Bus", path: "/explore/bus" },
-  { label: "Prayer", path: "/explore/prayer" },
-  { label: "Routines", path: "/explore/routines" },
+  { label: "Bus Schedule", path: "/explore/bus" },
   { label: "Cover Page", path: "/explore/cover-page" },
   { label: "CGPA", path: "/explore/cgpa" },
+  { label: "Prayer", path: "/explore/prayer" },
+  { label: "Faculty", path: "/explore/faculty" },
 ];
 const NAV = EXPLORE_NAV;
 
@@ -40,15 +36,15 @@ const NAV = EXPLORE_NAV;
 export function PublicNav({ active, overlay = false }) {
   const { currentUser, dashboardPath } = useApp();
   return (
-    <div className={`${overlay ? "fixed inset-x-0 top-0" : "sticky top-0"} z-40 px-3 pb-2 pt-3 sm:px-6 sm:pt-4`}>
+    <div className={`${overlay ? "fixed inset-x-0 top-0" : "sticky top-0"} z-40 px-2.5 pb-2 pt-2.5 sm:px-6 sm:pt-4`}>
       {/* Width matches the signed-in app's capsule so the two read as one system. */}
-      <div className="mx-auto flex w-full max-w-6xl items-center gap-3 rounded-full border border-[#1d3d7d]/80 bg-gradient-to-r from-[#0a1b42]/95 via-[#0f2862]/95 to-[#0a1b42]/95 px-3 py-2 shadow-lg shadow-black/20 backdrop-blur-md text-white">
-        <button onClick={() => navigate("/")} aria-label="CampusOne home" className="shrink-0 px-1">
-          <Logo onDark />
+      <div className="mx-auto flex w-full max-w-6xl items-center gap-1.5 rounded-full border border-[#1d3d7d]/80 bg-gradient-to-r from-[#0a1b42]/95 via-[#0f2862]/95 to-[#0a1b42]/95 px-2.5 py-1.5 sm:px-3 sm:py-2 shadow-lg shadow-black/20 backdrop-blur-md text-white">
+        <button onClick={() => navigate("/")} aria-label="CampusOne home" className="shrink-0 pl-1 pr-0.5 sm:px-1">
+          <Logo size="sm" onDark />
         </button>
         {/* Centred cluster rather than justify-evenly: inside a capsule, links
             spread to the edges read as a stretched toolbar, not a pill. */}
-        <nav className="hidden min-w-0 flex-1 items-center justify-center gap-0.5 xl:flex">
+        <nav className="hidden min-w-0 flex-1 items-center justify-center gap-0.5 md:flex">
           {NAV.map((l) => (
             <button
               key={l.path}
@@ -61,27 +57,27 @@ export function PublicNav({ active, overlay = false }) {
             </button>
           ))}
         </nav>
-        <div className="ml-auto flex shrink-0 items-center gap-2">
-          <ThemeToggle className="!text-white/80 hover:!bg-white/10 hover:!text-white !rounded-full" />
+        <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2 pr-0.5 sm:pr-1">
+          <ThemeToggle className="!h-8 !w-8 !p-1.5 !text-white/80 hover:!bg-white/10 hover:!text-white !rounded-full" />
           {currentUser ? (
-            <Button onClick={() => navigate(dashboardPath(currentUser.role))} iconRight={ArrowRight}>
-              Go to dashboard
+            <Button size="sm" className="!h-8 !rounded-full !px-3 !text-xs sm:!text-sm" onClick={() => navigate(dashboardPath(currentUser.role))} iconRight={ArrowRight}>
+              Dashboard
             </Button>
           ) : (
             <>
-              <Button variant="ghost" className="!text-white/90 hover:!bg-white/10 hover:!text-white" onClick={() => navigate("/login")}>Log In</Button>
-              <Button onClick={() => navigate("/register")}>Sign Up</Button>
+              <Button size="sm" variant="ghost" className="!h-8 !px-2 sm:!px-3 !text-xs sm:!text-sm !text-white/90 hover:!bg-white/10 hover:!text-white !rounded-full" onClick={() => navigate("/login")}>Log In</Button>
+              <Button size="sm" className="!h-8 !px-3 sm:!px-4 !text-xs sm:!text-sm !rounded-full shadow-xs" onClick={() => navigate("/register")}>Sign Up</Button>
             </>
           )}
         </div>
       </div>
-      {/* Mobile / tablet nav — its own scrolling capsule under the main one. */}
-      <div className="mx-auto mt-2 flex max-w-6xl gap-1 overflow-x-auto rounded-full border border-[#1d3d7d]/80 bg-gradient-to-r from-[#0a1b42]/95 via-[#0f2862]/95 to-[#0a1b42]/95 px-2 py-1.5 shadow-md shadow-black/20 backdrop-blur-md xl:hidden text-white">
+      {/* Mobile nav — cleanly centered pill, non-slidable without scrollbar */}
+      <div className="mx-auto mt-1.5 flex w-fit max-w-full items-center justify-center gap-0.5 sm:gap-1 no-scrollbar rounded-full border border-[#1d3d7d]/80 bg-gradient-to-r from-[#0a1b42]/95 via-[#0f2862]/95 to-[#0a1b42]/95 px-2.5 py-1 shadow-md shadow-black/20 backdrop-blur-md md:hidden text-white">
         {NAV.map((l) => (
           <button
             key={l.path}
             onClick={() => navigate(l.path)}
-            className={`shrink-0 rounded-full px-3 py-1.5 text-sm font-semibold transition-colors ${
+            className={`whitespace-nowrap rounded-full px-2.5 py-1 text-xs sm:text-sm font-semibold transition-colors ${
               active === l.path ? "bg-brand text-white shadow-xs" : "text-white/80 hover:bg-white/10 hover:text-white"
             }`}
           >
