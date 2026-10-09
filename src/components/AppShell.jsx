@@ -600,6 +600,7 @@ export function AppLayout({ children }) {
 
   if (!currentUser) return <>{children}</>;
   const go = (p) => { setDrawerOpen(false); navigate(p); };
+  const navBadges = { messages: totalUnreadMessages };
   const isChatbotMain = path === "/chatbot" || (path.startsWith("/chatbot/") && path !== "/chatbot/history");
 
   return (
