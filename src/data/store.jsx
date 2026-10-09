@@ -138,6 +138,51 @@ function toAnnouncement(r, readByMe, userId) {
   };
 }
 
+const SEED_ANNOUNCEMENTS = [
+  {
+    id: "AN-101",
+    code: "AN-101",
+    title: "10th Convocation Ceremony — Registration Open",
+    body: "Graduating students from batches 40 to 52 of all undergraduate and graduate programs are requested to complete their online convocation registration by November 15, 2026. Please collect clearance from Accounts and Examination Controller.",
+    department: "Office of the Registrar",
+    priority: "Urgent",
+    pinned: true,
+    image: "/announcements/convocation-2026.jpg",
+    attachment: "Convocation_Circular_2026.pdf",
+    attachmentUrl: null,
+    date: "2026-10-08",
+    readBy: [],
+  },
+  {
+    id: "AN-102",
+    code: "AN-102",
+    title: "Tri-Semester Final Examination Routine Published",
+    body: "The final examination routine for all departments (Fall Semester 2026) has been published by the Controller of Examinations. Students can check room allocations and timings in the Routines section.",
+    department: "Examination Controller",
+    priority: "Important",
+    pinned: true,
+    image: "/announcements/exam-routine.jpg",
+    attachment: "Final_Exam_Routine_Fall2026.pdf",
+    attachmentUrl: null,
+    date: "2026-10-07",
+    readBy: [],
+  },
+  {
+    id: "AN-103",
+    code: "AN-103",
+    title: "Campus Wi-Fi Upgrade & Fiber Maintenance Notice",
+    body: "Maintenance on the central campus fiber link and Wi-Fi access points across Building 1 and Building 2 will take place this Friday from 2:00 PM to 6:00 PM. High-speed 5GHz networks will resume normal operation immediately afterwards.",
+    department: "Facilities",
+    priority: "General",
+    pinned: false,
+    image: null,
+    attachment: null,
+    attachmentUrl: null,
+    date: "2026-10-05",
+    readBy: [],
+  },
+];
+
 // DB notification row -> screen shape. createdAt kept as raw ISO so the screen
 // can bucket (new/today/earlier) and render relative "2h" times.
 function toNotification(r) {
@@ -273,6 +318,39 @@ function toEvent(r, attendeeIds) {
     attendees: attendeeIds || [],
   };
 }
+
+const SEED_EVENTS = [
+  {
+    id: "EV-101",
+    code: "EV-101",
+    title: "Innovate & Code: BUBT Inter-University Hackathon 2026",
+    category: "Academic",
+    organizer: "BUBT Computer Gaming & Programming Club",
+    date: "2026-10-25",
+    time: "09:30",
+    endTime: "18:00",
+    venue: "Campus Auditorium & CSE Lab 402",
+    description: "Annual intra-university programming competition and 24-hour hackathon. Teams will compete in algorithmic problem solving and AI/Web software development.",
+    capacity: 250,
+    banner: "/events/hackathon-2026.jpg",
+    attendees: [],
+  },
+  {
+    id: "EV-102",
+    code: "EV-102",
+    title: "Voluntary Blood Donation Drive & Free Health Camp",
+    category: "Club",
+    organizer: "BUBT Rover Scout Group & Red Crescent",
+    date: "2026-11-02",
+    time: "10:00",
+    endTime: "16:00",
+    venue: "Building 2 Main Lobby",
+    description: "Join the annual student blood drive to support emergency patients in Mirpur and surrounding hospitals. Free blood group testing and health checkup provided.",
+    capacity: 150,
+    banner: "/events/blood-drive.jpg",
+    attendees: [],
+  },
+];
 
 // DB ride row -> screen shape. requesterIds aggregates the ride_requests join
 // rows (the screen reads `requesterIds` as an array of user ids).
@@ -706,7 +784,8 @@ export function AppProvider({ children }) {
     if (!stillCurrent(uid)) return;
     if (e1 || e2) { setDataError(true); return; }
     const readSet = new Set((reads || []).map((r) => r.announcement_id));
-    setAnnouncements((rows || []).map((r) => toAnnouncement(r, readSet.has(r.id), uid)));
+    const list = (rows || []).map((r) => toAnnouncement(r, readSet.has(r.id), uid));
+    setAnnouncements(list.length > 0 ? list : SEED_ANNOUNCEMENTS);
   }, [currentUser?.id]);
 
   const loadListings = useCallback(async () => {
@@ -827,7 +906,8 @@ export function AppProvider({ children }) {
     if (e1 || e2 || e3) { setDataError(true); return; }
     const byEvent = {};
     (rsvps || []).forEach((r) => { (byEvent[r.event_id] ||= []).push(r.user_id); });
-    setEvents((rows || []).map((r) => toEvent(r, byEvent[r.id])));
+    const mapped = (rows || []).map((r) => toEvent(r, byEvent[r.id])).filter((e) => e.title !== "waetdrg");
+    setEvents(mapped.length > 0 ? mapped : SEED_EVENTS);
     setEventOrganizers((orgs || []).map((o) => o.user_id));
   }, [currentUser?.id]);
 
