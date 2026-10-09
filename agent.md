@@ -206,7 +206,7 @@ Each feature domain has a dedicated accent color for iconography, category chips
 The live Supabase database (`xhgpxvyqrufbbuivttmi`) is the single source of truth.
 
 ### 9.1 Database Migration Engine & Deployment Rule
-- All schema DDL, RLS policies, indexes, and triggers reside sequentially in `supabase/migrations/` (`0001_init.sql` through `0087_seed_announcements_and_events.sql`).
+- All schema DDL, RLS policies, indexes, and triggers reside sequentially in `supabase/migrations/` (`0001_init.sql` through `0088_profile_pinned_tools.sql`).
 - **TO APPLY A NEW MIGRATION:**
   ```bash
   supabase db query --linked --file supabase/migrations/00NN_name.sql
