@@ -35,10 +35,10 @@ const DEFAULT_TOOLS = [
     subtitle: "Assignment & Lab",
     iconName: "FileBadge",
     path: "/cover-page",
-    iconBg: "bg-teal-500/10 text-teal-600 dark:bg-teal-500/20 dark:text-teal-400",
-    glowBorder: "hover:border-teal-500/50 hover:shadow-teal-500/10",
+    iconBg: "bg-surface-2 text-ink border border-brd",
+    glowBorder: "hover:border-ink-3",
     badge: "Instant PDF",
-    badgeTone: "bg-teal-50 text-teal-700 dark:bg-teal-950/40 dark:text-teal-300",
+    badgeTone: "bg-surface-3 text-ink-2",
     isDefault: true,
   },
   {
@@ -47,10 +47,10 @@ const DEFAULT_TOOLS = [
     subtitle: "Merge & Compress",
     iconName: "FileStack",
     path: "/pdf-maker",
-    iconBg: "bg-fuchsia-500/10 text-fuchsia-600 dark:bg-fuchsia-500/20 dark:text-fuchsia-400",
-    glowBorder: "hover:border-fuchsia-500/50 hover:shadow-fuchsia-500/10",
+    iconBg: "bg-surface-2 text-ink border border-brd",
+    glowBorder: "hover:border-ink-3",
     badge: "Client-side",
-    badgeTone: "bg-fuchsia-50 text-fuchsia-700 dark:bg-fuchsia-950/40 dark:text-fuchsia-300",
+    badgeTone: "bg-surface-3 text-ink-2",
     isDefault: true,
   },
   {
@@ -59,10 +59,10 @@ const DEFAULT_TOOLS = [
     subtitle: "Semester & Total",
     iconName: "Calculator",
     path: "/cgpa",
-    iconBg: "bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400",
-    glowBorder: "hover:border-blue-500/50 hover:shadow-blue-500/10",
+    iconBg: "bg-surface-2 text-ink border border-brd",
+    glowBorder: "hover:border-ink-3",
     badge: "BUBT 4.0",
-    badgeTone: "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300",
+    badgeTone: "bg-surface-3 text-ink-2",
     isDefault: true,
   },
 ];
@@ -74,70 +74,70 @@ const CAMPUS_FEATURES_CATALOG = [
     title: "Class Routines",
     iconName: "ClipboardList",
     path: "/routines",
-    iconBg: "bg-indigo-500/10 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400",
+    iconBg: "bg-surface-2 text-ink border border-brd",
   },
   {
     id: "calendar",
     title: "Academic Calendar",
     iconName: "CalendarRange",
     path: "/calendar",
-    iconBg: "bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400",
+    iconBg: "bg-surface-2 text-ink border border-brd",
   },
   {
     id: "study-hub",
     title: "Study Hub",
     iconName: "BookMarked",
     path: "/study-hub",
-    iconBg: "bg-cyan-500/10 text-cyan-600 dark:bg-cyan-500/20 dark:text-cyan-400",
+    iconBg: "bg-surface-2 text-ink border border-brd",
   },
   {
     id: "annex",
     title: "Annex Portal",
     iconName: "ExternalLink",
     path: "/annex",
-    iconBg: "bg-violet-500/10 text-violet-600 dark:bg-violet-500/20 dark:text-violet-400",
+    iconBg: "bg-surface-2 text-ink border border-brd",
   },
   {
     id: "bus",
     title: "Bus Schedule",
     iconName: "Bus",
     path: "/bus",
-    iconBg: "bg-sky-500/10 text-sky-600 dark:bg-sky-500/20 dark:text-sky-400",
+    iconBg: "bg-surface-2 text-ink border border-brd",
   },
   {
     id: "prayer",
     title: "Prayer Times",
     iconName: "Moon",
     path: "/prayer",
-    iconBg: "bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400",
+    iconBg: "bg-surface-2 text-ink border border-brd",
   },
   {
     id: "lost-found",
     title: "Lost & Found",
     iconName: "PackageSearch",
     path: "/lost-found",
-    iconBg: "bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400",
+    iconBg: "bg-surface-2 text-ink border border-brd",
   },
   {
     id: "marketplace",
     title: "Marketplace",
     iconName: "Store",
     path: "/marketplace",
-    iconBg: "bg-green-500/10 text-green-600 dark:bg-green-500/20 dark:text-green-400",
+    iconBg: "bg-surface-2 text-ink border border-brd",
   },
   {
     id: "blood",
     title: "Blood Registry",
     iconName: "Droplet",
     path: "/blood",
-    iconBg: "bg-rose-500/10 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400",
+    iconBg: "bg-surface-2 text-ink border border-brd",
   },
   {
     id: "faculty",
     title: "Faculty Directory",
     iconName: "GraduationCap",
     path: "/faculty",
-    iconBg: "bg-teal-500/10 text-teal-600 dark:bg-teal-500/20 dark:text-teal-400",
+    iconBg: "bg-surface-2 text-ink border border-brd",
   },
 ];
 
@@ -283,7 +283,7 @@ export default function AcademicTools() {
       title: cleanTitle,
       iconName: "Globe",
       path: cleanUrl,
-      iconBg: "bg-indigo-500/10 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400",
+      iconBg: "bg-surface-2 text-ink border border-brd",
       isExternal: cleanUrl.startsWith("http"),
     };
 
@@ -324,16 +324,16 @@ export default function AcademicTools() {
               <div
                 key={tool.id}
                 onClick={() => handleToolClick(tool)}
-                className="group relative flex aspect-square flex-col items-center justify-center rounded-md border border-brd bg-surface p-2.5 text-center shadow-xs transition-all duration-150 hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-sm active:translate-y-0 sm:p-4 cursor-pointer select-none"
+                className="group relative flex aspect-square flex-col items-center justify-center rounded-md border border-brd bg-surface p-2.5 text-center shadow-xs transition-all duration-150 hover:-translate-y-0.5 hover:border-ink-3 hover:shadow-sm active:translate-y-0 sm:p-4 cursor-pointer select-none"
               >
                 <div
                   className={`mb-2 flex h-11 w-11 items-center justify-center rounded-md transition-transform duration-150 group-hover:scale-105 sm:mb-2.5 sm:h-14 sm:w-14 ${
-                    tool.iconBg || "bg-brand/10 text-brand"
+                    tool.iconBg || "bg-surface-2 text-ink border border-brd"
                   }`}
                 >
                   <IconComp className="h-6 w-6 sm:h-7 sm:w-7" />
                 </div>
-                <h3 className="line-clamp-1 text-xs font-bold text-ink group-hover:text-brand sm:text-sm">
+                <h3 className="line-clamp-1 text-xs font-bold text-ink sm:text-sm">
                   {tool.title}
                 </h3>
               </div>
@@ -353,7 +353,7 @@ export default function AcademicTools() {
               <div
                 key={tool.id}
                 onClick={() => handleToolClick(tool)}
-                className="group relative flex aspect-square flex-col items-center justify-center rounded-md border border-brd bg-surface p-2.5 text-center shadow-xs transition-all duration-150 hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-sm active:translate-y-0 sm:p-4 cursor-pointer select-none"
+                className="group relative flex aspect-square flex-col items-center justify-center rounded-md border border-brd bg-surface p-2.5 text-center shadow-xs transition-all duration-150 hover:-translate-y-0.5 hover:border-ink-3 hover:shadow-sm active:translate-y-0 sm:p-4 cursor-pointer select-none"
               >
                 {/* Remove button */}
                 <button
@@ -367,12 +367,12 @@ export default function AcademicTools() {
 
                 <div
                   className={`mb-2 flex h-11 w-11 items-center justify-center rounded-md transition-transform duration-150 group-hover:scale-105 sm:mb-2.5 sm:h-14 sm:w-14 ${
-                    tool.iconBg || "bg-brand/10 text-brand"
+                    tool.iconBg || "bg-surface-2 text-ink border border-brd"
                   }`}
                 >
                   <IconComp className="h-6 w-6 sm:h-7 sm:w-7" />
                 </div>
-                <h3 className="line-clamp-1 text-xs font-bold text-ink group-hover:text-brand sm:text-sm">
+                <h3 className="line-clamp-1 text-xs font-bold text-ink sm:text-sm">
                   {tool.title}
                 </h3>
               </div>

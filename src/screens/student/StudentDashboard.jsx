@@ -409,7 +409,7 @@ export default function StudentDashboard() {
                       onClick={() => { navigate(item.path); setSearchOpen(false); }}
                       className="flex w-full items-center gap-3 p-2.5 text-left transition-colors hover:bg-surface-2"
                     >
-                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-brand-50 text-brand">
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded border border-brd bg-surface-2 text-ink">
                         <ItemIcon size={14} />
                       </span>
                       <div className="min-w-0 flex-1">
