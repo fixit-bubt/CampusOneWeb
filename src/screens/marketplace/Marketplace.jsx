@@ -39,23 +39,23 @@ export function ListingCard({ listing, seller, onOpen }) {
   const sold = listing.status === "Sold";
   return (
     <button onClick={onOpen} className="group flex flex-col overflow-hidden rounded-md border border-brd bg-surface text-left shadow-sm transition-all hover:border-brd-2 hover:shadow-md">
-      <div className="relative h-40 w-full overflow-hidden">
+      <div className="relative h-32 sm:h-36 md:h-40 w-full overflow-hidden">
         <MktPhoto listing={listing} className={`h-full w-full transition-transform group-hover:scale-105 ${sold ? "opacity-60" : ""}`} />
-        <div className="absolute left-3 top-3"><Badge tone="violet" icon={MKT_CATEGORY_ICON[listing.category]}>{listing.category}</Badge></div>
-        {sold && <div className="absolute right-3 top-3"><Badge tone="slate">Sold</Badge></div>}
+        <div className="absolute left-2 top-2 sm:left-3 sm:top-3"><Badge tone="violet" icon={MKT_CATEGORY_ICON[listing.category]}>{listing.category}</Badge></div>
+        {sold && <div className="absolute right-2 top-2 sm:right-3 sm:top-3"><Badge tone="slate">Sold</Badge></div>}
       </div>
-      <div className="flex flex-1 flex-col p-4">
+      <div className="flex flex-1 flex-col p-3 sm:p-4">
         <div className="flex items-start justify-between gap-2">
-          <h3 className="line-clamp-1 text-base font-semibold text-ink">{listing.title}</h3>
+          <h3 className="line-clamp-1 text-sm sm:text-base font-semibold text-ink">{listing.title}</h3>
         </div>
-        <div className="mt-1 flex items-center gap-2">
-          <span className="text-xl font-bold text-ink">{taka(listing.price)}</span>
+        <div className="mt-1 flex items-center gap-1.5 sm:gap-2">
+          <span className="text-base sm:text-xl font-bold text-ink">{taka(listing.price)}</span>
           {listing.negotiable && <Badge tone="violet">Negotiable</Badge>}
         </div>
-        <div className="mt-2 flex items-center gap-2">
+        <div className="mt-1.5 sm:mt-2 flex items-center gap-2">
           <Badge tone={CONDITION_TONE[listing.condition]}>{listing.condition}</Badge>
         </div>
-        <div className="mt-3 flex items-center gap-2 border-t border-brd pt-3 text-xs text-ink-3">
+        <div className="mt-2.5 sm:mt-3 flex items-center gap-2 border-t border-brd pt-2.5 sm:pt-3 text-xs text-ink-3">
           <Avatar name={seller?.name || "?"} size={20} />
           <span className="truncate">{seller?.name || "Unknown"}</span>
         </div>
@@ -155,7 +155,7 @@ export function Marketplace() {
       ) : filtered.length === 0 ? (
         <EmptyState icon="SearchX" title="No matching listings" message="Try a different search or filter." action={<Button variant="secondary" onClick={() => { setQuery(""); setCategory("All"); setStatus("All"); setMinPrice(""); setMaxPrice(""); setSortBy("newest"); }}>Clear filters</Button>} />
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid grid-cols-2 gap-2.5 sm:gap-3.5 md:grid-cols-3 lg:grid-cols-4">
           {filtered.map((l) => <ListingCard key={l.id} listing={l} seller={userById(l.sellerId)} onOpen={() => navigate(`/marketplace/${l.id}`)} />)}
         </div>
       )}
@@ -454,7 +454,7 @@ export function MyListings() {
       ) : mine.length === 0 ? (
         <EmptyState icon="Tag" title="No listings yet" message="Post an item to start selling." action={<Button icon="Plus" onClick={() => navigate("/marketplace/new")}>Post an Item</Button>} />
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid grid-cols-2 gap-2.5 sm:gap-3.5 md:grid-cols-3 lg:grid-cols-4">
           {mine.map((l) => <ListingCard key={l.id} listing={l} seller={userById(l.sellerId)} onOpen={() => navigate(`/marketplace/${l.id}`)} />)}
         </div>
       )}
