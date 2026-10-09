@@ -1,17 +1,23 @@
-import React, { useState, useMemo } from "react";
-import { Search, SearchX, PackageSearch, Plus, X, RotateCcw, ChevronDown } from "lucide-react";
+import React, { useState, useMemo, useCallback } from "react";
+import { Search, SearchX, PackageSearch, Plus, X, RotateCcw, ChevronDown, SlidersHorizontal, Check } from "lucide-react";
 import { useApp } from "../../data/store.jsx";
 import { navigate } from "../../lib/router.jsx";
-import { Button, EmptyState, Loading } from "../../components/ui.jsx";
+import { Button, EmptyState, Loading, Modal } from "../../components/ui.jsx";
 import { AppShell, PageHeader } from "../../components/AppShell.jsx";
 import { ItemCard } from "../../components/ItemBits.jsx";
 import { ITEM_CATEGORIES } from "../../lib/helpers.js";
 
-const TABS = [
+const TYPE_OPTIONS = [
   { id: "all", label: "All Items" },
   { id: "lost", label: "Lost" },
   { id: "found", label: "Found" },
   { id: "my-posts", label: "My Posts" },
+];
+
+const STATUS_OPTIONS = [
+  { id: "Active", label: "Active only" },
+  { id: "Resolved", label: "Resolved only" },
+  { id: "All", label: "All Status" },
 ];
 
 export default function LostFoundBrowse() {
@@ -20,6 +26,12 @@ export default function LostFoundBrowse() {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("All");
   const [status, setStatus] = useState("Active");
+
+  // Modal open & draft filter states
+  const [filterModalOpen, setFilterModalOpen] = useState(false);
+  const [draftTab, setDraftTab] = useState("all");
+  const [draftCategory, setDraftCategory] = useState("All");
+  const [draftStatus, setDraftStatus] = useState("Active");
 
   // Tab counts
   const counts = useMemo(() => {
@@ -31,10 +43,44 @@ export default function LostFoundBrowse() {
     };
   }, [items, currentUser?.id]);
 
-  const isFiltered = query.trim() !== "" || category !== "All" || status !== "Active";
+  // Count active non-default filters
+  const appliedFilterCount = useMemo(() => {
+    let count = 0;
+    if (activeTab !== "all") count++;
+    if (category !== "All") count++;
+    if (status !== "Active") count++;
+    return count;
+  }, [activeTab, category, status]);
+
+  const isFiltered = query.trim() !== "" || appliedFilterCount > 0;
+
+  const handleOpenFilters = () => {
+    setDraftTab(activeTab);
+    setDraftCategory(category);
+    setDraftStatus(status);
+    setFilterModalOpen(true);
+  };
+
+  const handleCloseFilters = useCallback(() => {
+    setFilterModalOpen(false);
+  }, []);
+
+  const handleApplyFilters = () => {
+    setActiveTab(draftTab);
+    setCategory(draftCategory);
+    setStatus(draftStatus);
+    setFilterModalOpen(false);
+  };
+
+  const handleResetDrafts = () => {
+    setDraftTab("all");
+    setDraftCategory("All");
+    setDraftStatus("Active");
+  };
 
   const clearFilters = () => {
     setQuery("");
+    setActiveTab("all");
     setCategory("All");
     setStatus("Active");
   };
@@ -77,116 +123,77 @@ export default function LostFoundBrowse() {
         action={<Button icon={Plus} onClick={() => navigate("/lost-found/new")}>Post an Item</Button>}
       />
 
-      {/* 1. Main Navigation Tabs (Compact inline segmented control) */}
-      <div className="mb-2.5 flex items-center overflow-x-auto pb-0.5">
-        <div className="inline-flex items-center rounded-lg border border-brd bg-surface-2 p-0.5 text-xs">
-          {TABS.map((t) => {
-            const active = activeTab === t.id;
-            return (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => setActiveTab(t.id)}
-                className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 py-1 text-xs font-semibold transition-all ${
-                  active
-                    ? "bg-brand text-white shadow-xs"
-                    : "text-ink-2 hover:text-ink hover:bg-surface/50"
-                }`}
-              >
-                <span>{t.label}</span>
-                {counts[t.id] != null && (
-                  <span
-                    className={`rounded px-1 text-[10px] font-bold ${
-                      active ? "bg-white/20 text-white" : "bg-surface-3 text-ink-3"
-                    }`}
-                  >
-                    {counts[t.id]}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* 2. Compact, Single-Row Toolbar (Search + Category + Status + Reset + Count) */}
-      <div className="mb-3.5 flex flex-wrap items-center gap-2">
-        {/* Search Field (Compact h-8) */}
-        <div className="relative flex-1 min-w-[170px] max-w-xs sm:max-w-sm">
-          <Search size={13} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-3" />
+      {/* Screen Toolbar: Outside Search + Filter Button */}
+      <div className="mb-3 flex items-center gap-2">
+        {/* Search input outside */}
+        <div className="relative flex-1">
+          <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-3" />
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             aria-label="Search items"
             placeholder="Search items, locations..."
-            className="h-8 w-full rounded-md border border-brd bg-surface pl-7 pr-6 text-xs text-ink placeholder:text-ink-3 shadow-2xs transition-colors focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+            className="h-10 w-full rounded-lg border border-brd bg-surface pl-9 pr-8 text-xs sm:text-sm text-ink placeholder:text-ink-3 shadow-2xs transition-colors focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
           />
           {query && (
             <button
               type="button"
               onClick={() => setQuery("")}
               aria-label="Clear search"
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-ink-3 hover:text-ink"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-ink-3 hover:text-ink"
             >
-              <X size={12} />
+              <X size={14} />
             </button>
           )}
         </div>
 
-        {/* Category Dropdown (Compact h-8) */}
-        <div className="relative">
-          <select
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            className="h-8 appearance-none rounded-md border border-brd bg-surface pl-2.5 pr-6 text-xs text-ink cursor-pointer shadow-2xs focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
-          >
-            <option value="All">All Categories</option>
-            {ITEM_CATEGORIES.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
-          <ChevronDown size={12} className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-ink-3" />
-        </div>
+        {/* Filter Button */}
+        <button
+          type="button"
+          onClick={handleOpenFilters}
+          className={`inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg border px-3 text-xs sm:text-sm font-semibold transition-colors shadow-2xs ${
+            appliedFilterCount > 0
+              ? "border-brand bg-brand/10 text-brand dark:bg-brand/20"
+              : "border-brd bg-surface text-ink-2 hover:bg-surface-2 hover:text-ink"
+          }`}
+        >
+          <SlidersHorizontal size={15} />
+          <span>Filters</span>
+          {appliedFilterCount > 0 && (
+            <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-brand px-1 text-[10px] font-bold text-white">
+              {appliedFilterCount}
+            </span>
+          )}
+        </button>
+      </div>
 
-        {/* Status Dropdown (Compact h-8) */}
-        <div className="relative">
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-            className="h-8 appearance-none rounded-md border border-brd bg-surface pl-2.5 pr-6 text-xs text-ink cursor-pointer shadow-2xs focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
-          >
-            <option value="Active">Active only</option>
-            <option value="Resolved">Resolved only</option>
-            <option value="All">All Status</option>
-          </select>
-          <ChevronDown size={12} className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-ink-3" />
-        </div>
+      {/* Item count & active filter status */}
+      <div className="mb-3 flex items-center justify-between text-xs text-ink-3">
+        <span>
+          Showing <strong className="font-semibold text-ink">{filtered.length}</strong> {filtered.length === 1 ? "item" : "items"}
+          {appliedFilterCount > 0 && (
+            <span className="ml-1 text-ink-3">
+              ({activeTab !== "all" ? `${TYPE_OPTIONS.find((t) => t.id === activeTab)?.label}` : ""}
+              {category !== "All" ? ` · ${category}` : ""}
+              {status !== "Active" ? ` · ${status}` : ""})
+            </span>
+          )}
+        </span>
 
-        {/* Reset button */}
         {isFiltered && (
           <button
             type="button"
             onClick={clearFilters}
-            title="Reset filters"
-            className="inline-flex h-8 items-center gap-1 rounded-md border border-brd bg-surface px-2 text-xs font-semibold text-ink-3 hover:bg-surface-2 hover:text-ink transition-colors shadow-2xs"
+            className="inline-flex items-center gap-1 font-semibold text-brand hover:underline"
           >
-            <RotateCcw size={12} />
-            <span className="hidden sm:inline">Reset</span>
+            <RotateCcw size={11} />
+            <span>Reset</span>
           </button>
         )}
-
-        {/* Live item count aligned right */}
-        <div className="ml-auto text-xs text-ink-3 whitespace-nowrap">
-          <span>
-            <strong className="font-semibold text-ink">{filtered.length}</strong> {filtered.length === 1 ? "item" : "items"}
-          </span>
-        </div>
       </div>
 
-      {/* 3. Grid & States */}
+      {/* Grid & States */}
       {dataLoading ? (
         <Loading />
       ) : items.length === 0 ? (
@@ -219,6 +226,116 @@ export default function LostFoundBrowse() {
           ))}
         </div>
       )}
+
+      {/* Filter Modal */}
+      <Modal
+        open={filterModalOpen}
+        onClose={handleCloseFilters}
+        title="Filter Items"
+        icon={SlidersHorizontal}
+        tone="blue"
+        size="md"
+        footer={
+          <div className="flex w-full items-center justify-between">
+            <Button variant="ghost" size="sm" onClick={handleResetDrafts}>
+              Reset
+            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="secondary" size="sm" onClick={handleCloseFilters}>
+                Cancel
+              </Button>
+              <Button variant="primary" size="sm" onClick={handleApplyFilters}>
+                Apply Filters
+              </Button>
+            </div>
+          </div>
+        }
+      >
+        <div className="space-y-4">
+          {/* 1. Item Type */}
+          <div>
+            <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-ink-2">
+              Item Type
+            </label>
+            <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+              {TYPE_OPTIONS.map((t) => {
+                const isSelected = draftTab === t.id;
+                return (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => setDraftTab(t.id)}
+                    className={`flex items-center justify-between rounded-lg border px-2.5 py-2 text-xs font-semibold transition-all ${
+                      isSelected
+                        ? "border-brand bg-brand text-white shadow-xs"
+                        : "border-brd bg-surface-2 text-ink-2 hover:bg-surface-3"
+                    }`}
+                  >
+                    <span>{t.label}</span>
+                    {counts[t.id] != null && (
+                      <span
+                        className={`rounded px-1 text-[10px] font-bold ${
+                          isSelected ? "bg-white/20 text-white" : "bg-surface-3 text-ink-3"
+                        }`}
+                      >
+                        {counts[t.id]}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 2. Category */}
+          <div>
+            <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-ink-2">
+              Category
+            </label>
+            <div className="relative">
+              <select
+                value={draftCategory}
+                onChange={(e) => setDraftCategory(e.target.value)}
+                className="h-10 w-full appearance-none rounded-lg border border-brd bg-surface px-3 pr-8 text-xs text-ink cursor-pointer shadow-2xs focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+              >
+                <option value="All">All Categories</option>
+                {ITEM_CATEGORIES.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown size={14} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-ink-3" />
+            </div>
+          </div>
+
+          {/* 3. Status */}
+          <div>
+            <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-ink-2">
+              Status
+            </label>
+            <div className="grid grid-cols-3 gap-1.5">
+              {STATUS_OPTIONS.map((s) => {
+                const isSelected = draftStatus === s.id;
+                return (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => setDraftStatus(s.id)}
+                    className={`rounded-lg border px-2.5 py-2 text-xs font-semibold transition-all text-center ${
+                      isSelected
+                        ? "border-brand bg-brand text-white shadow-xs"
+                        : "border-brd bg-surface-2 text-ink-2 hover:bg-surface-3"
+                    }`}
+                  >
+                    {s.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </Modal>
     </AppShell>
   );
 }
