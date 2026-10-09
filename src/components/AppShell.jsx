@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { LogOut, Menu, X, Bell, ChevronDown } from "lucide-react";
+import { LogOut, Menu, X, Bell, ChevronDown, Sparkles, MoreVertical } from "lucide-react";
 import { useApp } from "../data/store.jsx";
 import { navigate, Link, useHashRoute } from "../lib/router.jsx";
 import { Avatar, Badge } from "./ui.jsx";
@@ -33,6 +33,7 @@ const ANNEX = { key: "annex", label: "Annex Portal", icon: "ExternalLink", path:
 // Split out of Campus Life, which had grown to 11 items and stopped being a
 // meaningful grouping. Study Hub + Cover Page are students-only (see above).
 const ACADEMICS = [
+  { key: "tools", label: "Academic Tools", icon: "Wrench", path: "/tools", match: ["/tools", "/cover-page", "/pdf-maker", "/cgpa"] },
   { key: "routines", label: "Class Routines", icon: "ClipboardList", path: "/routines" },
   { key: "calendar", label: "Academic Calendar", icon: "CalendarRange", path: "/calendar" },
   { key: "faculty", label: "Faculty", icon: "GraduationCap", path: "/faculty" },
@@ -60,37 +61,47 @@ const COMMUNITY = [
 
 const NAV_BY_ROLE = {
   Student: [
-    { section: null, items: [
-      { key: "dashboard", label: "Dashboard", icon: "LayoutDashboard", path: "/dashboard" },
-      // One row for the whole report loop: My Reports / Campus Board tabs plus
-      // the "Report an Issue" button all live on this page, so /campus-issues
-      // and /reports/new have no sidebar row of their own. `match` keeps the
-      // row highlighted on the sibling route (see activeKeyForPath).
-      { key: "reports", label: "Reports", icon: "FileText", path: "/reports", match: ["/campus-issues"] },
-      { key: "messages", label: "Messages", icon: "MessagesSquare", path: "/messages" },
-      { key: "chatbot", label: "AI Assistant", icon: "Sparkles", path: "/chatbot", match: ["/chatbot/history"] },
-    ]},
+    {
+      section: null, items: [
+        { key: "dashboard", label: "Dashboard", icon: "LayoutDashboard", path: "/dashboard" },
+        // One row for the whole report loop: My Reports / Campus Board tabs plus
+        // the "Report an Issue" button all live on this page, so /campus-issues
+        // and /reports/new have no sidebar row of their own. `match` keeps the
+        // row highlighted on the sibling route (see activeKeyForPath).
+        { key: "reports", label: "Reports", icon: "FileText", path: "/reports", match: ["/campus-issues"] },
+        { key: "messages", label: "Messages", icon: "MessagesSquare", path: "/messages" },
+        { key: "chatbot", label: "AI Assistant", icon: "Sparkles", path: "/chatbot", match: ["/chatbot/history"] },
+      ]
+    },
     { section: "Academics", items: [STUDY_HUB, ...ACADEMICS, CGPA, COVER_PAGE, PDF_MAKER] },
     { section: "Campus Life", items: CAMPUS_LIFE },
-    { section: "Services", items: [
-      MEDICAL,
-      BUS,
-      { key: "lost-found", label: "Lost & Found", icon: "PackageSearch", path: "/lost-found" },
-    ]},
-    { section: "Community", items: [
-      ...COMMUNITY,
-      { key: "directory", label: "Students", icon: "Users", path: "/students" },
-    ]},
-    { section: null, items: [
-      { key: "profile", label: "My Profile", icon: "CircleUser", path: "/profile" },
-      ANNEX,
-    ]},
+    {
+      section: "Services", items: [
+        MEDICAL,
+        BUS,
+        { key: "lost-found", label: "Lost & Found", icon: "PackageSearch", path: "/lost-found" },
+      ]
+    },
+    {
+      section: "Community", items: [
+        ...COMMUNITY,
+        { key: "directory", label: "Students", icon: "Users", path: "/students" },
+      ]
+    },
+    {
+      section: null, items: [
+        { key: "profile", label: "My Profile", icon: "CircleUser", path: "/profile" },
+        ANNEX,
+      ]
+    },
   ],
   Staff: [
-    { section: null, items: [
-      { key: "dashboard", label: "Dashboard", icon: "LayoutDashboard", path: "/staff" },
-      { key: "assigned", label: "Assigned to Me", icon: "ClipboardCheck", path: "/staff/assigned" },
-    ]},
+    {
+      section: null, items: [
+        { key: "dashboard", label: "Dashboard", icon: "LayoutDashboard", path: "/staff" },
+        { key: "assigned", label: "Assigned to Me", icon: "ClipboardCheck", path: "/staff/assigned" },
+      ]
+    },
     // Staff are maintenance workers, not students — the student-academic items
     // (Faculty, Clubs, Events, Academic Calendar, Class Routines, Jobs) are
     // dropped, so Staff get no Academics group at all. Only the
@@ -99,33 +110,41 @@ const NAV_BY_ROLE = {
     { section: "Services", items: [MEDICAL, BUS] },
     // Community features are "any adult on campus" — kept in full.
     { section: "Community", items: COMMUNITY },
-    { section: null, items: [
-      { key: "profile", label: "My Profile", icon: "CircleUser", path: "/profile" },
-      ANNEX,
-    ]},
+    {
+      section: null, items: [
+        { key: "profile", label: "My Profile", icon: "CircleUser", path: "/profile" },
+        ANNEX,
+      ]
+    },
   ],
   Admin: [
-    { section: null, items: [
-      { key: "dashboard", label: "Dashboard", icon: "LayoutDashboard", path: "/admin" },
-      { key: "all-reports", label: "All Reports", icon: "FileText", path: "/admin/reports" },
-    ]},
+    {
+      section: null, items: [
+        { key: "dashboard", label: "Dashboard", icon: "LayoutDashboard", path: "/admin" },
+        { key: "all-reports", label: "All Reports", icon: "FileText", path: "/admin/reports" },
+      ]
+    },
     // The four admin-only editors were a flat block competing with Dashboard and
     // All Reports for attention. Grouped, so Admin's top level is the two things
     // they open daily and every role now fits the same shape of nav.
-    { section: "Manage", items: [
-      { key: "users", label: "Users", icon: "Users", path: "/admin/users" },
-      { key: "faculty-admin", label: "Faculty Profiles", icon: "GraduationCap", path: "/admin/faculty" },
-      { key: "studyhub-admin", label: "Study Hub", icon: "BookMarked", path: "/admin/study-hub" },
-      { key: "clubs-admin", label: "Clubs", icon: "UsersRound", path: "/admin/clubs" },
-    ]},
+    {
+      section: "Manage", items: [
+        { key: "users", label: "Users", icon: "Users", path: "/admin/users" },
+        { key: "faculty-admin", label: "Faculty Profiles", icon: "GraduationCap", path: "/admin/faculty" },
+        { key: "studyhub-admin", label: "Study Hub", icon: "BookMarked", path: "/admin/study-hub" },
+        { key: "clubs-admin", label: "Clubs", icon: "UsersRound", path: "/admin/clubs" },
+      ]
+    },
     { section: "Academics", items: ACADEMICS },
     { section: "Campus Life", items: CAMPUS_LIFE.filter((i) => i.key !== "clubs") },
     { section: "Services", items: [MEDICAL, BUS] },
     { section: "Community", items: COMMUNITY },
-    { section: null, items: [
-      { key: "profile", label: "My Profile", icon: "CircleUser", path: "/profile" },
-      ANNEX,
-    ]},
+    {
+      section: null, items: [
+        { key: "profile", label: "My Profile", icon: "CircleUser", path: "/profile" },
+        ANNEX,
+      ]
+    },
   ],
 };
 
@@ -232,48 +251,60 @@ function SidebarContent({ nav, activeKey, onNavigate, onLogout, badges = {}, ope
           const open = !collapsible || openSection === group.section;
           const hidden = collapsible && !open ? groupBadge(group.items) : 0;
           return (
-          <div key={group.section || `g${gi}`} className="space-y-1">
-            {collapsible && (
-              <button
-                onClick={() => onToggleSection(group.section)}
-                aria-expanded={open}
-                className="flex w-full items-center gap-1.5 rounded-md px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.06em] text-ink-3 hover:bg-surface-2 hover:text-ink-2"
-              >
-                <ChevronDown size={13} className={`transition-transform ${open ? "" : "-rotate-90"}`} />
-                {group.section}
-                {hidden > 0 && (
-                  <span className="ml-auto inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-danger px-1 text-[10px] leading-none text-white">
-                    {hidden > 9 ? "9+" : hidden}
-                  </span>
-                )}
-              </button>
-            )}
-            {open && group.items.map((item) => {
-              const active = item.key === activeKey;
-              return (
+            <div key={group.section || `g${gi}`} className="space-y-1">
+              {collapsible && (
                 <button
-                  key={item.key}
-                  data-active={active ? "true" : undefined}
-                  onClick={() => onNavigate(item.path)}
-                  className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-base font-semibold transition-colors ${
-                    active ? "bg-brand-50 text-brand-700" : "text-ink-2 hover:bg-surface-2 hover:text-ink"
-                  }`}
+                  onClick={() => onToggleSection(group.section)}
+                  aria-expanded={open}
+                  className="flex w-full items-center gap-1.5 rounded-md px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.06em] text-ink-3 hover:bg-surface-2 hover:text-ink-2"
                 >
-                  <Icon name={item.icon} size={18} className={active ? "text-brand" : "text-ink-3"} />
-                  {item.label}
-                  {badges[item.key] > 0 && (
-                    <span className="ml-auto inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-danger px-1.5 text-[11px] font-bold leading-none text-white">
-                      {badges[item.key] > 9 ? "9+" : badges[item.key]}
+                  <ChevronDown size={13} className={`transition-transform ${open ? "" : "-rotate-90"}`} />
+                  {group.section}
+                  {hidden > 0 && (
+                    <span className="ml-auto inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-danger px-1 text-[10px] leading-none text-white">
+                      {hidden > 9 ? "9+" : hidden}
                     </span>
                   )}
                 </button>
-              );
-            })}
-          </div>
+              )}
+              {open && group.items.map((item) => {
+                const active = item.key === activeKey;
+                return (
+                  <button
+                    key={item.key}
+                    data-active={active ? "true" : undefined}
+                    onClick={() => onNavigate(item.path)}
+                    className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-base font-semibold transition-colors ${active ? "bg-brand-50 text-brand-700" : "text-ink-2 hover:bg-surface-2 hover:text-ink"
+                      }`}
+                  >
+                    <Icon name={item.icon} size={18} className={active ? "text-brand" : "text-ink-3"} />
+                    {item.label}
+                    {badges[item.key] > 0 && (
+                      <span className="ml-auto inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-danger px-1.5 text-[11px] font-bold leading-none text-white">
+                        {badges[item.key] > 9 ? "9+" : badges[item.key]}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           );
         })}
       </nav>
-      <div className="shrink-0 border-t border-brd p-3">
+      <div className="shrink-0 space-y-2 border-t border-brd p-3">
+        <div className="flex items-center justify-between px-1 py-1">
+          <div className="flex items-center gap-1.5">
+            <LanguageToggle />
+            <ThemeToggle />
+          </div>
+          <button
+            onClick={() => onNavigate("/notifications")}
+            className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold text-ink-2 hover:bg-surface-2"
+          >
+            <Bell size={16} className="text-ink-3" />
+            Notifs
+          </button>
+        </div>
         <button
           onClick={onLogout}
           className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-base font-semibold text-ink-2 hover:bg-surface-2 hover:text-ink"
@@ -305,7 +336,7 @@ function activeKeyForPath(path, role) {
 
 // Lets the per-screen top bar open the mobile drawer, which now lives in the
 // persistent AppLayout rather than in each screen's AppShell.
-const LayoutContext = React.createContext({ openDrawer: () => {} });
+const LayoutContext = React.createContext({ openDrawer: () => { } });
 export function useLayout() { return React.useContext(LayoutContext); }
 
 // One grouped nav entry in the capsule: a button that drops its items in a menu
@@ -333,9 +364,8 @@ function NavMenu({ group, activeKey, onNavigate, badges }) {
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-haspopup="true"
-        className={`inline-flex h-9 items-center gap-1 whitespace-nowrap rounded-full px-3 text-base font-semibold transition-colors ${
-          hasActive ? "bg-brand-50 text-brand-700" : "text-ink-2 hover:bg-surface-2 hover:text-ink"
-        }`}
+        className={`inline-flex h-9 items-center gap-1 whitespace-nowrap rounded-full px-3 text-base font-semibold transition-colors ${hasActive ? "bg-brand text-white shadow-xs" : "text-white/80 hover:bg-white/10 hover:text-white"
+          }`}
       >
         {group.section}
         {count > 0 && (
@@ -343,7 +373,7 @@ function NavMenu({ group, activeKey, onNavigate, badges }) {
             {count > 9 ? "9+" : count}
           </span>
         )}
-        <ChevronDown size={14} className={`transition-transform ${open ? "rotate-180" : ""}`} />
+        <ChevronDown size={14} className={`transition-transform text-white/70 ${open ? "rotate-180" : ""}`} />
       </button>
 
       {open && (
@@ -355,9 +385,8 @@ function NavMenu({ group, activeKey, onNavigate, badges }) {
                 key={item.key}
                 role="menuitem"
                 onClick={() => { setOpen(false); onNavigate(item.path); }}
-                className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-base font-semibold transition-colors ${
-                  active ? "bg-brand-50 text-brand-700" : "text-ink-2 hover:bg-surface-2 hover:text-ink"
-                }`}
+                className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-base font-semibold transition-colors ${active ? "bg-brand-50 text-brand-700" : "text-ink-2 hover:bg-surface-2 hover:text-ink"
+                  }`}
               >
                 <Icon name={item.icon} size={17} className={active ? "text-brand" : "text-ink-3"} />
                 {item.label}
@@ -375,6 +404,170 @@ function NavMenu({ group, activeKey, onNavigate, badges }) {
   );
 }
 
+// BottomNavBackdrop — 1-piece full-width continuous SVG canvas for the mobile
+// bottom navigation bar. Spans the entire screen width with zero subpixel seams,
+// zero color mismatch, and a mathematically smooth C1-continuous organic valley
+// cradle under the elevated center AI orb.
+function BottomNavBackdrop({ hasFab = true }) {
+  const [width, setWidth] = React.useState(() => (typeof window !== "undefined" ? window.innerWidth : 390));
+
+  React.useEffect(() => {
+    const handleResize = () => setWidth(window.innerWidth);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const w = width;
+  const h = 100;
+  const r = 20; // rounded outer shoulder radius
+  const cx = w / 2;
+  const nw = 46; // notch half-width (92px total)
+  const nd = 26; // notch depth
+
+  // 1-piece path: left rounded shoulder -> flat top -> cradle valley -> flat top -> right rounded shoulder -> bottom
+  const bgPath = hasFab
+    ? `M 0,${r} A ${r} ${r} 0 0 1 ${r},0 L ${cx - nw},0 C ${cx - nw + 18},0 ${cx - 16},${nd} ${cx},${nd} C ${cx + 16},${nd} ${cx + nw - 18},0 ${cx + nw},0 L ${w - r},0 A ${r} ${r} 0 0 1 ${w},${r} L ${w},${h} L 0,${h} Z`
+    : `M 0,${r} A ${r} ${r} 0 0 1 ${r},0 L ${w - r},0 A ${r} ${r} 0 0 1 ${w},${r} L ${w},${h} L 0,${h} Z`;
+
+  // Continuous top rim highlight stroke
+  const rimPath = hasFab
+    ? `M 0,${r} A ${r} ${r} 0 0 1 ${r},0 L ${cx - nw},0 C ${cx - nw + 18},0 ${cx - 16},${nd} ${cx},${nd} C ${cx + 16},${nd} ${cx + nw - 18},0 ${cx + nw},0 L ${w - r},0 A ${r} ${r} 0 0 1 ${w},${r}`
+    : `M 0,${r} A ${r} ${r} 0 0 1 ${r},0 L ${w - r},0 A ${r} ${r} 0 0 1 ${w},${r}`;
+
+  return (
+    <div
+      className="absolute top-0 inset-x-0 pointer-events-none overflow-hidden"
+      style={{ height: 100 }}
+    >
+      <svg
+        width="100%"
+        height={100}
+        viewBox={`0 0 ${w} 100`}
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className="block w-full h-full"
+      >
+        <defs>
+          <linearGradient id="navBgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#0f2862" />
+            <stop offset="100%" stopColor="#0a1b42" />
+          </linearGradient>
+        </defs>
+
+        {/* 1. Entire navbar background — 1 single continuous path, zero mismatch */}
+        <path d={bgPath} fill="url(#navBgGrad)" />
+
+        {/* 2. Clean crisp top border line (zero glow) */}
+        <path
+          d={rimPath}
+          stroke="rgba(255, 255, 255, 0.12)"
+          strokeWidth="1"
+          strokeLinecap="round"
+          fill="none"
+        />
+      </svg>
+    </div>
+  );
+}
+
+function HeaderMenuDropdown({ currentUser, unreadNotifCount = 0, onLogout, onNavigate }) {
+  const [open, setOpen] = useState(false);
+  const ref = React.useRef(null);
+
+  React.useEffect(() => {
+    if (!open) return;
+    const onDown = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    const onKey = (e) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        aria-label="More options"
+        aria-expanded={open}
+        className="relative inline-flex h-9 w-9 items-center justify-center rounded-full text-white/85 hover:bg-white/10 hover:text-white transition-colors"
+      >
+        <MoreVertical size={20} />
+        {unreadNotifCount > 0 && (
+          <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-danger ring-2 ring-[#0a1b42]" />
+        )}
+      </button>
+
+      {open && (
+        <div
+          role="menu"
+          className="absolute right-0 top-full z-50 mt-2 w-60 rounded-2xl border border-brd bg-surface p-2 shadow-2xl text-ink animate-in fade-in zoom-in-95 duration-150"
+        >
+          {/* User profile item */}
+          <button
+            role="menuitem"
+            onClick={() => { setOpen(false); onNavigate("/profile"); }}
+            className="flex w-full items-center gap-3 rounded-xl p-2 text-left hover:bg-surface-2 transition-colors"
+          >
+            <Avatar name={currentUser?.name} src={currentUser?.avatar} size={36} />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-bold text-ink">{currentUser?.name}</p>
+              <p className="truncate text-xs text-ink-3 capitalize">{currentUser?.role}</p>
+            </div>
+          </button>
+
+          <div className="my-1.5 border-t border-brd" />
+
+          {/* Notifications */}
+          <button
+            role="menuitem"
+            onClick={() => { setOpen(false); onNavigate("/notifications"); }}
+            className="flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-sm font-semibold text-ink-2 hover:bg-surface-2 hover:text-ink transition-colors"
+          >
+            <span className="flex items-center gap-2.5">
+              <Bell size={16} className="text-ink-3" />
+              Notifications
+            </span>
+            {unreadNotifCount > 0 && (
+              <span className="inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-danger px-1 text-[10px] font-bold text-white">
+                {unreadNotifCount > 9 ? "9+" : unreadNotifCount}
+              </span>
+            )}
+          </button>
+
+          {/* Preferences */}
+          <div className="my-1.5 border-t border-brd" />
+          <div className="flex items-center justify-between px-2.5 py-1.5">
+            <span className="text-xs font-semibold text-ink-3">Preferences</span>
+            <div className="flex items-center gap-1">
+              <LanguageToggle />
+              <ThemeToggle />
+            </div>
+          </div>
+
+          <div className="my-1.5 border-t border-brd" />
+
+          {/* Log out */}
+          <button
+            role="menuitem"
+            onClick={() => { setOpen(false); onLogout(); }}
+            className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-semibold text-danger hover:bg-danger-bg transition-colors"
+          >
+            <LogOut size={16} />
+            <span>Log out</span>
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // AppLayout — persistent frame for all signed-in screens. Rendered ONCE around
 // the routed content (see App.jsx) so the sidebar and its scroll position
 // survive navigation instead of remounting per screen. Active nav is derived
@@ -384,16 +577,20 @@ export function AppLayout({ children }) {
   const path = useHashRoute();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  // Close the mobile drawer on Escape (it's an aria-modal dialog).
+  // Close the mobile drawer on Escape (it's a modal dialog).
   React.useEffect(() => {
     if (!drawerOpen) return;
-    const onKey = (e) => { if (e.key === "Escape") setDrawerOpen(false); };
+    const onKey = (e) => {
+      if (e.key === "Escape") setDrawerOpen(false);
+    };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [drawerOpen]);
 
-  // Close the drawer whenever the route changes.
-  React.useEffect(() => { setDrawerOpen(false); }, [path]);
+  // Close drawer whenever the route changes.
+  React.useEffect(() => {
+    setDrawerOpen(false);
+  }, [path]);
 
   // Derived before the signed-out early return — useNavAccordion is a hook, so
   // it can't sit behind a conditional return.
@@ -407,24 +604,57 @@ export function AppLayout({ children }) {
 
   return (
     <LayoutContext.Provider value={{ openDrawer: () => setDrawerOpen(true) }}>
-      <div className="min-h-screen bg-bg">
-        {/* Floating nav capsule — the app's primary navigation from lg up. Below
-            lg the nav collapses to the hamburger + the drawer underneath, which
-            still uses the accordion SidebarContent. Mounts once in AppLayout so
-            open menus and scroll position survive navigation. */}
-        <div className="sticky top-0 z-30 px-3 pb-2 pt-3 sm:px-6 sm:pt-4">
+      <div className="min-h-screen bg-bg overflow-x-hidden w-full max-w-full">
+        {/* Mobile top header — matching navbar dark blue gradient with 3-dot menu on left, centered CampusOne + tagline, notifications on right */}
+        <header className="sticky top-0 z-30 flex h-11 w-full items-center justify-between border-b border-[#1d3d7d]/80 bg-gradient-to-r from-[#0a1b42] via-[#0f2862] to-[#0a1b42] px-3 text-white shadow-xs backdrop-blur-md xl:hidden">
+          {/* Left: 3-dot button to open the menu drawer */}
+          <button
+            onClick={() => setDrawerOpen(true)}
+            aria-label="Open menu"
+            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white/85 hover:bg-white/10 hover:text-white transition-colors"
+          >
+            <MoreVertical size={18} />
+          </button>
+
+          {/* Center: CampusOne name + tagline */}
+          <Link to="/" className="flex flex-col items-center justify-center text-center">
+            <span className="font-extrabold tracking-tight text-sm leading-none text-white">
+              Campus<span className="text-emerald-400">One</span>
+            </span>
+            <span className="text-[6.5px] font-normal tracking-wide text-blue-200/65 leading-none mt-0.5">
+              Full campus in one app
+            </span>
+          </Link>
+
+          {/* Right: Notifications */}
+          <button
+            onClick={() => navigate("/notifications")}
+            aria-label={unreadNotifCount > 0 ? `Notifications, ${unreadNotifCount} unread` : "Notifications"}
+            className="relative inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white/85 hover:bg-white/10 hover:text-white transition-colors"
+          >
+            <Bell size={18} />
+            {unreadNotifCount > 0 && (
+              <span className="absolute right-0.5 top-0.5 inline-flex h-3.5 min-w-[14px] items-center justify-center rounded-full bg-danger px-1 text-[9px] font-bold leading-none text-white">
+                {unreadNotifCount > 9 ? "9+" : unreadNotifCount}
+              </span>
+            )}
+          </button>
+        </header>
+
+        {/* Floating nav capsule — desktop only (xl and up). On mobile, navigation is at the bottom bar */}
+        <div className="sticky top-0 z-30 hidden px-3 pb-2 pt-3 sm:px-6 sm:pt-4 xl:block">
           {/* Width cap is shared with <main> below so the capsule and the page
               content line up on the same left/right edges at every size. */}
-          <div className="topbar-blur mx-auto flex h-16 w-full max-w-[110rem] items-center gap-1 rounded-full border border-brd px-3 shadow-lg backdrop-blur sm:px-4">
+          <div className="mx-auto flex h-16 w-full max-w-[110rem] items-center gap-1 rounded-full border border-[#1d3d7d]/80 bg-gradient-to-r from-[#0a1b42]/95 via-[#0f2862]/95 to-[#0a1b42]/95 px-3 shadow-lg shadow-black/20 backdrop-blur-md sm:px-4 text-white">
             <button
               onClick={() => setDrawerOpen(true)}
               aria-label="Open menu"
-              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-ink-3 hover:bg-surface-2 xl:hidden"
+              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white/80 hover:bg-white/10 hover:text-white xl:hidden"
             >
               <Menu size={20} />
             </button>
 
-            <Link to="/" className="shrink-0 px-1"><Logo /></Link>
+            <Link to="/" className="shrink-0 px-1"><Logo onDark /></Link>
 
             {/* xl, not lg: Admin's nav needs ~990px including logo and account
                 controls, and lg (1024px) doesn't leave room — the pills are
@@ -451,9 +681,8 @@ export function AppLayout({ children }) {
                         <button
                           key={item.key}
                           onClick={() => go(item.path)}
-                          className={`inline-flex h-9 items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-base font-semibold transition-colors ${
-                            active ? "bg-brand-50 text-brand-700" : "text-ink-2 hover:bg-surface-2 hover:text-ink"
-                          }`}
+                          className={`inline-flex h-9 items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-base font-semibold transition-colors ${active ? "bg-brand text-white shadow-xs" : "text-white/80 hover:bg-white/10 hover:text-white"
+                            }`}
                         >
                           {item.label}
                           {navBadges[item.key] > 0 && (
@@ -469,13 +698,13 @@ export function AppLayout({ children }) {
             </nav>
 
             <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-1.5">
-              <LanguageToggle />
-              <ThemeToggle />
+              <LanguageToggle className="!text-white/80 hover:!bg-white/10 hover:!text-white !rounded-full" />
+              <ThemeToggle className="!text-white/80 hover:!bg-white/10 hover:!text-white !rounded-full" />
               <button
                 onClick={() => navigate("/notifications")}
                 title="Notifications"
                 aria-label={unreadNotifCount > 0 ? `Notifications, ${unreadNotifCount} unread` : "Notifications"}
-                className="relative inline-flex h-9 w-9 items-center justify-center rounded-full text-ink-3 hover:bg-surface-2 hover:text-ink-2"
+                className="relative inline-flex h-9 w-9 items-center justify-center rounded-full text-white/80 hover:bg-white/10 hover:text-white transition-colors"
               >
                 <Bell size={19} />
                 {unreadNotifCount > 0 && (
@@ -487,16 +716,15 @@ export function AppLayout({ children }) {
               {/* 2xl, not xl: at exactly xl the nav has only just gained room,
                   so the badge waits until there is slack to spend. */}
               <Badge tone={ROLE_TONE[currentUser.role]} className="hidden 2xl:inline-flex">{currentUser.role}</Badge>
-              <button onClick={() => navigate("/profile")} title="My profile" className="rounded-full">
+              <button onClick={() => navigate("/profile")} title="My profile" className="rounded-full ring-2 ring-white/20 hover:ring-white/40 transition-all">
                 <Avatar name={currentUser.name} src={currentUser.avatar} size={32} />
               </button>
-              <button
-                onClick={logout}
-                title="Log out"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full text-ink-3 hover:bg-surface-2 hover:text-ink-2"
-              >
-                <LogOut size={18} />
-              </button>
+              <HeaderMenuDropdown
+                currentUser={currentUser}
+                unreadNotifCount={unreadNotifCount}
+                onLogout={logout}
+                onNavigate={go}
+              />
             </div>
           </div>
         </div>
@@ -519,7 +747,136 @@ export function AppLayout({ children }) {
         )}
 
         {/* Main column — full width now that the nav is overhead, not beside. */}
-        <div>{children}</div>
+        <div className="w-full max-w-full overflow-x-hidden pb-24 xl:pb-0">{children}</div>
+
+        {/* Mobile bottom navigation bar — Borderless luxury overlay */}
+        {(() => {
+          const studentTabs = [
+            { key: "dashboard", label: "Home", icon: "Home", path: "/dashboard" },
+            { key: "study-hub", label: "Study Hub", icon: "BookMarked", path: "/study-hub" },
+            { key: "chatbot", label: "AI", icon: "Sparkles", path: "/chatbot", isCenterFab: true },
+            { key: "tools", label: "Tools", icon: "Wrench", path: "/tools" },
+            { key: "profile", label: "Profile", icon: "CircleUser", path: "/profile" },
+          ];
+          const staffTabs = [
+            { key: "dashboard", label: "Home", icon: "Home", path: "/staff" },
+            { key: "assigned", label: "Assigned", icon: "ClipboardCheck", path: "/staff/assigned" },
+            { key: "bus", label: "Bus", icon: "Bus", path: "/bus" },
+            { key: "reports", label: "Reports", icon: "FileText", path: "/reports" },
+            { key: "profile", label: "Profile", icon: "CircleUser", path: "/profile" },
+          ];
+          const adminTabs = [
+            { key: "dashboard", label: "Home", icon: "Home", path: "/admin" },
+            { key: "all-reports", label: "Reports", icon: "FileText", path: "/admin/reports" },
+            { key: "users", label: "Users", icon: "Users", path: "/admin/users" },
+            { key: "tools", label: "Tools", icon: "Wrench", path: "/tools" },
+            { key: "profile", label: "Profile", icon: "CircleUser", path: "/profile" },
+          ];
+          const tabs = currentUser.role === "Student" ? studentTabs
+            : currentUser.role === "Staff" ? staffTabs
+              : adminTabs;
+          const hasFab = tabs.some((t) => t.isCenterFab);
+
+          return (
+            <nav
+              aria-label="Mobile Bottom Navigation"
+              className="fixed bottom-0 inset-x-0 z-40 select-none xl:hidden"
+            >
+              {/* 1-piece seamless SVG backdrop with smooth organic cradle */}
+              <BottomNavBackdrop hasFab={hasFab} />
+
+              {/* Navigation items bar */}
+              <div
+                className="relative mx-auto flex max-w-md items-center justify-between px-2"
+                style={{
+                  height: 60,
+                  paddingBottom: "max(0.2rem, env(safe-area-inset-bottom))",
+                }}
+              >
+                {tabs.map((tab) => {
+                  const isToolsActive = tab.path === "/tools" && (
+                    path === "/tools" || path.startsWith("/tools/") ||
+                    path === "/cover-page" || path.startsWith("/cover-page/") ||
+                    path === "/pdf-maker" || path.startsWith("/pdf-maker/") ||
+                    path === "/cgpa" || path.startsWith("/cgpa/") ||
+                    path === "/routines" || path.startsWith("/routines/") ||
+                    path === "/calendar" || path.startsWith("/calendar/")
+                  );
+                  const isCur = isToolsActive ||
+                    (tab.isDrawer ? drawerOpen :
+                      tab.key === activeKey ||
+                      (tab.path && (path === tab.path || path.startsWith(tab.path + "/"))));
+
+                  if (tab.isCenterFab) {
+                    return (
+                      <div
+                        key={tab.key}
+                        className="relative flex items-center justify-center shrink-0"
+                        style={{ width: 68, height: 60 }}
+                      >
+                        {/* Cosmic Glass Luxury AI Orb — clean with zero background behind */}
+                        <button
+                          type="button"
+                          onClick={() => { go(tab.path); }}
+                          aria-label="CampusOne AI Assistant"
+                          className="group absolute -top-4 left-1/2 -translate-x-1/2 flex items-center justify-center p-[2px] rounded-full bg-gradient-to-b from-indigo-400/40 via-indigo-900/30 to-slate-900/80 shadow-md shadow-black/40 transition-all duration-200 active:scale-95 hover:scale-105"
+                        >
+                          <span className="relative flex h-[50px] w-[50px] items-center justify-center rounded-full overflow-hidden bg-[radial-gradient(circle_at_35%_25%,#38bdf8_0%,#1e40af_35%,#0f172a_75%,#030712_100%)] border border-cyan-400/25 shadow-[inset_0_1.5px_2px_rgba(255,255,255,0.45),inset_0_-2px_6px_rgba(0,0,0,0.85)]">
+                            {/* Specular glass reflection */}
+                            <span className="pointer-events-none absolute top-1 left-2 h-3 w-5 rounded-full bg-gradient-to-b from-white/35 to-transparent blur-[0.5px]" />
+                            <Sparkles
+                              size={22}
+                              className={`text-white transition-transform duration-300 group-hover:rotate-12 ${isCur ? "animate-pulse" : ""
+                                }`}
+                            />
+                          </span>
+                        </button>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <button
+                      key={tab.key}
+                      type="button"
+                      onClick={() => {
+                        if (tab.isDrawer) { setDrawerOpen(true); }
+                        else { go(tab.path); }
+                      }}
+                      className={`relative flex flex-1 flex-col items-center justify-center gap-0.5 py-1 text-[11px] transition-all active:scale-95 ${isCur
+                          ? "text-blue-400 font-semibold"
+                          : "text-slate-300/80 hover:text-white font-medium"
+                        }`}
+                    >
+                      <span className="relative flex h-6 w-6 items-center justify-center">
+                        <Icon
+                          name={tab.icon}
+                          size={20}
+                          strokeWidth={isCur ? 2.2 : 1.8}
+                          className={`transition-colors ${isCur ? "text-blue-400" : "text-slate-300/80"
+                            }`}
+                        />
+                        {tab.badge > 0 && (
+                          <span className="absolute -top-1 -right-2 inline-flex h-3.5 min-w-[14px] items-center justify-center rounded-full bg-danger px-1 text-[8px] font-bold text-white shadow-xs">
+                            {tab.badge > 9 ? "9+" : tab.badge}
+                          </span>
+                        )}
+                      </span>
+                      <span className="truncate leading-tight tracking-tight">{tab.label}</span>
+                      {/* Active blue dot indicator */}
+                      <span
+                        className={`mt-0.5 h-1 w-1 rounded-full transition-all ${isCur
+                            ? "bg-blue-400"
+                            : "bg-transparent opacity-0"
+                          }`}
+                      />
+                    </button>
+                  );
+                })}
+              </div>
+            </nav>
+          );
+        })()}
       </div>
     </LayoutContext.Provider>
   );
@@ -535,26 +892,26 @@ export function AppShell({ activeKey, title, children }) {
 
   return (
     <>
-        {/* The nav capsule in AppLayout carries the account controls and the
+      {/* The nav capsule in AppLayout carries the account controls and the
             hamburger now, so this renders no bar of its own. `title` stays the
             document's h1 — visually hidden, because PageHeader already shows the
             page name in the content. Page-level buttons belong to PageHeader's
             own `action` slot; the old top-bar `actions` prop is gone. */}
-        {title && <h1 className="sr-only">{title}</h1>}
+      {title && <h1 className="sr-only">{title}</h1>}
 
-        {/* A background load failed — offer a retry instead of silently showing empty lists. */}
-        {dataError && (
-          <div className="mx-3 mb-2 flex items-center justify-between gap-3 rounded-2xl border border-brd bg-warn-bg px-4 py-2.5 text-base text-warn sm:mx-6">
-            <span>Some data couldn't be loaded. Check your connection and try again.</span>
-            <button onClick={retryData} className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-md bg-warn px-3 text-xs font-bold text-white hover:brightness-95">
-              Retry
-            </button>
-          </div>
-        )}
+      {/* A background load failed — offer a retry instead of silently showing empty lists. */}
+      {dataError && (
+        <div className="mx-3 mb-2 flex items-center justify-between gap-3 rounded-2xl border border-brd bg-warn-bg px-4 py-2.5 text-base text-warn sm:mx-6">
+          <span>Some data couldn't be loaded. Check your connection and try again.</span>
+          <button onClick={retryData} className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-md bg-warn px-3 text-xs font-bold text-white hover:brightness-95">
+            Retry
+          </button>
+        </div>
+      )}
 
-        {/* Content — matches the capsule's max width so page content lines up
+      {/* Content — matches the capsule's max width so page content lines up
             with the nav above it rather than drifting wider. */}
-        <main className="mx-auto w-full max-w-[110rem] px-4 pb-6 pt-2 sm:px-6 sm:pb-8 sm:pt-3">{children}</main>
+      <main className="mx-auto w-full max-w-[110rem] overflow-x-hidden px-4 pb-6 pt-2 sm:px-6 sm:pb-8 sm:pt-3">{children}</main>
     </>
   );
 }

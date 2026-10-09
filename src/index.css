@@ -26,24 +26,37 @@
   --info: #2b5be3;    --info-bg: #eef3ff;
 }
 .dark {
-  --brand: #6a8cf2; --brand-700: #8aa4f7; --brand-50: #1a2340; --brand-100: #222d4e;
-  --bg: #0a0f1c; --surface: #111829; --surface-2: #182034; --surface-3: #202a42;
-  --border: #232f48; --border-2: #2e3b58;
-  --text: #e9eefb; --text-2: #a4b1cc; --text-3: #6c7a99;
-  --success: #36c98a; --success-bg: #0d2e20;
-  --warn: #e0a23c;    --warn-bg: #2e1e05;
-  --danger: #f0685e;  --danger-bg: #2e0d0b;
-  --info: #6a8cf2;    --info-bg: #1a2340;
+  --brand: #5b85f7; --brand-700: #7b9ef8; --brand-50: #1a1a1a; --brand-100: #262626;
+  --bg: #000000; --surface: #121212; --surface-2: #1c1c1c; --surface-3: #262626;
+  --border: #262626; --border-2: #383838;
+  --text: #f4f4f5; --text-2: #a1a1aa; --text-3: #71717a;
+  --success: #34d399; --success-bg: #0a2416;
+  --warn: #fbbf24;    --warn-bg: #261a05;
+  --danger: #f87171;  --danger-bg: #280c0c;
+  --info: #5b85f7;    --info-bg: #1a1a1a;
 }
 
 html {
   font-family: "Plus Jakarta Sans", "Hind Siliguri", ui-sans-serif, system-ui, sans-serif;
+  overflow-x: hidden;
+  max-width: 100vw;
+  width: 100%;
 }
 
 body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
+  overflow-x: hidden;
+  max-width: 100vw;
+  width: 100%;
+}
+
+#root {
+  overflow-x: hidden;
+  max-width: 100vw;
+  width: 100%;
+  min-height: 100vh;
 }
 
 h1 { letter-spacing: -0.02em; }
@@ -86,3 +99,29 @@ h2 { letter-spacing: -0.01em; }
 
 /* Bengali glyphs need vertical room for matras. */
 :lang(bn) { font-family: "Hind Siliguri", sans-serif; line-height: 1.6; }
+
+/* Mobile bottom nav: the AI FAB center button's ambient glow ring. */
+.ai-fab-glow {
+  box-shadow:
+    0 0 0 3px var(--surface),
+    0 4px 16px rgba(43, 91, 227, 0.35),
+    0 0 28px rgba(43, 91, 227, 0.15);
+}
+.dark .ai-fab-glow {
+  box-shadow:
+    0 0 0 3px var(--surface),
+    0 4px 20px rgba(91, 133, 247, 0.45),
+    0 0 36px rgba(91, 133, 247, 0.18);
+}
+.ai-fab-glow.active {
+  box-shadow:
+    0 0 0 3px var(--surface),
+    0 4px 20px rgba(43, 91, 227, 0.50),
+    0 0 36px rgba(43, 91, 227, 0.25);
+}
+.dark .ai-fab-glow.active {
+  box-shadow:
+    0 0 0 3px var(--surface),
+    0 4px 24px rgba(91, 133, 247, 0.60),
+    0 0 44px rgba(91, 133, 247, 0.30);
+}
