@@ -221,7 +221,7 @@ export function FileUpload({ value, onChange, error, label = "Upload photo", id 
         <button
           type="button"
           onClick={clear}
-          className="absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-md bg-white/90 text-slate-700 shadow-sm hover:bg-white dark:bg-slate-900/80 dark:text-slate-200 dark:hover:bg-slate-900"
+          className="absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-md bg-white/90 text-slate-700 shadow-sm hover:bg-white dark:bg-black/80 dark:text-neutral-200 dark:hover:bg-black"
         >
           <X size={16} />
         </button>
@@ -550,13 +550,13 @@ export function StatCard({ label, value, icon, tone = "blue" }) {
     slate: "bg-surface-3 text-ink-2",
   };
   return (
-    <Card className="flex items-center gap-4 p-5">
-      <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-md ${toneBg[tone]}`}>
+    <Card className="flex items-center gap-3 p-3.5 sm:gap-4 sm:p-5">
+      <span className={`flex h-10 w-10 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-md ${toneBg[tone]}`}>
         {StatIcon && <StatIcon size={20} />}
       </span>
-      <div className="min-w-0">
-        <p className="text-3xl font-bold leading-none text-ink">{value}</p>
-        <p className="mt-1 text-md text-ink-3">{label}</p>
+      <div className="min-w-0 flex-1">
+        <p className="text-2xl sm:text-3xl font-bold leading-none text-ink">{value}</p>
+        <p className="mt-1 text-xs sm:text-md text-ink-3 truncate">{label}</p>
       </div>
     </Card>
   );

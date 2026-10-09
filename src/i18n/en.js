@@ -15,13 +15,13 @@ export const en = {
     badge: "BUBT Campus",
     heroTitle1: "Your whole campus,",
     heroTitle2: "in one app.",
-    heroBody: "FixIt is the single place for the BUBT community — report issues, browse faculty, catch the bus, buy and sell, find blood donors, and much more.",
+    heroBody: "CampusOne is the single place for the BUBT community - report issues, browse faculty, catch the bus, buy and sell, find blood donors, and much more.",
     getStarted: "Get started",
     browseFaculty: "or explore campus pages without an account →",
   },
   auth: {
     login: {
-      title: "Log in to FixIt",
+      title: "Log in to CampusOne",
       subtitle: "Welcome back — pick up where you left off.",
       email: "Email",
       password: "Password",
@@ -32,7 +32,7 @@ export const en = {
     },
     register: {
       title: "Create your account",
-      subtitle: "Join FixIt to report issues and use Lost & Found.",
+      subtitle: "Join CampusOne to report issues and use Lost & Found.",
       fullName: "Full name",
       email: "Email",
       password: "Password",

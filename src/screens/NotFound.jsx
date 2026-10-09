@@ -26,7 +26,7 @@ export default function NotFound() {
           {currentUser ? (
             <Button icon={LayoutDashboard} onClick={() => navigate(dashboardPath(currentUser.role))}>My dashboard</Button>
           ) : (
-            <Button icon={House} onClick={() => navigate("/")}>Back to FixIt</Button>
+            <Button icon={House} onClick={() => navigate("/")}>Back to CampusOne</Button>
           )}
         </div>
       </div>

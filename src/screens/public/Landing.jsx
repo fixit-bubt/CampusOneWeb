@@ -187,7 +187,7 @@ export default function Landing() {
       <footer className="border-t border-brd bg-surface">
         <div className="flex flex-col items-center justify-between gap-4 px-4 py-8 sm:flex-row sm:px-6">
           <Logo size="sm" />
-          <p className="text-base text-ink-3">© 2026 FixIt · Bangladesh University of Business &amp; Technology</p>
+          <p className="text-base text-ink-3">© 2026 CampusOne · Bangladesh University of Business &amp; Technology</p>
         </div>
       </footer>
     </div>

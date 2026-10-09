@@ -91,7 +91,7 @@ function Landing() {
     <>
       <PageHeader
         title="PDF Maker"
-        subtitle="Prepare assignment submissions without leaving FixIt — everything runs in your browser, so your files never leave your device."
+        subtitle="Prepare assignment submissions without leaving CampusOne - everything runs in your browser, so your files never leave your device."
       />
       <div className="grid gap-3 sm:grid-cols-2">
         {TOOL_ORDER.map((key) => {

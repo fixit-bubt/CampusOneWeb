@@ -142,7 +142,7 @@ export default function ManageUsers() {
     <AppShell activeKey="users" title="Manage Users">
       <PageHeader
         title="Manage Users"
-        subtitle={`${users.length} people in the FixIt directory.`}
+        subtitle={`${users.length} people in the CampusOne directory.`}
         action={<Button icon={UserPlus} onClick={openAdd}>Add account</Button>}
       />
 

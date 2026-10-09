@@ -12,7 +12,7 @@ export function Logo({ size = "md", onDark = false, withWord = true }) {
         <Wrench size={d * 0.55} />
       </span>
       {withWord && (
-        <span className={`font-extrabold tracking-tight ${word} ${onDark ? "text-white" : "text-ink"}`}>FixIt</span>
+        <span className={`font-extrabold tracking-tight ${word} ${onDark ? "text-white" : "text-ink"}`}>CampusOne</span>
       )}
     </span>
   );

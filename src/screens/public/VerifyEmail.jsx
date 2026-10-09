@@ -35,7 +35,7 @@ export default function VerifyEmail() {
       const r = await verifySignupCode(email, code);
       if (!r.ok) { setError(r.error); return; }
       try { sessionStorage.removeItem(PENDING_VERIFY_KEY); } catch { /* fine */ }
-      toast({ type: "success", title: "Email verified", message: "Welcome to FixIt!" });
+      toast({ type: "success", title: "Email verified", message: "Welcome to CampusOne!" });
       // A session is now open; /login redirects onward once the profile loads
       // (new students land on onboarding first).
       navigate("/login");

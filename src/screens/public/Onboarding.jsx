@@ -95,7 +95,7 @@ export default function Onboarding() {
                 <Field label="Phone" htmlFor="ob-ph" hint="Optional"><Input id="ob-ph" type="tel" value={form.phone} onChange={set("phone")} placeholder="01XXXXXXXXX" /></Field>
               </div>
               {error && form.studentId.trim() && <p className="text-base text-danger">{error}</p>}
-              <Button type="submit" full iconRight={ArrowRight} loading={saving}>Continue to FixIt</Button>
+              <Button type="submit" full iconRight={ArrowRight} loading={saving}>Continue to CampusOne</Button>
             </form>
           </Card>
           <p className="mt-4 text-center text-xs text-ink-3">You can edit these anytime from My Profile.</p>

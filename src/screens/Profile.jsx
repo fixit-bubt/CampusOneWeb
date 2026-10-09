@@ -66,7 +66,7 @@ export default function Profile() {
     allowDms: currentUser?.allowDms !== false,
   });
   async function shareApp() {
-    const shareData = { title: "FixIt", text: "FixIt — the BUBT campus app.", url: window.location.origin };
+    const shareData = { title: "CampusOne", text: "CampusOne - the BUBT campus app.", url: window.location.origin };
     if (navigator.share) {
       try { await navigator.share(shareData); } catch { /* user cancelled — not an error */ }
       return;
@@ -272,7 +272,7 @@ export default function Profile() {
           </div>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-base font-semibold text-ink">FixIt</p>
+              <p className="text-base font-semibold text-ink">CampusOne</p>
               <p className="text-sm text-ink-3">{t.settings.version} {appVersion}</p>
             </div>
             <Button variant="secondary" icon={Share2} onClick={shareApp}>{t.settings.share}</Button>

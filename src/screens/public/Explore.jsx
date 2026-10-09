@@ -42,9 +42,9 @@ export function PublicNav({ active, overlay = false }) {
   return (
     <div className={`${overlay ? "fixed inset-x-0 top-0" : "sticky top-0"} z-40 px-3 pb-2 pt-3 sm:px-6 sm:pt-4`}>
       {/* Width matches the signed-in app's capsule so the two read as one system. */}
-      <div className="topbar-blur mx-auto flex w-full max-w-[110rem] items-center gap-3 rounded-full border border-brd px-3 py-2 shadow-lg backdrop-blur-md">
-        <button onClick={() => navigate("/")} aria-label="FixIt home" className="shrink-0 px-1">
-          <Logo />
+      <div className="mx-auto flex w-full max-w-[110rem] items-center gap-3 rounded-full border border-[#1d3d7d]/80 bg-gradient-to-r from-[#0a1b42]/95 via-[#0f2862]/95 to-[#0a1b42]/95 px-3 py-2 shadow-lg shadow-black/20 backdrop-blur-md text-white">
+        <button onClick={() => navigate("/")} aria-label="CampusOne home" className="shrink-0 px-1">
+          <Logo onDark />
         </button>
         {/* Centred cluster rather than justify-evenly: inside a capsule, links
             spread to the edges read as a stretched toolbar, not a pill. */}
@@ -54,7 +54,7 @@ export function PublicNav({ active, overlay = false }) {
               key={l.path}
               onClick={() => navigate(l.path)}
               className={`whitespace-nowrap rounded-full px-3 py-1.5 text-[15px] font-semibold transition-colors ${
-                active === l.path ? "bg-brand-50 text-brand" : "text-ink-2 hover:bg-surface-2 hover:text-ink"
+                active === l.path ? "bg-brand text-white shadow-xs" : "text-white/80 hover:bg-white/10 hover:text-white"
               }`}
             >
               {l.label}
@@ -62,27 +62,27 @@ export function PublicNav({ active, overlay = false }) {
           ))}
         </nav>
         <div className="ml-auto flex shrink-0 items-center gap-2">
-          <ThemeToggle />
+          <ThemeToggle className="!text-white/80 hover:!bg-white/10 hover:!text-white !rounded-full" />
           {currentUser ? (
             <Button onClick={() => navigate(dashboardPath(currentUser.role))} iconRight={ArrowRight}>
               Go to dashboard
             </Button>
           ) : (
             <>
-              <Button variant="ghost" onClick={() => navigate("/login")}>Log In</Button>
+              <Button variant="ghost" className="!text-white/90 hover:!bg-white/10 hover:!text-white" onClick={() => navigate("/login")}>Log In</Button>
               <Button onClick={() => navigate("/register")}>Sign Up</Button>
             </>
           )}
         </div>
       </div>
       {/* Mobile / tablet nav — its own scrolling capsule under the main one. */}
-      <div className="topbar-blur mx-auto mt-2 flex max-w-[110rem] gap-1 overflow-x-auto rounded-full border border-brd px-2 py-1.5 backdrop-blur-md xl:hidden">
+      <div className="mx-auto mt-2 flex max-w-[110rem] gap-1 overflow-x-auto rounded-full border border-[#1d3d7d]/80 bg-gradient-to-r from-[#0a1b42]/95 via-[#0f2862]/95 to-[#0a1b42]/95 px-2 py-1.5 shadow-md shadow-black/20 backdrop-blur-md xl:hidden text-white">
         {NAV.map((l) => (
           <button
             key={l.path}
             onClick={() => navigate(l.path)}
-            className={`shrink-0 rounded-full px-3 py-1.5 text-sm font-semibold ${
-              active === l.path ? "bg-brand-50 text-brand" : "text-ink-2 hover:bg-surface-2"
+            className={`shrink-0 rounded-full px-3 py-1.5 text-sm font-semibold transition-colors ${
+              active === l.path ? "bg-brand text-white shadow-xs" : "text-white/80 hover:bg-white/10 hover:text-white"
             }`}
           >
             {l.label}
