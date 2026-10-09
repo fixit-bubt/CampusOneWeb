@@ -12,7 +12,53 @@
     <title>CampusOne — Campus Management</title>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div id="app-preloader" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#eaf4fb;">
+        <style>
+          @media (prefers-color-scheme: dark) {
+            #app-preloader { background: #000 !important; }
+            #app-preloader .pre-sq { background: #fff !important; }
+          }
+          @keyframes pre-sq-anim {
+            0% { left: 0; top: 0; }
+            10.5% { left: 0; top: 0; }
+            12.5% { left: 24px; top: 0; }
+            23% { left: 24px; top: 0; }
+            25% { left: 48px; top: 0; }
+            35.5% { left: 48px; top: 0; }
+            37.5% { left: 48px; top: 24px; }
+            48% { left: 48px; top: 24px; }
+            50% { left: 24px; top: 24px; }
+            60.5% { left: 24px; top: 24px; }
+            62.5% { left: 24px; top: 48px; }
+            73% { left: 24px; top: 48px; }
+            75% { left: 0; top: 48px; }
+            85.5% { left: 0; top: 48px; }
+            87.5% { left: 0; top: 24px; }
+            98% { left: 0; top: 24px; }
+            100% { left: 0; top: 0; }
+          }
+          .pre-sq {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            margin: 2px;
+            border-radius: 3px;
+            background: #2b5be3;
+            animation: pre-sq-anim 10s ease-in-out infinite both;
+          }
+        </style>
+        <div style="position:relative;width:72px;height:72px;transform:rotate(45deg);">
+          <div class="pre-sq" style="animation-delay: 0s;"></div>
+          <div class="pre-sq" style="animation-delay: -1.428s;"></div>
+          <div class="pre-sq" style="animation-delay: -2.857s;"></div>
+          <div class="pre-sq" style="animation-delay: -4.285s;"></div>
+          <div class="pre-sq" style="animation-delay: -5.714s;"></div>
+          <div class="pre-sq" style="animation-delay: -7.142s;"></div>
+          <div class="pre-sq" style="animation-delay: -8.571s;"></div>
+        </div>
+      </div>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

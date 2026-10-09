@@ -150,3 +150,16 @@ h2 { letter-spacing: -0.01em; }
 .animate-square {
   animation: square-animation 10s ease-in-out infinite both;
 }
+
+.bg-grid {
+  background-image: 
+    linear-gradient(rgba(15, 26, 46, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(15, 26, 46, 0.08) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+.dark .bg-grid {
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+}

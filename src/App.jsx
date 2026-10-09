@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { useHashRoute, matchRoute, navigate } from "./lib/router.jsx";
 import { useApp } from "./data/store.jsx";
-import { Spinner } from "./components/ui.jsx";
+import { Spinner, Loading, FullPageLoader } from "./components/ui.jsx";
 import { AppLayout } from "./components/AppShell.jsx";
 
 import Landing from "./screens/public/Landing.jsx";
@@ -70,7 +70,7 @@ const PdfMaker = React.lazy(() => import("./screens/pdfmaker/PdfMaker.jsx"));
 // so only the content column flashes a spinner while the chunk downloads.
 function LazyScreen({ children }) {
   return (
-    <React.Suspense fallback={<div className="flex justify-center py-16"><Spinner size={26} /></div>}>
+    <React.Suspense fallback={<Loading className="py-20" />}>
       {children}
     </React.Suspense>
   );
@@ -112,11 +112,7 @@ export default function App() {
   // session's profile is still loading — otherwise a refresh while signed in
   // briefly sees currentUser=null and flashes/bounces to /login.
   if (loading || (sessionUserId && !currentUser && !profileError)) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-bg">
-        <Spinner size={28} />
-      </div>
-    );
+    return <FullPageLoader />;
   }
 
   // Profile read failed for a valid session — recoverable, never an endless

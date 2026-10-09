@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { AlertCircle } from "lucide-react";
 import { useApp } from "../../data/store.jsx";
 import { navigate, Link } from "../../lib/router.jsx";
-import { Spinner } from "../../components/ui.jsx";
+import { FullPageLoader } from "../../components/ui.jsx";
 import { AuthShell } from "./AuthShell.jsx";
 
 // Landing pad for the Google OAuth redirect (see loginWithGoogle in store.jsx).
@@ -47,9 +47,5 @@ export default function AuthCallback() {
     );
   }
 
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-bg">
-      <Spinner size={28} />
-    </div>
-  );
+  return <FullPageLoader />;
 }

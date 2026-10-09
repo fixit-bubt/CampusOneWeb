@@ -3,7 +3,7 @@ import { ArrowRight, Search, GraduationCap, CalendarDays, Bus, Moon, MapPin, Clo
 import { supabase } from "../../lib/supabase.js";
 import { useApp } from "../../data/store.jsx";
 import { navigate } from "../../lib/router.jsx";
-import { Button, Badge, Card, Spinner, Avatar, Modal } from "../../components/ui.jsx";
+import { Button, Badge, Card, Spinner, Loading, Avatar, Modal } from "../../components/ui.jsx";
 import { Logo } from "../../components/Brand.jsx";
 import { ThemeToggle } from "../../components/ThemeToggle.jsx";
 import { CoverPageBody } from "../coverpage/CoverPage.jsx";
@@ -137,7 +137,7 @@ function useAnonQuery(fetcher) {
 }
 
 function LoadState({ loading, error, retry, children }) {
-  if (loading) return <div className="flex justify-center py-24"><Spinner size={26} /></div>;
+  if (loading) return <Loading className="py-24" />;
   if (error) {
     return (
       <div className="py-24 text-center">

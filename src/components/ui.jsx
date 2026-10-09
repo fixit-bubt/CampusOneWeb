@@ -562,6 +562,16 @@ export function Loading({ className = "", scale = 0.45 }) {
   );
 }
 
+// Full-page animated square loader for app initialization / page reload
+export function FullPageLoader() {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-bg relative overflow-hidden transition-colors duration-300">
+      <div className="absolute inset-0 bg-grid opacity-15 dark:opacity-20 pointer-events-none" />
+      <SquareLoader scale={0.75} />
+    </div>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // StatCard — dashboard metric tile. icon: lucide component
 // ---------------------------------------------------------------------------
