@@ -125,3 +125,28 @@ h2 { letter-spacing: -0.01em; }
     0 4px 24px rgba(91, 133, 247, 0.60),
     0 0 44px rgba(91, 133, 247, 0.30);
 }
+
+/* Animated square loader chasing loop */
+@keyframes square-animation {
+  0% { left: 0; top: 0; }
+  10.5% { left: 0; top: 0; }
+  12.5% { left: 32px; top: 0; }
+  23% { left: 32px; top: 0; }
+  25% { left: 64px; top: 0; }
+  35.5% { left: 64px; top: 0; }
+  37.5% { left: 64px; top: 32px; }
+  48% { left: 64px; top: 32px; }
+  50% { left: 32px; top: 32px; }
+  60.5% { left: 32px; top: 32px; }
+  62.5% { left: 32px; top: 64px; }
+  73% { left: 32px; top: 64px; }
+  75% { left: 0; top: 64px; }
+  85.5% { left: 0; top: 64px; }
+  87.5% { left: 0; top: 32px; }
+  98% { left: 0; top: 32px; }
+  100% { left: 0; top: 0; }
+}
+
+.animate-square {
+  animation: square-animation 10s ease-in-out infinite both;
+}

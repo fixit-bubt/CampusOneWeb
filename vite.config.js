@@ -1,6 +1,10 @@
+import path from "path";
+import { fileURLToPath } from "url";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { viteStaticCopy } from "vite-plugin-static-copy";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // pdf.js needs two asset folders at runtime that aren't part of its JS bundle:
 //   standard_fonts/ — glyph data for PDFs that reference (but don't embed) the
@@ -31,4 +35,9 @@ export default defineConfig({
   // Vite's default "iife" worker format can't emit a code-split worker, so the
   // build fails without this.
   worker: { format: "es" },
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+    },
+  },
 });

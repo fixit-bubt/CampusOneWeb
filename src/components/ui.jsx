@@ -527,11 +527,37 @@ export function Spinner({ size = 20, className = "" }) {
   );
 }
 
-// Centered loading spinner for list/dashboard areas while data loads.
-export function Loading({ className = "" }) {
+// Chasing-squares animated loader (diamond orientation)
+export function SquareLoader({ scale = 0.45, className = "" }) {
   return (
-    <div className={`flex items-center justify-center py-16 ${className}`}>
-      <Spinner size={28} />
+    <div className={`flex items-center justify-center ${className}`}>
+      <div
+        className="relative w-24 h-24 rotate-45 shrink-0 select-none pointer-events-none"
+        style={{
+          transform: `scale(${scale}) rotate(45deg)`,
+          transformOrigin: "center center",
+        }}
+        aria-hidden="true"
+      >
+        {[...Array(7)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute top-0 left-0 w-7 h-7 m-0.5 animate-square rounded-[3px] bg-brand dark:bg-white shadow-xs"
+            style={{
+              animationDelay: `${-1.4285714286 * i}s`,
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Centered loading state for list/dashboard areas while data loads.
+export function Loading({ className = "", scale = 0.45 }) {
+  return (
+    <div className={`flex items-center justify-center py-14 ${className}`} role="status" aria-label="Loading...">
+      <SquareLoader scale={scale} />
     </div>
   );
 }
