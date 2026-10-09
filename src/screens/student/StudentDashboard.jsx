@@ -18,7 +18,7 @@ const DASHBOARD_SEARCH_ITEMS = [
   { label: "Class & Exam Routines", sub: "View daily routine & exam schedules", path: "/routines", icon: Clock },
   { label: "Campus Events", sub: "Seminars, workshops & club activities", path: "/events", icon: CalendarDays },
   { label: "Announcements & Notices", sub: "Official university circulars", path: "/announcements", icon: Megaphone },
-  { label: "AI Campus Assistant", sub: "Ask Gemini about schedules & campus info", path: "/chatbot", icon: Sparkles },
+  { label: "Fixi", sub: "Your BUBT campus companion", path: "/chatbot", icon: Sparkles },
   { label: "Marketplace", sub: "Buy and sell books, calculators, gadgets", path: "/marketplace", icon: PackageSearch },
   { label: "Ride Sharing", sub: "Share rides & commute with classmates", path: "/rides", icon: ArrowRight },
   { label: "Blood Donation", sub: "Emergency blood donor registry", path: "/blood", icon: Sparkles },
@@ -196,7 +196,7 @@ export default function StudentDashboard() {
   return (
     <AppShell activeKey="dashboard" title="Dashboard">
       {/* 1. Search Field (placed before the announcement cards, sleek rectangular shape) */}
-      <div className="relative z-30 mb-4 pt-1">
+      <div className="relative z-10 mb-4 pt-1">
         <div className="relative flex items-center">
           <Search size={14} className="pointer-events-none absolute left-2.5 text-ink-3" />
           <input
@@ -220,7 +220,7 @@ export default function StudentDashboard() {
 
         {/* Live Search Suggestions Dropdown */}
         {searchOpen && searchQuery && (
-          <div className="absolute inset-x-0 top-10 z-50 overflow-hidden rounded border border-brd bg-surface shadow-xl">
+          <div className="absolute inset-x-0 top-10 z-20 overflow-hidden rounded border border-brd bg-surface shadow-xl">
             {searchResults.length === 0 ? (
               <div className="p-3 text-center text-xs text-ink-3">No matching campus features found.</div>
             ) : (
@@ -270,35 +270,15 @@ export default function StudentDashboard() {
             </>
           )}
 
-          {/* Card Content overlaid on full card */}
-          <div className="relative z-10 flex min-h-[130px] flex-col justify-between">
+          {/* Card Content overlaid on full card: title & short description only */}
+          <div className="relative z-10 flex min-h-[130px] flex-col justify-end">
             <div>
-              <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 rounded-lg bg-black/40 border border-white/20 px-2.5 py-0.5 text-[10px] sm:text-[11px] font-bold tracking-wide text-white backdrop-blur-md">
-                  <ActiveIcon size={12} />
-                  {activeCard.tag}
-                </span>
-                <span className="text-[10px] font-bold tracking-wider text-white/80 uppercase">
-                  {activeCard.type}
-                </span>
-              </div>
-
-              <h3 className="mt-2 text-base sm:text-lg md:text-xl font-extrabold leading-snug tracking-tight text-white line-clamp-2">
+              <h3 className="text-base sm:text-lg md:text-xl font-extrabold leading-snug tracking-tight text-white line-clamp-2">
                 {activeCard.title}
               </h3>
-              <p className="mt-1 text-xs text-white/90 line-clamp-1">
+              <p className="mt-1 text-xs sm:text-sm text-white/90 line-clamp-2">
                 {activeCard.subtitle}
               </p>
-            </div>
-
-            <div className="mt-3 flex items-center justify-between">
-              <span className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-xs font-bold text-ink shadow-sm transition-transform active:scale-95">
-                {activeCard.btnText}
-                <ArrowRight size={12} />
-              </span>
-              <span className="text-[11px] font-medium text-white/80">
-                {currentSlide + 1} / {combinedSlides.length}
-              </span>
             </div>
           </div>
         </div>

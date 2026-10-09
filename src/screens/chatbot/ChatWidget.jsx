@@ -113,7 +113,7 @@ export default function ChatWidget() {
               </span>
             )}
             <div className="min-w-0 flex-1">
-              <p className="truncate text-base font-bold text-ink">{view === "history" ? "Your chats" : "AI Assistant"}</p>
+              <p className="truncate text-base font-bold text-ink">{view === "history" ? "Your chats" : "Fixi"}</p>
               {view === "chat" && <p className="truncate text-xs text-ink-3">Bus, prayer times, clubs, jobs, faculty…</p>}
             </div>
             {view === "chat" && (

@@ -44,7 +44,7 @@ export default function Chatbot({ conversationId }) {
   }
 
   return (
-    <AppShell activeKey="chatbot" title="AI Assistant">
+    <AppShell activeKey="chatbot" title="Fixi">
       <div className="flex flex-1 min-h-0 w-full flex-col overflow-hidden">
         {/* Clean floating conversation card */}
         <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-2xl border border-brd bg-surface shadow-xs">
@@ -62,7 +62,7 @@ export default function Chatbot({ conversationId }) {
               <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-brand/10 text-brand">
                 <Sparkles size={16} />
               </div>
-              <h2 className="text-base font-bold text-ink">AI Assistant</h2>
+              <h2 className="text-base font-bold text-ink">Fixi</h2>
             </div>
 
             <div className="flex items-center gap-1">

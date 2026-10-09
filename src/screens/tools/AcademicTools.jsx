@@ -267,8 +267,10 @@ export default function AcademicTools() {
 
   return (
     <AppShell activeKey="tools" title="Tools">
-      <div className="mx-auto max-w-4xl px-3 py-4 sm:px-6 sm:py-6">
-        <PageHeader title="Tools" />
+      <div className="mx-auto max-w-4xl px-3 py-1 sm:px-6 sm:py-3">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-ink">Tools</h2>
+        </div>
 
         {/* 1. The 3 Fixed Core Tools */}
         <div className="grid grid-cols-3 gap-3 sm:gap-5">
@@ -297,7 +299,7 @@ export default function AcademicTools() {
         </div>
 
         {/* Subtle Separator */}
-        <div className="my-6 border-t border-brd" />
+        <div className="my-3 sm:my-4 border-t border-brd" />
 
         {/* 2. Pinned Shortcuts & Add Tool */}
         <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 sm:gap-5">

@@ -70,7 +70,6 @@ const NAV_BY_ROLE = {
         // row highlighted on the sibling route (see activeKeyForPath).
         { key: "reports", label: "Reports", icon: "FileText", path: "/reports", match: ["/campus-issues"] },
         { key: "messages", label: "Messages", icon: "MessagesSquare", path: "/messages" },
-        { key: "chatbot", label: "AI Assistant", icon: "Sparkles", path: "/chatbot", match: ["/chatbot/history"] },
       ]
     },
     { section: "Academics", items: [STUDY_HUB, ...ACADEMICS, CGPA, COVER_PAGE, PDF_MAKER] },
@@ -193,17 +192,16 @@ function sectionForKey(nav, key) {
 // Open/close state for the nav accordion. Lives in AppLayout, NOT in
 // SidebarContent, because SidebarContent is mounted twice (desktop aside +
 // mobile drawer) — per-instance state would let the two copies disagree.
-function useNavAccordion(nav, activeKey) {
-  const [openSection, setOpenSection] = useState(() => readOpenSection());
-  // Navigating into a collapsed group reveals it (otherwise the active item
-  // sits highlighted inside a group the user can't see) — and persists, so the
-  // reveal survives a reload instead of silently snapping shut.
+function useNavAccordion(drawerOpen) {
+  const [openSection, setOpenSection] = useState(null);
+  // Whenever the menu drawer opens, start with every section collapsed
   React.useEffect(() => {
-    const s = sectionForKey(nav, activeKey);
-    if (s) setOpenSection((prev) => { if (prev === s) return prev; writeOpenSection(s); return s; });
-  }, [activeKey, nav]);
+    if (drawerOpen) {
+      setOpenSection(null);
+    }
+  }, [drawerOpen]);
   const toggleSection = React.useCallback((name) => {
-    setOpenSection((prev) => { const next = prev === name ? null : name; writeOpenSection(next); return next; });
+    setOpenSection((prev) => (prev === name ? null : name));
   }, []);
   return { openSection, toggleSection };
 }
@@ -596,7 +594,7 @@ export function AppLayout({ children }) {
   // it can't sit behind a conditional return.
   const nav = NAV_BY_ROLE[currentUser?.role] || EMPTY_NAV;
   const activeKey = activeKeyForPath(path, currentUser?.role);
-  const { openSection, toggleSection } = useNavAccordion(nav, activeKey);
+  const { openSection, toggleSection } = useNavAccordion(drawerOpen);
 
   if (!currentUser) return <>{children}</>;
   const go = (p) => { setDrawerOpen(false); navigate(p); };
@@ -607,7 +605,7 @@ export function AppLayout({ children }) {
     <LayoutContext.Provider value={{ openDrawer: () => setDrawerOpen(true) }}>
       <div className={`bg-bg w-full max-w-full ${isChatbotMain ? "fixed inset-0 h-[100dvh] max-h-[100dvh] overflow-hidden flex flex-col" : "min-h-screen overflow-x-hidden"}`}>
         {/* Mobile top header — fixed to screen across all pages with 3-line menu on left, centered CampusOne + tagline, notifications on right */}
-        <header className="fixed top-0 inset-x-0 z-30 flex h-11 w-full items-center justify-between border-b border-[#1d3d7d]/80 bg-gradient-to-r from-[#0a1b42] via-[#0f2862] to-[#0a1b42] px-3 text-white shadow-xs backdrop-blur-md xl:hidden">
+        <header className="fixed top-0 inset-x-0 z-40 flex h-11 w-full items-center justify-between border-b border-[#1d3d7d]/80 bg-gradient-to-r from-[#0a1b42] via-[#0f2862] to-[#0a1b42] px-3 text-white shadow-xs backdrop-blur-md xl:hidden">
           {/* Left: 3-line hamburger button to open the menu drawer */}
           <button
             onClick={() => setDrawerOpen(true)}
@@ -748,7 +746,7 @@ export function AppLayout({ children }) {
         )}
 
         {/* Main column — full width now that the nav is overhead, not beside. */}
-        <div className={`w-full max-w-full ${isChatbotMain ? "flex-1 min-h-0 flex flex-col overflow-hidden pt-11 pb-[60px] xl:pt-0 xl:pb-4" : "overflow-x-hidden pt-11 pb-24 xl:pt-0 xl:pb-0"}`}>
+        <div className={`w-full max-w-full ${isChatbotMain ? "flex-1 min-h-0 flex flex-col overflow-hidden pt-11 pb-[60px] xl:pt-0 xl:pb-4" : "overflow-x-hidden pt-11 pb-16 sm:pb-20 xl:pt-0 xl:pb-0"}`}>
           {children}
         </div>
 
@@ -757,7 +755,7 @@ export function AppLayout({ children }) {
           const studentTabs = [
             { key: "dashboard", label: "Home", icon: "Home", path: "/dashboard" },
             { key: "study-hub", label: "Study Hub", icon: "BookMarked", path: "/study-hub" },
-            { key: "chatbot", label: "AI", icon: "Sparkles", path: "/chatbot", isCenterFab: true },
+            { key: "chatbot", label: "Fixi", icon: "Sparkles", path: "/chatbot", isCenterFab: true },
             { key: "tools", label: "Tools", icon: "Wrench", path: "/tools" },
             { key: "profile", label: "Profile", icon: "CircleUser", path: "/profile" },
           ];
@@ -821,7 +819,7 @@ export function AppLayout({ children }) {
                         <button
                           type="button"
                           onClick={() => { go(tab.path); }}
-                          aria-label="CampusOne AI Assistant"
+                          aria-label="Fixi"
                           className="group absolute -top-4 left-1/2 -translate-x-1/2 flex items-center justify-center p-[2px] rounded-full bg-gradient-to-b from-indigo-400/40 via-indigo-900/30 to-slate-900/80 shadow-md shadow-black/40 transition-all duration-200 active:scale-95 hover:scale-105"
                         >
                           <span className="relative flex h-[50px] w-[50px] items-center justify-center rounded-full overflow-hidden bg-[radial-gradient(circle_at_35%_25%,#38bdf8_0%,#1e40af_35%,#0f172a_75%,#030712_100%)] border border-cyan-400/25 shadow-[inset_0_1.5px_2px_rgba(255,255,255,0.45),inset_0_-2px_6px_rgba(0,0,0,0.85)]">
@@ -920,7 +918,7 @@ export function AppShell({ activeKey, title, children }) {
         className={`mx-auto w-full ${
           isChatbotMain
             ? "max-w-3xl flex-1 min-h-0 flex flex-col overflow-hidden px-2 sm:px-4 py-1.5 sm:py-2"
-            : "max-w-[110rem] overflow-x-hidden px-4 pb-6 pt-2 sm:px-6 sm:pb-8 sm:pt-3"
+            : "max-w-[110rem] overflow-x-hidden px-4 pb-3 pt-2 sm:px-6 sm:pb-5 sm:pt-3"
         }`}
       >
         {children}

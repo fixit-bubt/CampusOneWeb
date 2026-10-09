@@ -317,6 +317,8 @@ export function RichText({ body }) {
 }
 
 // Scrolling transcript. `emptyHint` lets the widget run a shorter blurb than
+const FIXI_GREETING = "Hi there! 👋 I'm **Fixi**, your BUBT campus companion. How can I help you today? You can ask me about bus schedules, prayer times, class routines, clubs, campus notices, or academic tools!";
+
 // Scrolling transcript. `emptyHint` lets the widget run a shorter blurb than
 // the full page without forking the component; `onPickSuggestion` turns the
 // empty state into tappable conversation starters.
@@ -330,17 +332,18 @@ export function MessageList({ messages, streamText, loadingHistory, emptyHint, o
   return (
     <div ref={listRef} className={`flex-1 min-h-0 overflow-y-auto px-3.5 py-3 sm:px-5 ${className}`}>
       {messages.length === 0 && !streamText ? (
-        <div className="flex h-full min-h-[14rem] flex-col items-center justify-center px-4 py-6 text-center">
-          <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50 text-brand dark:bg-brand-950/50">
-            <Sparkles size={20} />
-          </div>
+        <div className="space-y-3 py-1">
+          {/* Fixed friendly greeting from Fixi */}
+          <Bubble role="model" body={FIXI_GREETING} />
+
+          {/* Quick suggestions below Fixi's greeting */}
           {onPickSuggestion && (
-            <div className="flex flex-wrap justify-center gap-1.5 max-w-sm">
+            <div className="flex flex-wrap gap-1.5 pl-8 pt-1">
               {CHAT_SUGGESTIONS.map((s) => (
                 <button
                   key={s}
                   onClick={() => onPickSuggestion(s)}
-                  className="rounded-full border border-brd bg-surface px-2.5 py-1 text-xs text-ink-2 transition-colors hover:border-brand hover:text-brand"
+                  className="rounded-full border border-brd bg-surface px-3 py-1 text-xs text-ink-2 transition-colors hover:border-brand hover:text-brand shadow-xs"
                 >
                   {s}
                 </button>
