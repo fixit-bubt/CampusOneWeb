@@ -3,7 +3,8 @@ import { LogOut, Menu, X, Bell, ChevronDown, Sparkles, MoreVertical } from "luci
 import { useApp } from "../data/store.jsx";
 import { navigate, Link, useHashRoute } from "../lib/router.jsx";
 import { Avatar, Badge } from "./ui.jsx";
-import { Icon } from "./Icon.jsx";
+import { Icon, resolveIcon } from "./Icon.jsx";
+import MegaMenu from "./ui/mega-menu";
 import { Logo } from "./Brand.jsx";
 import { AccentTile } from "./featureKit.jsx";
 import { ThemeToggle } from "./ThemeToggle.jsx";
@@ -389,86 +390,157 @@ function activeKeyForPath(path, role) {
 const LayoutContext = React.createContext({ openDrawer: () => { } });
 export function useLayout() { return React.useContext(LayoutContext); }
 
-// One grouped nav entry in the capsule: a button that drops its items in a menu
-// panel underneath. Closes on outside click, Escape, or picking an item.
-function NavMenu({ group, activeKey, onNavigate, badges }) {
-  const [open, setOpen] = useState(false);
-  const ref = React.useRef(null);
-  const hasActive = group.items.some((i) => i.key === activeKey);
-  const count = group.items.reduce((n, i) => n + (badges[i.key] || 0), 0);
+// buildMegaMenuItems — maps the role-based navigation structure into MegaMenuItem[]
+// for the animated desktop navbar dropdowns.
+function buildMegaMenuItems({ nav, activeKey, onNavigate, badges = {} }) {
+  const result = [];
 
-  React.useEffect(() => {
-    if (!open) return;
-    // `mousedown`, not `click`: closing on click would fire after the item's own
-    // handler and could swallow a selection made in a sibling menu.
-    const onDown = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
-    const onKey = (e) => { if (e.key === "Escape") setOpen(false); };
-    document.addEventListener("mousedown", onDown);
-    document.addEventListener("keydown", onKey);
-    return () => { document.removeEventListener("mousedown", onDown); document.removeEventListener("keydown", onKey); };
-  }, [open]);
+  for (const group of nav) {
+    if (!group.section) {
+      // Direct items like Dashboard, Reports, Messages, Annex Portal (excluding profile)
+      for (const item of group.items) {
+        if (item.key === "profile") continue;
+        const count = badges[item.key] || 0;
+        result.push({
+          id: item.key,
+          label: item.label,
+          isActive: item.key === activeKey,
+          badge: count > 0 ? (count > 9 ? "9+" : count) : undefined,
+          onClick: () => onNavigate(item.path),
+        });
+      }
+    } else {
+      // Grouped items with animated dropdown
+      const hasActive = group.items.some((i) => i.key === activeKey);
+      const groupTotal = group.items.reduce((sum, i) => sum + (badges[i.key] || 0), 0);
 
-  return (
-    <div ref={ref} className="relative">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-        aria-haspopup="true"
-        className={`inline-flex h-8.5 items-center gap-1 whitespace-nowrap rounded-full px-2.5 text-sm font-semibold transition-colors ${hasActive ? "bg-brand text-white shadow-xs" : "text-white/80 hover:bg-white/10 hover:text-white"
-          }`}
-      >
-        {group.section}
-        {count > 0 && (
-          <span className="inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-danger px-1 text-[10px] font-bold leading-none text-white">
-            {count > 9 ? "9+" : count}
-          </span>
-        )}
-        <ChevronDown size={14} className={`transition-transform text-white/70 ${open ? "rotate-180" : ""}`} />
-      </button>
+      const toSubItem = (item) => {
+        const count = badges[item.key] || 0;
+        return {
+          label: item.label,
+          description: item.sub || "",
+          icon: resolveIcon(item.icon),
+          path: item.path,
+          isActive: item.key === activeKey,
+          badge: count > 0 ? (count > 9 ? "9+" : count) : undefined,
+          onClick: () => onNavigate(item.path),
+        };
+      };
 
-      {open && (
-        <div role="menu" aria-label={group.section} className="absolute left-0 top-full z-40 mt-2 w-72 rounded-2xl border border-brd bg-surface p-2 shadow-xl animate-in fade-in slide-in-from-top-1 duration-150">
-          <div className="px-2 py-1 mb-1 border-b border-brd flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-ink-3">{group.section}</span>
-            <span className="text-[10px] font-semibold text-ink-3">{group.items.length} features</span>
-          </div>
-          <div className="space-y-1">
-            {group.items.map((item) => {
-              const active = item.key === activeKey;
-              return (
-                <button
-                  key={item.key}
-                  role="menuitem"
-                  onClick={() => { setOpen(false); onNavigate(item.path); }}
-                  className={`group flex w-full items-center gap-2.5 rounded-xl p-2 text-left transition-all ${active
-                      ? "bg-brand-50/90 dark:bg-brand-950/40 border border-brand/20 shadow-xs"
-                      : "hover:bg-surface-2 text-ink-2 hover:text-ink"
-                    }`}
-                >
-                  <AccentTile icon={item.icon} tone={item.tone || "slate"} size={30} iconSize={15} />
-                  <div className="min-w-0 flex-1">
-                    <p className={`truncate text-xs font-bold leading-tight ${active ? "text-brand" : "text-ink group-hover:text-brand"}`}>
-                      {item.label}
-                    </p>
-                    {item.sub && (
-                      <p className="truncate text-[11px] font-normal text-ink-3 leading-tight mt-0.5">
-                        {item.sub}
-                      </p>
-                    )}
-                  </div>
-                  {badges[item.key] > 0 && (
-                    <span className="ml-auto inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-danger px-1 text-[10px] font-bold leading-none text-white">
-                      {badges[item.key] > 9 ? "9+" : badges[item.key]}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-    </div>
-  );
+      let subMenus = [];
+
+      if (group.section === "Academics") {
+        const courseworkKeys = ["study-hub", "routines", "calendar", "faculty"];
+        const toolKeys = ["tools", "cgpa", "cover-page", "pdf-maker"];
+
+        const courseworkItems = group.items.filter((i) => courseworkKeys.includes(i.key));
+        const toolItems = group.items.filter((i) => toolKeys.includes(i.key));
+        const remaining = group.items.filter(
+          (i) => !courseworkKeys.includes(i.key) && !toolKeys.includes(i.key)
+        );
+
+        if (courseworkItems.length > 0) {
+          subMenus.push({
+            title: "Coursework & Routines",
+            items: courseworkItems.map(toSubItem),
+          });
+        }
+        if (toolItems.length > 0 || remaining.length > 0) {
+          subMenus.push({
+            title: "Academic Tools",
+            items: [...toolItems, ...remaining].map(toSubItem),
+          });
+        }
+      } else if (group.section === "Campus Life") {
+        const activityKeys = ["clubs", "events", "announcements"];
+        const dailyKeys = ["prayer", "jobs"];
+
+        const activityItems = group.items.filter((i) => activityKeys.includes(i.key));
+        const dailyItems = group.items.filter((i) => dailyKeys.includes(i.key));
+        const remaining = group.items.filter(
+          (i) => !activityKeys.includes(i.key) && !dailyKeys.includes(i.key)
+        );
+
+        if (activityItems.length > 0) {
+          subMenus.push({
+            title: "Activities & Notices",
+            items: activityItems.map(toSubItem),
+          });
+        }
+        if (dailyItems.length > 0 || remaining.length > 0) {
+          subMenus.push({
+            title: "Daily & Career",
+            items: [...dailyItems, ...remaining].map(toSubItem),
+          });
+        }
+      } else if (group.section === "Community") {
+        const marketKeys = ["marketplace", "rideshare"];
+        const aidKeys = ["blood", "directory"];
+
+        const marketItems = group.items.filter((i) => marketKeys.includes(i.key));
+        const aidItems = group.items.filter((i) => aidKeys.includes(i.key));
+        const remaining = group.items.filter(
+          (i) => !marketKeys.includes(i.key) && !aidKeys.includes(i.key)
+        );
+
+        if (marketItems.length > 0) {
+          subMenus.push({
+            title: "Market & Rides",
+            items: marketItems.map(toSubItem),
+          });
+        }
+        if (aidItems.length > 0 || remaining.length > 0) {
+          subMenus.push({
+            title: "Directory & Aid",
+            items: [...aidItems, ...remaining].map(toSubItem),
+          });
+        }
+      } else if (group.section === "Manage") {
+        const adminKeys = ["users", "all-reports", "faculty-admin"];
+        const academicKeys = ["studyhub-admin", "clubs-admin"];
+
+        const adminItems = group.items.filter((i) => adminKeys.includes(i.key));
+        const academicItems = group.items.filter((i) => academicKeys.includes(i.key));
+        const remaining = group.items.filter(
+          (i) => !adminKeys.includes(i.key) && !academicKeys.includes(i.key)
+        );
+
+        if (adminItems.length > 0) {
+          subMenus.push({
+            title: "Administration",
+            items: adminItems.map(toSubItem),
+          });
+        }
+        if (academicItems.length > 0 || remaining.length > 0) {
+          subMenus.push({
+            title: "Academic Records",
+            items: [...academicItems, ...remaining].map(toSubItem),
+          });
+        }
+      } else if (group.section === "Services") {
+        subMenus.push({
+          title: "Campus Facilities",
+          items: group.items.map(toSubItem),
+        });
+      } else {
+        subMenus.push({
+          title: group.section,
+          items: group.items.map(toSubItem),
+        });
+      }
+
+      result.push({
+        id: group.section,
+        label: group.section,
+        isActive: hasActive,
+        badge: groupTotal > 0 ? (groupTotal > 9 ? "9+" : groupTotal) : undefined,
+        align: ["Community"].includes(group.section) ? "right" : "left",
+        subMenus,
+      });
+    }
+  }
+
+  return result;
 }
 
 // BottomNavBackdrop — 1-piece full-width continuous SVG canvas for the mobile
@@ -670,6 +742,15 @@ export function AppLayout({ children }) {
   const navBadges = { messages: totalUnreadMessages };
   const isChatbotMain = path === "/chatbot" || (path.startsWith("/chatbot/") && path !== "/chatbot/history");
 
+  const desktopMegaItems = React.useMemo(() => {
+    return buildMegaMenuItems({
+      nav,
+      activeKey,
+      onNavigate: go,
+      badges: navBadges,
+    });
+  }, [nav, activeKey, totalUnreadMessages]);
+
   return (
     <LayoutContext.Provider value={{ openDrawer: () => setDrawerOpen(true) }}>
       <div className={`bg-bg w-full max-w-full ${isChatbotMain ? "fixed inset-0 h-[100dvh] max-h-[100dvh] overflow-hidden flex flex-col" : "min-h-screen overflow-x-hidden"}`}>
@@ -724,35 +805,7 @@ export function AppLayout({ children }) {
             <Link to="/" className="shrink-0 px-1"><Logo onDark /></Link>
 
             <nav className="ml-1.5 hidden min-w-0 flex-1 items-center gap-0.5 xl:flex">
-              {nav.map((group, gi) =>
-                group.section ? (
-                  <NavMenu key={group.section} group={group} activeKey={activeKey} onNavigate={go} badges={navBadges} />
-                ) : (
-                  // Ungrouped items are direct links. `profile` is excluded — the
-                  // avatar on the right already opens it, and a duplicate row
-                  // would cost a slot the capsule can't spare.
-                  group.items
-                    .filter((i) => i.key !== "profile")
-                    .map((item) => {
-                      const active = item.key === activeKey;
-                      return (
-                        <button
-                          key={item.key}
-                          onClick={() => go(item.path)}
-                          className={`inline-flex h-8.5 items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 text-sm font-semibold transition-colors ${active ? "bg-brand text-white shadow-xs" : "text-white/80 hover:bg-white/10 hover:text-white"
-                            }`}
-                        >
-                          {item.label}
-                          {navBadges[item.key] > 0 && (
-                            <span className="inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-danger px-1 text-[10px] font-bold leading-none text-white">
-                              {navBadges[item.key] > 9 ? "9+" : navBadges[item.key]}
-                            </span>
-                          )}
-                        </button>
-                      );
-                    })
-                )
-              )}
+              <MegaMenu items={desktopMegaItems} />
             </nav>
 
             <div className="ml-auto flex shrink-0 items-center gap-1">
