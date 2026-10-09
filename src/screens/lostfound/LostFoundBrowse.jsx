@@ -134,7 +134,7 @@ export default function LostFoundBrowse() {
             onChange={(e) => setQuery(e.target.value)}
             aria-label="Search items"
             placeholder="Search items, locations..."
-            className="h-10 w-full rounded-lg border border-brd bg-surface pl-9 pr-8 text-xs sm:text-sm text-ink placeholder:text-ink-3 shadow-2xs transition-colors focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+            className="h-10 w-full rounded-lg border border-brd bg-surface pl-9 pr-8 text-xs sm:text-sm text-ink placeholder:text-ink-3 shadow-2xs transition-colors focus:border-ink-2 focus:outline-none focus:ring-1 focus:ring-ink-2"
           />
           {query && (
             <button
@@ -154,14 +154,14 @@ export default function LostFoundBrowse() {
           onClick={handleOpenFilters}
           className={`inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg border px-3 text-xs sm:text-sm font-semibold transition-colors shadow-2xs ${
             appliedFilterCount > 0
-              ? "border-brand bg-brand/10 text-brand dark:bg-brand/20"
+              ? "border-ink bg-surface-2 text-ink dark:border-neutral-400"
               : "border-brd bg-surface text-ink-2 hover:bg-surface-2 hover:text-ink"
           }`}
         >
-          <SlidersHorizontal size={15} />
+          <SlidersHorizontal size={15} className="text-ink-2" />
           <span>Filters</span>
           {appliedFilterCount > 0 && (
-            <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-brand px-1 text-[10px] font-bold text-white">
+            <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-ink px-1 text-[10px] font-bold text-surface">
               {appliedFilterCount}
             </span>
           )}
@@ -185,9 +185,9 @@ export default function LostFoundBrowse() {
           <button
             type="button"
             onClick={clearFilters}
-            className="inline-flex items-center gap-1 font-semibold text-brand hover:underline"
+            className="inline-flex items-center gap-1 font-semibold text-ink-2 hover:text-ink hover:underline"
           >
-            <RotateCcw size={11} />
+            <RotateCcw size={11} className="text-ink-3" />
             <span>Reset</span>
           </button>
         )}
@@ -232,8 +232,6 @@ export default function LostFoundBrowse() {
         open={filterModalOpen}
         onClose={handleCloseFilters}
         title="Filter Items"
-        icon={SlidersHorizontal}
-        tone="blue"
         size="md"
         footer={
           <div className="flex w-full items-center justify-between">
@@ -244,7 +242,12 @@ export default function LostFoundBrowse() {
               <Button variant="secondary" size="sm" onClick={handleCloseFilters}>
                 Cancel
               </Button>
-              <Button variant="primary" size="sm" onClick={handleApplyFilters}>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleApplyFilters}
+                className="border-ink bg-ink text-surface hover:opacity-90"
+              >
                 Apply Filters
               </Button>
             </div>
@@ -267,7 +270,7 @@ export default function LostFoundBrowse() {
                     onClick={() => setDraftTab(t.id)}
                     className={`flex items-center justify-between rounded-lg border px-2.5 py-2 text-xs font-semibold transition-all ${
                       isSelected
-                        ? "border-brand bg-brand text-white shadow-xs"
+                        ? "border-ink bg-ink text-surface shadow-xs dark:border-neutral-200 dark:bg-neutral-100 dark:text-neutral-900"
                         : "border-brd bg-surface-2 text-ink-2 hover:bg-surface-3"
                     }`}
                   >
@@ -275,7 +278,9 @@ export default function LostFoundBrowse() {
                     {counts[t.id] != null && (
                       <span
                         className={`rounded px-1 text-[10px] font-bold ${
-                          isSelected ? "bg-white/20 text-white" : "bg-surface-3 text-ink-3"
+                          isSelected
+                            ? "bg-surface/20 text-surface dark:bg-neutral-900/20 dark:text-neutral-900"
+                            : "bg-surface-3 text-ink-3"
                         }`}
                       >
                         {counts[t.id]}
@@ -296,7 +301,7 @@ export default function LostFoundBrowse() {
               <select
                 value={draftCategory}
                 onChange={(e) => setDraftCategory(e.target.value)}
-                className="h-10 w-full appearance-none rounded-lg border border-brd bg-surface px-3 pr-8 text-xs text-ink cursor-pointer shadow-2xs focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+                className="h-10 w-full appearance-none rounded-lg border border-brd bg-surface px-3 pr-8 text-xs text-ink cursor-pointer shadow-2xs focus:border-ink-2 focus:outline-none focus:ring-1 focus:ring-ink-2"
               >
                 <option value="All">All Categories</option>
                 {ITEM_CATEGORIES.map((c) => (
@@ -324,7 +329,7 @@ export default function LostFoundBrowse() {
                     onClick={() => setDraftStatus(s.id)}
                     className={`rounded-lg border px-2.5 py-2 text-xs font-semibold transition-all text-center ${
                       isSelected
-                        ? "border-brand bg-brand text-white shadow-xs"
+                        ? "border-ink bg-ink text-surface shadow-xs dark:border-neutral-200 dark:bg-neutral-100 dark:text-neutral-900"
                         : "border-brd bg-surface-2 text-ink-2 hover:bg-surface-3"
                     }`}
                   >
