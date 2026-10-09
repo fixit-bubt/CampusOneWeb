@@ -117,7 +117,7 @@ export default function LostFoundBrowse() {
 
   return (
     <AppShell activeKey="lost-found" title="Lost & Found">
-      <div className="mx-auto max-w-5xl">
+      <div className="w-full">
         <PageHeader
           title="Lost & Found"
           subtitle="Report lost belongings or help reunite found items with classmates."

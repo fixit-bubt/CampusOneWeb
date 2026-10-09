@@ -414,7 +414,7 @@ function NavMenu({ group, activeKey, onNavigate, badges }) {
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-haspopup="true"
-        className={`inline-flex h-9 items-center gap-1 whitespace-nowrap rounded-full px-3 text-base font-semibold transition-colors ${hasActive ? "bg-brand text-white shadow-xs" : "text-white/80 hover:bg-white/10 hover:text-white"
+        className={`inline-flex h-8.5 items-center gap-1 whitespace-nowrap rounded-full px-2.5 text-sm font-semibold transition-colors ${hasActive ? "bg-brand text-white shadow-xs" : "text-white/80 hover:bg-white/10 hover:text-white"
           }`}
       >
         {group.section}
@@ -711,28 +711,19 @@ export function AppLayout({ children }) {
 
         {/* Floating nav capsule — desktop only (xl and up). On mobile, navigation is at the bottom bar */}
         <div className="sticky top-0 z-30 hidden px-3 pb-2 pt-3 sm:px-6 sm:pt-4 xl:block shrink-0">
-          {/* Width cap allows all nav items, dropdowns and controls to breathe without collapsing. */}
-          <div className="mx-auto flex h-16 w-full max-w-[110rem] items-center gap-1 rounded-full border border-[#1d3d7d]/80 bg-gradient-to-r from-[#0a1b42]/95 via-[#0f2862]/95 to-[#0a1b42]/95 px-3 shadow-lg shadow-black/20 backdrop-blur-md sm:px-4 text-white">
+          {/* Width cap is shared with <main> below so the capsule and page content line up cleanly. */}
+          <div className="mx-auto flex h-14 w-full max-w-6xl items-center gap-1.5 rounded-full border border-[#1d3d7d]/80 bg-gradient-to-r from-[#0a1b42]/95 via-[#0f2862]/95 to-[#0a1b42]/95 px-3 shadow-lg shadow-black/20 backdrop-blur-md sm:px-4 text-white">
             <button
               onClick={() => setDrawerOpen(true)}
               aria-label="Open menu"
-              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white/80 hover:bg-white/10 hover:text-white xl:hidden"
+              className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white/80 hover:bg-white/10 hover:text-white xl:hidden"
             >
-              <Menu size={20} />
+              <Menu size={18} />
             </button>
 
             <Link to="/" className="shrink-0 px-1"><Logo onDark /></Link>
 
-            {/* xl, not lg: Admin's nav needs ~990px including logo and account
-                controls, and lg (1024px) doesn't leave room — the pills are
-                whitespace-nowrap, so an undersized box doesn't shrink them, it
-                lets them spill over the account controls and steal their
-                clicks. At xl the tightest role (Admin) still has ~210px slack.
-                Below xl the hamburger + drawer take over.
-                NB: no `overflow` here. Any overflow value makes this a clipping
-                container, and the dropdown panels hang BELOW the nav box — they
-                would be cut off and invisible. */}
-            <nav className="ml-2 hidden min-w-0 flex-1 items-center gap-0.5 xl:flex">
+            <nav className="ml-1.5 hidden min-w-0 flex-1 items-center gap-0.5 xl:flex">
               {nav.map((group, gi) =>
                 group.section ? (
                   <NavMenu key={group.section} group={group} activeKey={activeKey} onNavigate={go} badges={navBadges} />
@@ -748,7 +739,7 @@ export function AppLayout({ children }) {
                         <button
                           key={item.key}
                           onClick={() => go(item.path)}
-                          className={`inline-flex h-9 items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-base font-semibold transition-colors ${active ? "bg-brand text-white shadow-xs" : "text-white/80 hover:bg-white/10 hover:text-white"
+                          className={`inline-flex h-8.5 items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 text-sm font-semibold transition-colors ${active ? "bg-brand text-white shadow-xs" : "text-white/80 hover:bg-white/10 hover:text-white"
                             }`}
                         >
                           {item.label}
@@ -764,27 +755,24 @@ export function AppLayout({ children }) {
               )}
             </nav>
 
-            <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-1.5">
-              <LanguageToggle className="!text-white/80 hover:!bg-white/10 hover:!text-white !rounded-full" />
-              <ThemeToggle className="!text-white/80 hover:!bg-white/10 hover:!text-white !rounded-full" />
+            <div className="ml-auto flex shrink-0 items-center gap-1">
+              <LanguageToggle className="!text-white/80 hover:!bg-white/10 hover:!text-white !rounded-full !h-8 !px-2 !text-xs" />
+              <ThemeToggle className="!text-white/80 hover:!bg-white/10 hover:!text-white !rounded-full !h-8 !w-8" />
               <button
                 onClick={() => navigate("/notifications")}
                 title="Notifications"
                 aria-label={unreadNotifCount > 0 ? `Notifications, ${unreadNotifCount} unread` : "Notifications"}
-                className="relative inline-flex h-9 w-9 items-center justify-center rounded-full text-white/80 hover:bg-white/10 hover:text-white transition-colors"
+                className="relative inline-flex h-8 w-8 items-center justify-center rounded-full text-white/80 hover:bg-white/10 hover:text-white transition-colors"
               >
-                <Bell size={19} />
+                <Bell size={17} />
                 {unreadNotifCount > 0 && (
-                  <span className="absolute right-0.5 top-0.5 inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-danger px-1 text-[10px] font-bold leading-none text-white">
+                  <span className="absolute right-0.5 top-0.5 inline-flex h-3.5 min-w-[14px] items-center justify-center rounded-full bg-danger px-1 text-[9px] font-bold leading-none text-white">
                     {unreadNotifCount > 9 ? "9+" : unreadNotifCount}
                   </span>
                 )}
               </button>
-              {/* 2xl, not xl: at exactly xl the nav has only just gained room,
-                  so the badge waits until there is slack to spend. */}
-              <Badge tone={ROLE_TONE[currentUser.role]} className="hidden 2xl:inline-flex">{currentUser.role}</Badge>
               <button onClick={() => navigate("/profile")} title="My profile" className="rounded-full ring-2 ring-white/20 hover:ring-white/40 transition-all">
-                <Avatar name={currentUser.name} src={currentUser.avatar} size={32} />
+                <Avatar name={currentUser.name} src={currentUser.avatar} size={28} />
               </button>
               <HeaderMenuDropdown
                 currentUser={currentUser}
@@ -980,12 +968,12 @@ export function AppShell({ activeKey, title, children }) {
         </div>
       )}
 
-      {/* Content — constrained to max-w-5xl so all screens stay nicely centered in desktop */}
+      {/* Content — matches the capsule's max-w-6xl width so page content lines up cleanly with the nav */}
       <main
         className={`mx-auto w-full ${
           isChatbotMain
             ? "max-w-3xl flex-1 min-h-0 flex flex-col overflow-hidden px-2 sm:px-4 py-1.5 sm:py-2"
-            : "max-w-5xl overflow-x-hidden px-4 pb-3 pt-2 sm:px-6 sm:pb-5 sm:pt-3"
+            : "max-w-6xl overflow-x-hidden px-4 pb-3 pt-2 sm:px-6 sm:pb-5 sm:pt-3"
         }`}
       >
         {children}

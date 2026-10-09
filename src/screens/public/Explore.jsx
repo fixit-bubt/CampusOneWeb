@@ -42,7 +42,7 @@ export function PublicNav({ active, overlay = false }) {
   return (
     <div className={`${overlay ? "fixed inset-x-0 top-0" : "sticky top-0"} z-40 px-3 pb-2 pt-3 sm:px-6 sm:pt-4`}>
       {/* Width matches the signed-in app's capsule so the two read as one system. */}
-      <div className="mx-auto flex w-full max-w-[110rem] items-center gap-3 rounded-full border border-[#1d3d7d]/80 bg-gradient-to-r from-[#0a1b42]/95 via-[#0f2862]/95 to-[#0a1b42]/95 px-3 py-2 shadow-lg shadow-black/20 backdrop-blur-md text-white">
+      <div className="mx-auto flex w-full max-w-6xl items-center gap-3 rounded-full border border-[#1d3d7d]/80 bg-gradient-to-r from-[#0a1b42]/95 via-[#0f2862]/95 to-[#0a1b42]/95 px-3 py-2 shadow-lg shadow-black/20 backdrop-blur-md text-white">
         <button onClick={() => navigate("/")} aria-label="CampusOne home" className="shrink-0 px-1">
           <Logo onDark />
         </button>
@@ -53,7 +53,7 @@ export function PublicNav({ active, overlay = false }) {
             <button
               key={l.path}
               onClick={() => navigate(l.path)}
-              className={`whitespace-nowrap rounded-full px-3 py-1.5 text-[15px] font-semibold transition-colors ${
+              className={`whitespace-nowrap rounded-full px-2.5 py-1 text-sm font-semibold transition-colors ${
                 active === l.path ? "bg-brand text-white shadow-xs" : "text-white/80 hover:bg-white/10 hover:text-white"
               }`}
             >
@@ -76,7 +76,7 @@ export function PublicNav({ active, overlay = false }) {
         </div>
       </div>
       {/* Mobile / tablet nav — its own scrolling capsule under the main one. */}
-      <div className="mx-auto mt-2 flex max-w-[110rem] gap-1 overflow-x-auto rounded-full border border-[#1d3d7d]/80 bg-gradient-to-r from-[#0a1b42]/95 via-[#0f2862]/95 to-[#0a1b42]/95 px-2 py-1.5 shadow-md shadow-black/20 backdrop-blur-md xl:hidden text-white">
+      <div className="mx-auto mt-2 flex max-w-6xl gap-1 overflow-x-auto rounded-full border border-[#1d3d7d]/80 bg-gradient-to-r from-[#0a1b42]/95 via-[#0f2862]/95 to-[#0a1b42]/95 px-2 py-1.5 shadow-md shadow-black/20 backdrop-blur-md xl:hidden text-white">
         {NAV.map((l) => (
           <button
             key={l.path}
@@ -99,7 +99,7 @@ function ExploreShell({ active, children }) {
     <div className="min-h-screen bg-bg">
       <PublicNav active={active} />
 
-      <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6">{children}</main>
+      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">{children}</main>
 
       {!currentUser && (
         <div className="mx-auto max-w-7xl px-4 pb-10 sm:px-6 2xl:max-w-[96rem]">

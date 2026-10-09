@@ -58,7 +58,7 @@ export default function Landing() {
 
         {/* Top padding clears the overlaid capsule: ~80px of bar on desktop, plus
             the second scrolling nav row that appears below xl. */}
-        <div className="relative mx-auto max-w-[110rem] px-6 pb-16 pt-44 sm:pb-20 sm:pt-40 xl:pt-32">
+        <div className="relative mx-auto max-w-6xl px-6 pb-16 pt-44 sm:pb-20 sm:pt-40 xl:pt-32">
           <div className="mx-auto max-w-2xl text-center">
             <Badge tone="blue" icon={GraduationCap} className="mb-6">{t.landing.badge}</Badge>
             <h1 className="text-[40px] leading-[1.08] font-extrabold tracking-tight text-ink sm:text-[54px]">
