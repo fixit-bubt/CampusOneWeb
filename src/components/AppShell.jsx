@@ -731,25 +731,29 @@ export function AppLayout({ children }) {
     setDrawerOpen(false);
   }, [path]);
 
-  // Derived before the signed-out early return — useNavAccordion is a hook, so
-  // it can't sit behind a conditional return.
+  // Derived before the signed-out early return — all hooks must be called
+  // before any conditional return to prevent "rendered fewer hooks than expected".
   const nav = NAV_BY_ROLE[currentUser?.role] || EMPTY_NAV;
   const activeKey = activeKeyForPath(path, currentUser?.role);
   const { openSection, toggleSection } = useNavAccordion(drawerOpen);
-
-  if (!currentUser) return <>{children}</>;
-  const go = (p) => { setDrawerOpen(false); navigate(p); };
-  const navBadges = { messages: totalUnreadMessages };
-  const isChatbotMain = path === "/chatbot" || (path.startsWith("/chatbot/") && path !== "/chatbot/history");
+  const go = React.useCallback((p) => {
+    setDrawerOpen(false);
+    navigate(p);
+  }, []);
+  const navBadges = React.useMemo(() => ({ messages: totalUnreadMessages }), [totalUnreadMessages]);
 
   const desktopMegaItems = React.useMemo(() => {
+    if (!currentUser) return [];
     return buildMegaMenuItems({
       nav,
       activeKey,
       onNavigate: go,
       badges: navBadges,
     });
-  }, [nav, activeKey, totalUnreadMessages]);
+  }, [currentUser, nav, activeKey, go, navBadges]);
+
+  if (!currentUser) return <>{children}</>;
+  const isChatbotMain = path === "/chatbot" || (path.startsWith("/chatbot/") && path !== "/chatbot/history");
 
   return (
     <LayoutContext.Provider value={{ openDrawer: () => setDrawerOpen(true) }}>
