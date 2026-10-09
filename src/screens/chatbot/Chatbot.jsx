@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ArrowLeft, Sparkles, History, Trash2, Plus } from "lucide-react";
 import { navigate, Link } from "../../lib/router.jsx";
 import { supabase } from "../../lib/supabase.js";
@@ -17,6 +17,18 @@ export default function Chatbot({ conversationId }) {
   const toast = useToast();
   const chat = useChatSession(conversationId);
   const [confirmDelete, setConfirmDelete] = useState(false);
+
+  // Prevent entire page / body scrolling so ONLY the message list scrolls.
+  useEffect(() => {
+    const prevHtmlOverflow = document.documentElement.style.overflow;
+    const prevBodyOverflow = document.body.style.overflow;
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.documentElement.style.overflow = prevHtmlOverflow;
+      document.body.style.overflow = prevBodyOverflow;
+    };
+  }, []);
 
   async function deleteThisConversation() {
     setConfirmDelete(false);

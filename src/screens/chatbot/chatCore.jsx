@@ -328,7 +328,7 @@ export function MessageList({ messages, streamText, loadingHistory, emptyHint, o
 
   if (loadingHistory) return <Loading className="flex-1" />;
   return (
-    <div ref={listRef} className={`flex-1 overflow-y-auto px-3.5 py-3 sm:px-5 ${className}`}>
+    <div ref={listRef} className={`flex-1 min-h-0 overflow-y-auto px-3.5 py-3 sm:px-5 ${className}`}>
       {messages.length === 0 && !streamText ? (
         <div className="flex h-full min-h-[14rem] flex-col items-center justify-center px-4 py-6 text-center">
           <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50 text-brand dark:bg-brand-950/50">

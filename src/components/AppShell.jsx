@@ -605,16 +605,16 @@ export function AppLayout({ children }) {
 
   return (
     <LayoutContext.Provider value={{ openDrawer: () => setDrawerOpen(true) }}>
-      <div className={`bg-bg w-full max-w-full ${isChatbotMain ? "h-screen h-[100dvh] max-h-screen max-h-[100dvh] overflow-hidden flex flex-col" : "min-h-screen overflow-x-hidden"}`}>
-        {/* Mobile top header — matching navbar dark blue gradient with 3-dot menu on left, centered CampusOne + tagline, notifications on right */}
-        <header className="sticky top-0 z-30 flex h-11 w-full items-center justify-between border-b border-[#1d3d7d]/80 bg-gradient-to-r from-[#0a1b42] via-[#0f2862] to-[#0a1b42] px-3 text-white shadow-xs backdrop-blur-md xl:hidden">
-          {/* Left: 3-dot button to open the menu drawer */}
+      <div className={`bg-bg w-full max-w-full ${isChatbotMain ? "fixed inset-0 h-[100dvh] max-h-[100dvh] overflow-hidden flex flex-col" : "min-h-screen overflow-x-hidden"}`}>
+        {/* Mobile top header — fixed to screen across all pages with 3-line menu on left, centered CampusOne + tagline, notifications on right */}
+        <header className="fixed top-0 inset-x-0 z-30 flex h-11 w-full items-center justify-between border-b border-[#1d3d7d]/80 bg-gradient-to-r from-[#0a1b42] via-[#0f2862] to-[#0a1b42] px-3 text-white shadow-xs backdrop-blur-md xl:hidden">
+          {/* Left: 3-line hamburger button to open the menu drawer */}
           <button
             onClick={() => setDrawerOpen(true)}
             aria-label="Open menu"
             className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white/85 hover:bg-white/10 hover:text-white transition-colors"
           >
-            <MoreVertical size={18} />
+            <Menu size={18} />
           </button>
 
           {/* Center: CampusOne name + tagline */}
@@ -643,7 +643,7 @@ export function AppLayout({ children }) {
         </header>
 
         {/* Floating nav capsule — desktop only (xl and up). On mobile, navigation is at the bottom bar */}
-        <div className="sticky top-0 z-30 hidden px-3 pb-2 pt-3 sm:px-6 sm:pt-4 xl:block">
+        <div className="sticky top-0 z-30 hidden px-3 pb-2 pt-3 sm:px-6 sm:pt-4 xl:block shrink-0">
           {/* Width cap is shared with <main> below so the capsule and the page
               content line up on the same left/right edges at every size. */}
           <div className="mx-auto flex h-16 w-full max-w-[110rem] items-center gap-1 rounded-full border border-[#1d3d7d]/80 bg-gradient-to-r from-[#0a1b42]/95 via-[#0f2862]/95 to-[#0a1b42]/95 px-3 shadow-lg shadow-black/20 backdrop-blur-md sm:px-4 text-white">
@@ -748,7 +748,7 @@ export function AppLayout({ children }) {
         )}
 
         {/* Main column — full width now that the nav is overhead, not beside. */}
-        <div className={`w-full max-w-full ${isChatbotMain ? "flex-1 min-h-0 flex flex-col overflow-hidden pb-[68px] xl:pb-4" : "overflow-x-hidden pb-24 xl:pb-0"}`}>
+        <div className={`w-full max-w-full ${isChatbotMain ? "flex-1 min-h-0 flex flex-col overflow-hidden pt-11 pb-[60px] xl:pt-0 xl:pb-4" : "overflow-x-hidden pt-11 pb-24 xl:pt-0 xl:pb-0"}`}>
           {children}
         </div>
 
@@ -919,7 +919,7 @@ export function AppShell({ activeKey, title, children }) {
       <main
         className={`mx-auto w-full ${
           isChatbotMain
-            ? "max-w-2xl flex-1 min-h-0 flex flex-col overflow-hidden px-2 sm:px-4 pt-1 sm:pt-2 pb-1 sm:pb-2"
+            ? "max-w-3xl flex-1 min-h-0 flex flex-col overflow-hidden px-2 sm:px-4 py-1.5 sm:py-2"
             : "max-w-[110rem] overflow-x-hidden px-4 pb-6 pt-2 sm:px-6 sm:pb-8 sm:pt-3"
         }`}
       >
