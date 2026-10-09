@@ -131,24 +131,45 @@ function ActivityRow({ ev }) {
 
 // --- Course row -------------------------------------------------------------
 function CourseRow({ course, sectionId, onDelete }) {
-  const { studyFilesIn } = useApp();
-  const count = studyFilesIn(course.id).length;
+  const { studyFilesIn, studyQuestionsIn, studyBooksInCourse } = useApp();
+  const notesCount = studyFilesIn(course.id).length;
+  const qbCount = studyQuestionsIn(course.id).length;
+  const booksCount = studyBooksInCourse(course.id).length;
+
+  const parts = [];
+  if (notesCount > 0) parts.push(`${notesCount} note${notesCount === 1 ? "" : "s"}`);
+  if (qbCount > 0) parts.push(`${qbCount} question${qbCount === 1 ? "" : "s"}`);
+  if (booksCount > 0) parts.push(`${booksCount} book${booksCount === 1 ? "" : "s"}`);
+  const summary = parts.length > 0 ? parts.join(" · ") : "No materials yet";
+
   return (
     <div className="group flex items-center transition-colors hover:bg-surface-2">
       <button
         onClick={() => navigate(`/study-hub/section/${sectionId}/course/${course.id}`)}
-        className="flex min-w-0 flex-1 items-center gap-3 p-4 text-left"
+        className="flex min-w-0 flex-1 items-center gap-3.5 p-4 text-left"
       >
-        <AccentTile icon="BookOpen" tone={ACCENT} size={40} />
+        <AccentTile icon="BookOpen" tone={ACCENT} size={42} />
         <div className="min-w-0 flex-1">
-          <p className="truncate text-base font-semibold text-ink group-hover:text-teal-700 dark:group-hover:text-teal-300">
-            {course.code} — {course.name}
-          </p>
-          <p className="mt-0.5 text-xs text-ink-3">{count} material{count === 1 ? "" : "s"}</p>
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-ink text-base group-hover:text-teal-600 dark:group-hover:text-teal-300">
+              {course.code}
+            </span>
+            <span className="text-ink-3">·</span>
+            <span className="truncate text-base font-medium text-ink">
+              {course.name}
+            </span>
+          </div>
+          <p className="mt-0.5 text-xs text-ink-3">{summary}</p>
         </div>
-        {!onDelete && <Icon name="ArrowRight" size={18} className="shrink-0 text-ink-3 group-hover:text-teal-500 dark:group-hover:text-teal-300" />}
+        {!onDelete && (
+          <Icon name="ChevronRight" size={18} className="shrink-0 text-ink-3 group-hover:text-teal-500 dark:group-hover:text-teal-300" />
+        )}
       </button>
-      {onDelete && <div className="pr-3"><DeleteIcon onClick={() => onDelete(course)} title="Remove course" /></div>}
+      {onDelete && (
+        <div className="pr-3">
+          <DeleteIcon onClick={() => onDelete(course)} title="Remove course" />
+        </div>
+      )}
     </div>
   );
 }
@@ -180,7 +201,16 @@ function CRBanner({ section, sectionNumber }) {
 // Landing — your section overview / pending / first-run setup
 // ============================================================================
 export function StudyHub() {
-  const { currentUser, studyMembers, studySections, resolveMySection, studySectionStats, studyRecentActivity, studyCoursesIn, studyBooksInCourse, dataLoading, myPendingCreateRequest } = useApp();
+  const {
+    currentUser, studyMembers, studySections, resolveMySection,
+    studyCoursesIn, studyPinsIn, deleteStudyPin, removeMember,
+    dataLoading, myPendingCreateRequest,
+  } = useApp();
+  const toast = useToast();
+  const [query, setQuery] = React.useState("");
+  const [unpinBusy, setUnpinBusy] = React.useState(false);
+  const [leaveOpen, setLeaveOpen] = React.useState(false);
+  const [leaving, setLeaving] = React.useState(false);
 
   const mine = resolveMySection();
 
@@ -196,11 +226,45 @@ export function StudyHub() {
   }
 
   const { section, deptCode: code, intakeNumber, sectionNumber, myRole } = mine;
-  const stats = studySectionStats(section);
-  const activity = studyRecentActivity(section, 5);
+  const manager = isCR(myRole);
+  const pins = studyPinsIn(section.id);
   const courses = studyCoursesIn(section.id);
-  const books = courses.flatMap((c) => studyBooksInCourse(c.id)); // section-scoped, like the other home stats
-  const shownCourses = courses.slice(0, 4);
+
+  const myMembership = studyMembers.find(
+    (m) => m.sectionId === section.id && m.userId === currentUser?.id && m.status === "approved"
+  );
+
+  async function unpin(pin) {
+    if (unpinBusy) return;
+    setUnpinBusy(true);
+    try {
+      const r = await deleteStudyPin(pin.id);
+      if (!r.ok) { toast({ type: "error", title: "Couldn't unpin", message: r.error }); return; }
+      toast({ type: "success", title: "Unpinned" });
+    } catch {
+      toast({ type: "error", title: "Couldn't unpin", message: "Please try again." });
+    } finally {
+      setUnpinBusy(false);
+    }
+  }
+
+  async function doLeave() {
+    if (leaving || !myMembership) return;
+    setLeaving(true);
+    try {
+      const r = await removeMember(myMembership.id);
+      if (!r.ok) { toast({ type: "error", title: "Couldn't leave", message: r.error }); return; }
+      toast({ type: "success", title: "Left section" });
+      setLeaveOpen(false);
+    } finally {
+      setLeaving(false);
+    }
+  }
+
+  const q = query.trim().toLowerCase();
+  const filteredCourses = courses.filter(
+    (c) => !q || (c.code || "").toLowerCase().includes(q) || (c.name || "").toLowerCase().includes(q)
+  );
 
   return (
     <AppShell activeKey="study-hub" title="Study Hub">
@@ -208,79 +272,90 @@ export function StudyHub() {
         title="Study Hub"
         subtitle={`${code} · Intake ${intakeNumber} · Section ${sectionNumber}`}
         action={
-          <Button variant="secondary" icon="LayoutGrid" onClick={() => navigate("/study-hub/browse")}>Browse all</Button>
+          <div className="flex items-center gap-2">
+            <Button variant="secondary" icon="LayoutGrid" onClick={() => navigate("/study-hub/browse")}>
+              Browse all
+            </Button>
+            {manager ? (
+              <Button icon="Settings" onClick={() => navigate(`/study-hub/section/${section.id}/manage`)}>
+                Manage section
+              </Button>
+            ) : myMembership && (
+              <Button variant="secondary" icon="LogOut" onClick={() => setLeaveOpen(true)}>
+                Leave
+              </Button>
+            )}
+          </div>
         }
       />
 
-      {isCR(myRole) && <CRBanner section={section} sectionNumber={sectionNumber} />}
+      {manager && <CRBanner section={section} sectionNumber={sectionNumber} />}
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Courses" value={stats.courses} icon="BookOpen" tone={ACCENT} />
-        <StatCard label="Materials" value={stats.files} icon="FileText" tone="slate" />
-        <StatCard label="Question papers" value={stats.questions} icon="FileQuestion" tone="slate" />
-        <StatCard label="Books" value={books.length} icon="Library" tone="slate" />
-      </div>
-
-      <div className="mt-6 grid gap-4 sm:grid-cols-2">
-        <button
-          onClick={() => navigate(`/study-hub/section/${section.id}`)}
-          className="group flex items-center gap-4 rounded-md border border-brd bg-surface p-5 text-left shadow-sm transition-colors hover:border-teal-300 dark:hover:border-teal-500/40 hover:bg-teal-50/40 dark:hover:bg-teal-500/10"
-        >
-          <span className="flex h-11 w-11 items-center justify-center rounded-md bg-teal-100 dark:bg-teal-500/15 text-teal-700 dark:text-teal-300"><Icon name="FolderOpen" size={22} /></span>
-          <div className="flex-1">
-            <p className="text-base font-semibold text-ink">Open my section</p>
-            <p className="text-xs text-ink-3">Pinned notices and your subjects.</p>
+      {/* Pinned notices (clean and prominent when pins exist; hidden when empty) */}
+      {pins.length > 0 && (
+        <div className="mb-6 space-y-2">
+          <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-teal-700 dark:text-teal-400">
+            <Icon name="Pin" size={14} /> Pinned Notices
           </div>
-          <Icon name="ArrowRight" size={18} className="text-ink-3 group-hover:text-teal-500 dark:group-hover:text-teal-300" />
-        </button>
-        <button
-          onClick={() => navigate(`/study-hub/intake/${section.intakeId}`)}
-          className="group flex items-center gap-4 rounded-md border border-brd bg-surface p-5 text-left shadow-sm transition-colors hover:border-teal-300 dark:hover:border-teal-500/40 hover:bg-teal-50/40 dark:hover:bg-teal-500/10"
-        >
-          <span className="flex h-11 w-11 items-center justify-center rounded-md bg-surface-3 text-ink-2"><Icon name="Library" size={22} /></span>
-          <div className="flex-1">
-            <p className="text-base font-semibold text-ink">Study Materials</p>
-            <p className="text-xs text-ink-3">Notes, questions & books from every section — and senior intakes.</p>
+          <div className="space-y-2">
+            {pins.map((p) => (
+              <PinRow key={p.id} pin={p} manager={manager} onUnpin={unpin} />
+            ))}
           </div>
-          <Icon name="ArrowRight" size={18} className="text-ink-3 group-hover:text-teal-500 dark:group-hover:text-teal-300" />
-        </button>
-      </div>
-
-      <div className="mt-8">
-        <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-base font-semibold text-ink">Recent activity</h3>
-          <button onClick={() => navigate(`/study-hub/section/${section.id}`)} className="text-base font-semibold text-teal-700 dark:text-teal-300 hover:text-teal-800 dark:hover:text-teal-300">Open section</button>
         </div>
-        {activity.length === 0 ? (
-          <EmptyState icon="FileText" title="Nothing yet" message="New materials and pins will show up here." />
-        ) : (
-          <Card className="divide-y divide-brd overflow-hidden">
-            {activity.map((ev) => <ActivityRow key={ev.id} ev={ev} />)}
-          </Card>
-        )}
-      </div>
+      )}
 
-      <div className="mt-8">
-        <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-base font-semibold text-ink">Your courses</h3>
-          <span className="text-xs text-ink-3">{courses.length} total</span>
+      {/* Courses */}
+      <div className="space-y-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h3 className="text-base font-semibold text-ink">
+            Courses <span className="text-xs font-normal text-ink-3">({courses.length})</span>
+          </h3>
+          {courses.length > 2 && (
+            <div className="relative w-full sm:max-w-xs">
+              <Icon name="Search" size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-3" />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search courses…"
+                className="h-10 w-full rounded-md border border-brd bg-surface pl-9 pr-3 text-sm text-ink placeholder:text-ink-3 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand-100"
+              />
+            </div>
+          )}
         </div>
+
         {courses.length === 0 ? (
-          <EmptyState icon="BookOpen" title="No courses yet" message="Courses your CR or editors add will appear here." />
+          <EmptyState
+            icon="BookOpen"
+            title="No courses yet"
+            message={manager ? "Add your section's courses in Manage section." : "Your CR will add courses here."}
+          />
+        ) : filteredCourses.length === 0 ? (
+          <EmptyState
+            icon="Search"
+            title="No matching courses"
+            message="Try searching with another course code or name."
+          />
         ) : (
           <Card className="divide-y divide-brd overflow-hidden">
-            {shownCourses.map((c) => <CourseRow key={c.id} course={c} sectionId={section.id} />)}
-            {courses.length > shownCourses.length && (
-              <button
-                onClick={() => navigate(`/study-hub/section/${section.id}`)}
-                className="flex w-full items-center justify-center gap-1.5 p-3 text-base font-semibold text-teal-700 dark:text-teal-300 hover:bg-surface-2"
-              >
-                View all {courses.length} courses <Icon name="ArrowRight" size={15} />
-              </button>
-            )}
+            {filteredCourses.map((c) => (
+              <CourseRow key={c.id} course={c} sectionId={section.id} />
+            ))}
           </Card>
         )}
       </div>
+
+      <Modal
+        open={leaveOpen} onClose={() => setLeaveOpen(false)} icon="LogOut" tone="red"
+        title="Leave this section?"
+        description="You'll lose access to this section's materials. You can rejoin later."
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setLeaveOpen(false)} disabled={leaving}>Cancel</Button>
+            <Button variant="destructive" loading={leaving} onClick={doLeave}>Leave section</Button>
+          </>
+        }
+      />
     </AppShell>
   );
 }
@@ -749,28 +824,29 @@ function AddBookModal({ open, onClose, courseId, courseCode }) {
 }
 
 function BooksTab({ books, canAdd, isManager, onAdd, onDelete, saved, onToggleSave }) {
-  const [filter, setFilter] = React.useState("All");
   if (books.length === 0) {
-    return <EmptyState icon="Library" title="No books yet" message={canAdd ? "Add textbooks, references, or the syllabus for this subject." : "No books have been shared for this subject yet."} action={canAdd ? <Button icon="Plus" onClick={onAdd}>Add book</Button> : null} />;
+    return (
+      <EmptyState
+        icon="Library"
+        title="No books yet"
+        message={canAdd ? "Add textbooks, references, or the syllabus." : "No books have been shared yet."}
+        action={canAdd ? <Button icon="Plus" onClick={onAdd}>Add book</Button> : null}
+      />
+    );
   }
-  const counts = { All: books.length };
-  BOOK_FILTERS.slice(1).forEach((k) => { counts[k] = books.filter((b) => b.kind === k).length; });
-  const shown = filter === "All" ? books : books.filter((b) => b.kind === filter);
   return (
-    <div>
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <FilterTabs options={BOOK_FILTERS} value={filter} onChange={setFilter} counts={counts} />
-        {canAdd && <Button icon="Plus" onClick={onAdd}>Add book</Button>}
-      </div>
-      {shown.length === 0 ? (
-        <EmptyState icon="Library" title="Nothing here" message="No books in this category yet." />
-      ) : (
-        <Card className="divide-y divide-brd overflow-hidden">
-          {shown.map((b) => <BookRow key={b.id} book={b} isManager={isManager} onDelete={onDelete}
-            saved={saved?.has(b.id)} onToggleSave={onToggleSave && (() => onToggleSave("book", b))} />)}
-        </Card>
-      )}
-    </div>
+    <Card className="divide-y divide-brd overflow-hidden">
+      {books.map((b) => (
+        <BookRow
+          key={b.id}
+          book={b}
+          isManager={isManager}
+          onDelete={onDelete}
+          saved={saved?.has(b.id)}
+          onToggleSave={onToggleSave && (() => onToggleSave("book", b))}
+        />
+      ))}
+    </Card>
   );
 }
 
@@ -986,14 +1062,40 @@ function PinnedTab({ pins, manager, onPin, onUnpin }) {
 }
 
 function CoursesTab({ section, courses, canEdit, manager, onAddCourse, onDeleteCourse }) {
+  const [query, setQuery] = React.useState("");
+  const q = query.trim().toLowerCase();
+  const filtered = courses.filter((c) =>
+    !q || (c.code || "").toLowerCase().includes(q) || (c.name || "").toLowerCase().includes(q)
+  );
+
   return (
-    <div>
-      {canEdit && <div className="mb-4 flex justify-end"><Button icon="Plus" onClick={onAddCourse}>Add course</Button></div>}
+    <div className="space-y-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h3 className="text-base font-semibold text-ink">
+          Courses <span className="text-xs font-normal text-ink-3">({courses.length})</span>
+        </h3>
+        <div className="flex items-center gap-2">
+          {courses.length > 2 && (
+            <div className="relative w-full sm:w-64">
+              <Icon name="Search" size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-3" />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search courses…"
+                className="h-10 w-full rounded-md border border-brd bg-surface pl-9 pr-3 text-sm text-ink placeholder:text-ink-3 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand-100"
+              />
+            </div>
+          )}
+          {canEdit && <Button icon="Plus" onClick={onAddCourse}>Add course</Button>}
+        </div>
+      </div>
       {courses.length === 0 ? (
         <EmptyState icon="BookOpen" title="No courses yet" message={canEdit ? "Add a course so classmates can upload its materials." : "No courses have been added yet."} />
+      ) : filtered.length === 0 ? (
+        <EmptyState icon="Search" title="No matching courses" message="Try another search term." />
       ) : (
         <Card className="divide-y divide-brd overflow-hidden">
-          {courses.map((c) => <CourseRow key={c.id} course={c} sectionId={section.id} onDelete={manager ? onDeleteCourse : undefined} />)}
+          {filtered.map((c) => <CourseRow key={c.id} course={c} sectionId={section.id} onDelete={manager ? onDeleteCourse : undefined} />)}
         </Card>
       )}
     </div>
@@ -1028,29 +1130,30 @@ function QBPaperRow({ paper, isManager, onVerify, onDelete, saved, onToggleSave 
 }
 
 function QuestionBankTab({ qb, canEdit, isManager, onUpload, onVerify, onDelete, saved, onToggleSave }) {
-  const [exam, setExam] = React.useState("All");
-  // Chip values come from the data (study_question_bank.exam), with the known
-  // exams first so the order stays stable.
-  const exams = ["All", ...QB_EXAMS.filter((x) => qb.some((q) => q.exam === x)),
-    ...[...new Set(qb.map((q) => q.exam).filter(Boolean))].filter((x) => !QB_EXAMS.includes(x))];
-  const counts = { All: qb.length };
-  exams.slice(1).forEach((x) => { counts[x] = qb.filter((q) => q.exam === x).length; });
-  const shown = exam === "All" ? qb : qb.filter((q) => q.exam === exam);
+  if (qb.length === 0) {
+    return (
+      <EmptyState
+        icon="FileQuestion"
+        title="No question papers yet"
+        message={canEdit ? "Upload a past paper to start the bank." : "Nothing has been uploaded yet."}
+        action={canEdit ? <Button icon="Upload" onClick={onUpload}>Upload</Button> : null}
+      />
+    );
+  }
   return (
-    <div>
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <FilterTabs options={exams} value={exam} onChange={setExam} counts={counts} />
-        {canEdit && <Button icon="Upload" onClick={onUpload}>Upload paper</Button>}
-      </div>
-      {shown.length === 0 ? (
-        <EmptyState icon="FileQuestion" title={exam === "All" ? "No papers" : `No ${exam} papers`} message={canEdit ? "Upload a past paper to start the bank." : "Nothing here yet."} />
-      ) : (
-        <Card className="divide-y divide-brd overflow-hidden">
-          {shown.map((q) => <QBPaperRow key={q.id} paper={q} isManager={isManager} onVerify={onVerify} onDelete={onDelete}
-            saved={saved?.has(q.id)} onToggleSave={onToggleSave && (() => onToggleSave("question", q))} />)}
-        </Card>
-      )}
-    </div>
+    <Card className="divide-y divide-brd overflow-hidden">
+      {qb.map((q) => (
+        <QBPaperRow
+          key={q.id}
+          paper={q}
+          isManager={isManager}
+          onVerify={onVerify}
+          onDelete={onDelete}
+          saved={saved?.has(q.id)}
+          onToggleSave={onToggleSave && (() => onToggleSave("question", q))}
+        />
+      ))}
+    </Card>
   );
 }
 
@@ -1298,31 +1401,31 @@ function FileRow({ file, isManager, onDelete, saved, onToggleSave }) {
   );
 }
 
-// Notes (course materials) tab — file list with a type filter.
+// Notes (course materials) tab — clean file list.
 function NotesTab({ files, canUpload, manager, onUpload, onDelete, saved, onToggleSave }) {
-  const [filter, setFilter] = React.useState("All");
-  const types = ["All", ...MATERIAL_TYPES.filter((t) => files.some((f) => f.type === t))];
-  const counts = { All: files.length };
-  MATERIAL_TYPES.forEach((t) => { counts[t] = files.filter((f) => f.type === t).length; });
-  const shown = filter === "All" ? files : files.filter((f) => f.type === filter);
+  if (files.length === 0) {
+    return (
+      <EmptyState
+        icon="FileText"
+        title="No notes yet"
+        message={canUpload ? "Upload notes or slides for this subject." : "Nothing has been uploaded yet."}
+        action={canUpload ? <Button icon="Upload" onClick={onUpload}>Upload</Button> : null}
+      />
+    );
+  }
   return (
-    <div>
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        {files.length > 1 ? <FilterTabs options={types} value={filter} onChange={setFilter} counts={counts} /> : <span />}
-        {canUpload && <Button icon="Upload" onClick={onUpload}>Upload</Button>}
-      </div>
-      {files.length === 0 ? (
-        <EmptyState icon="FileText" title="No notes yet" message={canUpload ? "Upload notes, slides, or assignments for this subject." : "Nothing has been uploaded yet."}
-          action={canUpload ? <Button icon="Upload" onClick={onUpload}>Upload</Button> : null} />
-      ) : shown.length === 0 ? (
-        <EmptyState icon="FileText" title="Nothing here" message="No notes of this type yet." />
-      ) : (
-        <Card className="divide-y divide-brd overflow-hidden">
-          {shown.map((f) => <FileRow key={f.id} file={f} isManager={manager} onDelete={onDelete}
-            saved={saved?.has(f.id)} onToggleSave={onToggleSave && (() => onToggleSave("material", f))} />)}
-        </Card>
-      )}
-    </div>
+    <Card className="divide-y divide-brd overflow-hidden">
+      {files.map((f) => (
+        <FileRow
+          key={f.id}
+          file={f}
+          isManager={manager}
+          onDelete={onDelete}
+          saved={saved?.has(f.id)}
+          onToggleSave={onToggleSave && (() => onToggleSave("material", f))}
+        />
+      ))}
+    </Card>
   );
 }
 
@@ -1344,7 +1447,6 @@ export function StudyHubCourse({ sectionId, courseId }) {
   const [confirmBusy, setConfirmBusy] = React.useState(false);
   const [verifyBusy, setVerifyBusy] = React.useState(false);
   const [query, setQuery] = React.useState("");
-  const [sort, setSort] = React.useState("new"); // new | name
   const [saved, setSaved] = React.useState(() => new Set());
 
   // Saved state for everything visible in this subject (study_bookmarks is
@@ -1416,12 +1518,10 @@ export function StudyHubCourse({ sectionId, courseId }) {
     );
   }
 
-  // Search (title) + sort (newest / name) apply to every tab's list.
+  // Search (title) applies to every tab's list, sorted newest first.
   const q = query.trim().toLowerCase();
-  const bySort = (a, b) => sort === "name"
-    ? a.title.localeCompare(b.title)
-    : (b.createdAt ?? "").localeCompare(a.createdAt ?? "");
-  const refine = (list) => list.filter((x) => !q || (x.title ?? "").toLowerCase().includes(q)).sort(bySort);
+  const byNewest = (a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? "");
+  const refine = (list) => list.filter((x) => !q || (x.title ?? "").toLowerCase().includes(q)).sort(byNewest);
   const files = refine(studyFilesIn(course.id));
   const qb = refine(studyQuestionsIn(course.id));
   const books = refine(studyBooksInCourse(course.id));
@@ -1469,8 +1569,11 @@ export function StudyHubCourse({ sectionId, courseId }) {
 
   return (
     <AppShell activeKey="study-hub" title="Study Hub">
-      <button onClick={() => navigate(`/study-hub/section/${section.id}`)} className="mb-4 inline-flex items-center gap-1.5 text-base font-semibold text-ink-3 hover:text-ink-2">
-        <Icon name="ArrowLeft" size={16} /> Section {section.number}
+      <button
+        onClick={() => navigate(section.isMine ? "/study-hub" : `/study-hub/section/${section.id}`)}
+        className="mb-4 inline-flex items-center gap-1.5 text-base font-semibold text-ink-3 hover:text-ink-2"
+      >
+        <Icon name="ArrowLeft" size={16} /> {section.isMine ? "Courses" : `Section ${section.number}`}
       </button>
       <PageHeader
         title={`${course.code} — ${course.name}`}
@@ -1499,23 +1602,28 @@ export function StudyHubCourse({ sectionId, courseId }) {
         </Card>
       )}
 
-      <div className="mb-5 flex flex-col gap-3">
-        <FilterTabs options={["Notes", "Questions", "Books"]} value={tab} onChange={setTab}
-          counts={{ Notes: files.length, Questions: qb.length, Books: books.length }} />
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="relative w-full sm:max-w-xs">
-            <Icon name="Search" size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-3" />
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              aria-label="Search in this subject"
-              placeholder="Search by title…"
-              className="h-11 w-full rounded-md border border-brd bg-surface pl-9 pr-3 text-base text-ink placeholder:text-ink-3 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand-100"
-            />
-          </div>
-          <SegmentToggle
-            options={[{ value: "new", label: "Newest", icon: "Clock" }, { value: "name", label: "Name", icon: "ArrowDownAZ" }]}
-            value={sort} onChange={setSort} />
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <FilterTabs
+          options={["Notes", "Questions", "Books"]}
+          value={tab}
+          onChange={setTab}
+          counts={{ Notes: files.length, Questions: qb.length, Books: books.length }}
+        />
+        <div className="flex items-center gap-2">
+          {(files.length > 2 || qb.length > 2 || books.length > 2 || query) && (
+            <div className="relative w-full sm:w-56">
+              <Icon name="Search" size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-3" />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search…"
+                className="h-10 w-full rounded-md border border-brd bg-surface pl-9 pr-3 text-sm text-ink placeholder:text-ink-3 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand-100"
+              />
+            </div>
+          )}
+          {canUpload && tab === "Notes" && <Button icon="Upload" onClick={() => setUploadOpen(true)}>Upload</Button>}
+          {canUpload && tab === "Questions" && <Button icon="Upload" onClick={() => setQbOpen(true)}>Upload</Button>}
+          {canUpload && tab === "Books" && <Button icon="Plus" onClick={() => setBookOpen(true)}>Add book</Button>}
         </div>
       </div>
 
