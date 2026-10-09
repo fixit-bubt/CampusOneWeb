@@ -166,6 +166,7 @@ export default function ChatWidget() {
               <MessageList
                 messages={chat.messages}
                 streamText={chat.streamText}
+                sending={chat.sending}
                 loadingHistory={chat.loadingHistory}
                 emptyHint="Ask me anything about campus."
                 onPickSuggestion={(s) => chat.send(s)}

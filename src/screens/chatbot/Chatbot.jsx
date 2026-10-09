@@ -101,6 +101,7 @@ export default function Chatbot({ conversationId }) {
           <MessageList
             messages={chat.messages}
             streamText={chat.streamText}
+            sending={chat.sending}
             loadingHistory={chat.loadingHistory}
             onPickSuggestion={(s) => chat.send(s)}
           />

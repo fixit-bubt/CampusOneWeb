@@ -319,19 +319,73 @@ export function RichText({ body }) {
 // Scrolling transcript. `emptyHint` lets the widget run a shorter blurb than
 const FIXI_GREETING = "Hi there! 👋 I'm **Fixi**, your BUBT campus companion. How can I help you today? You can ask me about bus schedules, prayer times, class routines, clubs, campus notices, or academic tools!";
 
+// ---------------------------------------------------------------------------
+// Thinking state — terminal style slash spinner cycling through progressive stages
+// while the model processes the query and prepares the response.
+// ---------------------------------------------------------------------------
+export function ThinkingBubble() {
+  const [frame, setFrame] = useState(0);
+  const [stepIndex, setStepIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setFrame((f) => (f + 1) % 4);
+    }, 110);
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    const t1 = setTimeout(() => setStepIndex(1), 1800);
+    const t2 = setTimeout(() => setStepIndex(2), 3800);
+    const t3 = setTimeout(() => setStepIndex(1), 7500);
+    const t4 = setTimeout(() => setStepIndex(2), 11000);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+      clearTimeout(t4);
+    };
+  }, []);
+
+  const FRAMES = ["|", "/", "-", "\\"];
+  const STEPS = [
+    "Thinking…",
+    "Connecting the details…",
+    "Forming a response…",
+  ];
+
+  return (
+    <div className="group flex gap-2 py-0.5 justify-start">
+      <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand dark:bg-brand-950/50">
+        <Sparkles size={13} />
+      </span>
+      <div className="flex flex-col items-start max-w-[85%] sm:max-w-[75%]">
+        <div className="flex items-center gap-2 rounded-2xl border border-brd bg-surface px-3.5 py-2 text-sm leading-relaxed text-ink shadow-xs">
+          <span className="inline-flex w-3.5 items-center justify-center font-mono font-bold text-brand select-none text-xs sm:text-sm" aria-hidden="true">
+            {FRAMES[frame]}
+          </span>
+          <span className="text-ink-2 font-medium text-xs sm:text-sm tracking-tight transition-opacity duration-200">
+            {STEPS[stepIndex]}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Scrolling transcript. `emptyHint` lets the widget run a shorter blurb than
 // the full page without forking the component; `onPickSuggestion` turns the
 // empty state into tappable conversation starters.
-export function MessageList({ messages, streamText, loadingHistory, emptyHint, onPickSuggestion, className = "" }) {
+export function MessageList({ messages, streamText, sending, loadingHistory, emptyHint, onPickSuggestion, className = "" }) {
   const listRef = useRef(null);
   useLayoutEffect(() => {
     if (listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight;
-  }, [messages, streamText]);
+  }, [messages, streamText, sending]);
 
   if (loadingHistory) return <Loading className="flex-1" />;
   return (
     <div ref={listRef} className={`flex-1 min-h-0 overflow-y-auto px-3.5 py-3 sm:px-5 ${className}`}>
-      {messages.length === 0 && !streamText ? (
+      {messages.length === 0 && !streamText && !sending ? (
         <div className="space-y-3 py-1">
           {/* Fixed friendly greeting from Fixi */}
           <Bubble role="model" body={FIXI_GREETING} />
@@ -354,6 +408,7 @@ export function MessageList({ messages, streamText, loadingHistory, emptyHint, o
       ) : (
         <div className="space-y-2 py-1">
           {messages.map((m) => <Bubble key={m.id} role={m.role} body={m.body} imageUrl={m.image_url} />)}
+          {sending && !streamText && <ThinkingBubble />}
           {streamText && <Bubble role="model" body={streamText} pending />}
         </div>
       )}
