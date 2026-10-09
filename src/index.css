@@ -17,8 +17,8 @@
    `.dark` on <html> flips every token, so token-based classes need no dark: twin. */
 :root {
   --brand: #2b5be3; --brand-700: #1f47c4; --brand-50: #eef3ff; --brand-100: #dde7ff;
-  --bg: #f5f7fb; --surface: #ffffff; --surface-2: #eef2f8; --surface-3: #e6ebf3;
-  --border: #e4e9f1; --border-2: #d4dce8;
+  --bg: #eaf4fb; --surface: #ffffff; --surface-2: #e1eff8; --surface-3: #d5e6f3;
+  --border: #d4e5f2; --border-2: #c3dbed;
   --text: #0f1a2e; --text-2: #46536e; --text-3: #8693aa;
   --success: #12915e; --success-bg: #e3f5ec;
   --warn: #b9760a;    --warn-bg: #fbefdb;

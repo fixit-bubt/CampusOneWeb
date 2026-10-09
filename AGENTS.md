@@ -152,10 +152,10 @@ Styles strictly flow through CSS custom variables in `src/index.css` and extende
 |---|---|---|---|
 | Brand Primary | `#2b5be3` | `#5b85f7` | `bg-brand`, `text-brand` |
 | Brand Hover / 700 | `#1f47c4` | `#7b9ef8` | `bg-brand-700` |
-| Background | `#f5f7fb` | `#000000` | `bg-bg` |
+| Background | `#eaf4fb` | `#000000` | `bg-bg` |
 | Surface (Card) | `#ffffff` | `#121212` | `bg-surface` |
-| Surface Alt | `#eef2f8` | `#1c1c1c` | `bg-surface-2` |
-| Border | `#e4e9f1` | `#262626` | `border-brd` |
+| Surface Alt | `#e1eff8` | `#1c1c1c` | `bg-surface-2` |
+| Border | `#d4e5f2` | `#262626` | `border-brd` |
 | Primary Text | `#0f1a2e` | `#f4f4f5` | `text-ink` |
 | Secondary Text | `#46536e` | `#a1a1aa` | `text-ink-2` |
 | Muted Text | `#8693aa` | `#71717a` | `text-ink-3` |
