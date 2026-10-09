@@ -15,6 +15,7 @@ export type MegaMenuSubItem = {
 export type MegaMenuItem = {
   id: number | string;
   label: string;
+  items?: MegaMenuSubItem[];
   subMenus?: {
     title: string;
     items: MegaMenuSubItem[];
@@ -71,6 +72,10 @@ const MegaMenu = React.forwardRef<HTMLUListElement, MegaMenuProps>(
           const isCurrentActive = Boolean(navItem.isActive);
           const isOpen = openMenu === navItem.label;
           const isHovered = isHover === navItem.id;
+          const hasDropdown = Boolean(
+            (navItem.items && navItem.items.length > 0) ||
+            (navItem.subMenus && navItem.subMenus.length > 0)
+          );
 
           return (
             <li
@@ -85,7 +90,7 @@ const MegaMenu = React.forwardRef<HTMLUListElement, MegaMenuProps>(
                   if (navItem.onClick) {
                     handleHover(null);
                     navItem.onClick();
-                  } else if (navItem.subMenus) {
+                  } else if (hasDropdown) {
                     setOpenMenu((prev) => (prev === navItem.label ? null : navItem.label));
                   }
                 }}
@@ -103,7 +108,7 @@ const MegaMenu = React.forwardRef<HTMLUListElement, MegaMenuProps>(
                     {navItem.badge}
                   </span>
                 )}
-                {navItem.subMenus && (
+                {hasDropdown && (
                   <ChevronDown
                     className={`relative z-10 h-3.5 w-3.5 transition-transform duration-200 text-white/70 group-hover:rotate-180 ${
                       isOpen ? "rotate-180" : ""
@@ -123,7 +128,7 @@ const MegaMenu = React.forwardRef<HTMLUListElement, MegaMenuProps>(
               </button>
 
               <AnimatePresence>
-                {isOpen && navItem.subMenus && (
+                {isOpen && hasDropdown && (
                   <div
                     className={`absolute top-full w-auto pt-2 z-50 ${
                       navItem.align === "right" ? "right-0" : "left-0"
@@ -134,76 +139,133 @@ const MegaMenu = React.forwardRef<HTMLUListElement, MegaMenuProps>(
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 6, scale: 0.98 }}
                       transition={{ duration: 0.16, ease: "easeOut" }}
-                      className="w-max max-w-[90vw] border border-brd bg-surface/98 p-4 shadow-2xl backdrop-blur-md"
-                      style={{
-                        borderRadius: 16,
-                      }}
+                      className="w-72 max-w-[90vw] rounded-2xl border border-brd bg-surface p-2 shadow-2xl"
                       layoutId="menu"
                     >
-                      <div className="flex w-fit shrink-0 space-x-6 overflow-hidden">
-                        {navItem.subMenus.map((sub) => (
-                          <motion.div layout className="w-full min-w-[210px]" key={sub.title}>
-                            <h3 className="mb-2.5 px-2 text-[10px] font-bold uppercase tracking-wider text-ink-3 border-b border-brd pb-1">
-                              {sub.title}
-                            </h3>
-                            <ul className="space-y-1">
-                              {sub.items.map((item) => {
-                                const Icon = item.icon;
-                                const isSubActive = Boolean(item.isActive);
-                                return (
-                                  <li key={item.label}>
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        handleHover(null);
-                                        if (item.onClick) item.onClick();
-                                      }}
-                                      className={`flex w-full items-start space-x-3 rounded-lg p-2 text-left transition-colors duration-150 group ${
-                                        isSubActive
-                                          ? "bg-surface-2 font-semibold"
-                                          : "hover:bg-surface-2"
-                                      }`}
-                                    >
-                                      <div
-                                        className={`flex size-8 shrink-0 items-center justify-center rounded-lg border transition-colors duration-150 ${
+                      {navItem.items && navItem.items.length > 0 ? (
+                        <ul className="space-y-1">
+                          {navItem.items.map((item) => {
+                            const Icon = item.icon;
+                            const isSubActive = Boolean(item.isActive);
+                            return (
+                              <li key={item.label}>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    handleHover(null);
+                                    if (item.onClick) item.onClick();
+                                  }}
+                                  className={`flex w-full items-center space-x-3 rounded-xl p-2 text-left transition-colors duration-150 group ${
+                                    isSubActive
+                                      ? "bg-surface-2 font-semibold"
+                                      : "hover:bg-surface-2"
+                                  }`}
+                                >
+                                  <div
+                                    className={`flex size-8 shrink-0 items-center justify-center rounded-lg border transition-colors duration-150 ${
+                                      isSubActive
+                                        ? "border-brand bg-brand text-white"
+                                        : "border-brd bg-surface-2 text-ink group-hover:bg-brand group-hover:text-white group-hover:border-brand"
+                                    }`}
+                                  >
+                                    <Icon className="h-4 w-4 flex-none" />
+                                  </div>
+                                  <div className="min-w-0 flex-1 leading-4">
+                                    <div className="flex items-center gap-1.5">
+                                      <p
+                                        className={`truncate text-xs font-semibold transition-colors ${
                                           isSubActive
-                                            ? "border-brand bg-brand text-white"
-                                            : "border-brd bg-surface-2 text-ink group-hover:bg-brand group-hover:text-white group-hover:border-brand"
+                                            ? "text-brand"
+                                            : "text-ink group-hover:text-brand"
                                         }`}
                                       >
-                                        <Icon className="h-4 w-4 flex-none" />
-                                      </div>
-                                      <div className="min-w-0 flex-1 leading-4">
-                                        <div className="flex items-center gap-1.5">
-                                          <p
-                                            className={`truncate text-xs font-semibold transition-colors ${
-                                              isSubActive
-                                                ? "text-brand"
-                                                : "text-ink group-hover:text-brand"
-                                            }`}
-                                          >
-                                            {item.label}
-                                          </p>
-                                          {Boolean(item.badge) && (
-                                            <span className="inline-flex h-3.5 min-w-[14px] items-center justify-center rounded-full bg-danger px-1 text-[9px] font-bold text-white">
-                                              {item.badge}
-                                            </span>
+                                        {item.label}
+                                      </p>
+                                      {Boolean(item.badge) && (
+                                        <span className="inline-flex h-3.5 min-w-[14px] items-center justify-center rounded-full bg-danger px-1 text-[9px] font-bold text-white">
+                                          {item.badge}
+                                        </span>
+                                      )}
+                                    </div>
+                                    {item.description && (
+                                      <p className="mt-0.5 line-clamp-1 text-[11px] text-ink-3 transition-colors duration-150">
+                                        {item.description}
+                                      </p>
+                                    )}
+                                  </div>
+                                </button>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      ) : (
+                        <div className="flex w-fit shrink-0 space-x-6 overflow-hidden">
+                          {navItem.subMenus?.map((sub) => (
+                            <motion.div layout className="w-full min-w-[210px]" key={sub.title}>
+                              {sub.title && (
+                                <h3 className="mb-2.5 px-2 text-[10px] font-bold uppercase tracking-wider text-ink-3 border-b border-brd pb-1">
+                                  {sub.title}
+                                </h3>
+                              )}
+                              <ul className="space-y-1">
+                                {sub.items.map((item) => {
+                                  const Icon = item.icon;
+                                  const isSubActive = Boolean(item.isActive);
+                                  return (
+                                    <li key={item.label}>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          handleHover(null);
+                                          if (item.onClick) item.onClick();
+                                        }}
+                                        className={`flex w-full items-start space-x-3 rounded-lg p-2 text-left transition-colors duration-150 group ${
+                                          isSubActive
+                                            ? "bg-surface-2 font-semibold"
+                                            : "hover:bg-surface-2"
+                                        }`}
+                                      >
+                                        <div
+                                          className={`flex size-8 shrink-0 items-center justify-center rounded-lg border transition-colors duration-150 ${
+                                            isSubActive
+                                              ? "border-brand bg-brand text-white"
+                                              : "border-brd bg-surface-2 text-ink group-hover:bg-brand group-hover:text-white group-hover:border-brand"
+                                          }`}
+                                        >
+                                          <Icon className="h-4 w-4 flex-none" />
+                                        </div>
+                                        <div className="min-w-0 flex-1 leading-4">
+                                          <div className="flex items-center gap-1.5">
+                                            <p
+                                              className={`truncate text-xs font-semibold transition-colors ${
+                                                isSubActive
+                                                  ? "text-brand"
+                                                  : "text-ink group-hover:text-brand"
+                                              }`}
+                                            >
+                                              {item.label}
+                                            </p>
+                                            {Boolean(item.badge) && (
+                                              <span className="inline-flex h-3.5 min-w-[14px] items-center justify-center rounded-full bg-danger px-1 text-[9px] font-bold text-white">
+                                                {item.badge}
+                                              </span>
+                                            )}
+                                          </div>
+                                          {item.description && (
+                                            <p className="mt-0.5 line-clamp-1 text-[11px] text-ink-3 transition-colors duration-150">
+                                              {item.description}
+                                            </p>
                                           )}
                                         </div>
-                                        {item.description && (
-                                          <p className="mt-0.5 line-clamp-1 text-[11px] text-ink-3 transition-colors duration-150">
-                                            {item.description}
-                                          </p>
-                                        )}
-                                      </div>
-                                    </button>
-                                  </li>
-                                );
-                              })}
-                            </ul>
-                          </motion.div>
-                        ))}
-                      </div>
+                                      </button>
+                                    </li>
+                                  );
+                                })}
+                              </ul>
+                            </motion.div>
+                          ))}
+                        </div>
+                      )}
                     </motion.div>
                   </div>
                 )}

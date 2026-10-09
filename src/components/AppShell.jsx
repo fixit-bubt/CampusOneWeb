@@ -410,11 +410,11 @@ function buildMegaMenuItems({ nav, activeKey, onNavigate, badges = {} }) {
         });
       }
     } else {
-      // Grouped items with animated dropdown
+      // Grouped items: direct single list inside dropdown (no multiple sections)
       const hasActive = group.items.some((i) => i.key === activeKey);
       const groupTotal = group.items.reduce((sum, i) => sum + (badges[i.key] || 0), 0);
 
-      const toSubItem = (item) => {
+      const items = group.items.map((item) => {
         const count = badges[item.key] || 0;
         return {
           label: item.label,
@@ -425,109 +425,7 @@ function buildMegaMenuItems({ nav, activeKey, onNavigate, badges = {} }) {
           badge: count > 0 ? (count > 9 ? "9+" : count) : undefined,
           onClick: () => onNavigate(item.path),
         };
-      };
-
-      let subMenus = [];
-
-      if (group.section === "Academics") {
-        const courseworkKeys = ["study-hub", "routines", "calendar", "faculty"];
-        const toolKeys = ["tools", "cgpa", "cover-page", "pdf-maker"];
-
-        const courseworkItems = group.items.filter((i) => courseworkKeys.includes(i.key));
-        const toolItems = group.items.filter((i) => toolKeys.includes(i.key));
-        const remaining = group.items.filter(
-          (i) => !courseworkKeys.includes(i.key) && !toolKeys.includes(i.key)
-        );
-
-        if (courseworkItems.length > 0) {
-          subMenus.push({
-            title: "Coursework & Routines",
-            items: courseworkItems.map(toSubItem),
-          });
-        }
-        if (toolItems.length > 0 || remaining.length > 0) {
-          subMenus.push({
-            title: "Academic Tools",
-            items: [...toolItems, ...remaining].map(toSubItem),
-          });
-        }
-      } else if (group.section === "Campus Life") {
-        const activityKeys = ["clubs", "events", "announcements"];
-        const dailyKeys = ["prayer", "jobs"];
-
-        const activityItems = group.items.filter((i) => activityKeys.includes(i.key));
-        const dailyItems = group.items.filter((i) => dailyKeys.includes(i.key));
-        const remaining = group.items.filter(
-          (i) => !activityKeys.includes(i.key) && !dailyKeys.includes(i.key)
-        );
-
-        if (activityItems.length > 0) {
-          subMenus.push({
-            title: "Activities & Notices",
-            items: activityItems.map(toSubItem),
-          });
-        }
-        if (dailyItems.length > 0 || remaining.length > 0) {
-          subMenus.push({
-            title: "Daily & Career",
-            items: [...dailyItems, ...remaining].map(toSubItem),
-          });
-        }
-      } else if (group.section === "Community") {
-        const marketKeys = ["marketplace", "rideshare"];
-        const aidKeys = ["blood", "directory"];
-
-        const marketItems = group.items.filter((i) => marketKeys.includes(i.key));
-        const aidItems = group.items.filter((i) => aidKeys.includes(i.key));
-        const remaining = group.items.filter(
-          (i) => !marketKeys.includes(i.key) && !aidKeys.includes(i.key)
-        );
-
-        if (marketItems.length > 0) {
-          subMenus.push({
-            title: "Market & Rides",
-            items: marketItems.map(toSubItem),
-          });
-        }
-        if (aidItems.length > 0 || remaining.length > 0) {
-          subMenus.push({
-            title: "Directory & Aid",
-            items: [...aidItems, ...remaining].map(toSubItem),
-          });
-        }
-      } else if (group.section === "Manage") {
-        const adminKeys = ["users", "all-reports", "faculty-admin"];
-        const academicKeys = ["studyhub-admin", "clubs-admin"];
-
-        const adminItems = group.items.filter((i) => adminKeys.includes(i.key));
-        const academicItems = group.items.filter((i) => academicKeys.includes(i.key));
-        const remaining = group.items.filter(
-          (i) => !adminKeys.includes(i.key) && !academicKeys.includes(i.key)
-        );
-
-        if (adminItems.length > 0) {
-          subMenus.push({
-            title: "Administration",
-            items: adminItems.map(toSubItem),
-          });
-        }
-        if (academicItems.length > 0 || remaining.length > 0) {
-          subMenus.push({
-            title: "Academic Records",
-            items: [...academicItems, ...remaining].map(toSubItem),
-          });
-        }
-      } else if (group.section === "Services") {
-        subMenus.push({
-          title: "Campus Facilities",
-          items: group.items.map(toSubItem),
-        });
-      } else {
-        subMenus.push({
-          title: group.section,
-          items: group.items.map(toSubItem),
-        });
-      }
+      });
 
       result.push({
         id: group.section,
@@ -535,7 +433,7 @@ function buildMegaMenuItems({ nav, activeKey, onNavigate, badges = {} }) {
         isActive: hasActive,
         badge: groupTotal > 0 ? (groupTotal > 9 ? "9+" : groupTotal) : undefined,
         align: ["Community"].includes(group.section) ? "right" : "left",
-        subMenus,
+        items,
       });
     }
   }
