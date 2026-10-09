@@ -5,6 +5,7 @@ import { navigate, Link, useHashRoute } from "../lib/router.jsx";
 import { Avatar, Badge } from "./ui.jsx";
 import { Icon } from "./Icon.jsx";
 import { Logo } from "./Brand.jsx";
+import { AccentTile } from "./featureKit.jsx";
 import { ThemeToggle } from "./ThemeToggle.jsx";
 import { LanguageToggle } from "./LanguageToggle.jsx";
 
@@ -17,46 +18,46 @@ import { LanguageToggle } from "./LanguageToggle.jsx";
 
 // Study Hub is students-only (staff/admins don't have a section), so it's added
 // to the Student nav explicitly rather than to the shared CAMPUS_LIFE group.
-const STUDY_HUB = { key: "study-hub", label: "Study Hub", icon: "BookMarked", path: "/study-hub" };
+const STUDY_HUB = { key: "study-hub", label: "Study Hub", icon: "BookMarked", path: "/study-hub", tone: "study", sub: "Course notes & section files" };
 // Cover Page Generator is also students-only (BUBT assignment/lab/report covers).
-const COVER_PAGE = { key: "cover-page", label: "Cover Page", icon: "FileBadge", path: "/cover-page" };
+const COVER_PAGE = { key: "cover-page", label: "Cover Page", icon: "FileBadge", path: "/cover-page", tone: "coverpage", sub: "Assignment cover maker" };
 // PDF Maker (photos->PDF, merge, organize, compress) — students only, and
 // entirely client-side. Its /pdf-maker/:tool subroutes highlight this row via
 // activeKeyForPath's longest-prefix match.
-const PDF_MAKER = { key: "pdf-maker", label: "PDF Maker", icon: "FileStack", path: "/pdf-maker" };
+const PDF_MAKER = { key: "pdf-maker", label: "PDF Maker", icon: "FileStack", path: "/pdf-maker", tone: "pdfmaker", sub: "Merge, organize & compress" };
 // BUBT's own student portal (results/routine/attendance), embedded in-app —
 // all roles, like mobile's Annex tab. A real internal route (see Annex.jsx),
 // not an external link, so it needs no special-case in the nav renderer.
-const ANNEX = { key: "annex", label: "Annex Portal", icon: "ExternalLink", path: "/annex" };
+const ANNEX = { key: "annex", label: "Annex Portal", icon: "ExternalLink", path: "/annex", tone: "study", sub: "BUBT student portal" };
 
 // "Academics" — coursework tools: what you need to attend and pass classes.
 // Split out of Campus Life, which had grown to 11 items and stopped being a
 // meaningful grouping. Study Hub + Cover Page are students-only (see above).
 const ACADEMICS = [
-  { key: "tools", label: "Academic Tools", icon: "Wrench", path: "/tools", match: ["/tools", "/cover-page", "/pdf-maker", "/cgpa"] },
-  { key: "routines", label: "Class Routines", icon: "ClipboardList", path: "/routines" },
-  { key: "calendar", label: "Academic Calendar", icon: "CalendarRange", path: "/calendar" },
-  { key: "faculty", label: "Faculty", icon: "GraduationCap", path: "/faculty" },
+  { key: "tools", label: "Academic Tools", icon: "Wrench", path: "/tools", tone: "study", sub: "CGPA, covers & PDF tools", match: ["/tools", "/cover-page", "/pdf-maker", "/cgpa"] },
+  { key: "routines", label: "Class Routines", icon: "ClipboardList", path: "/routines", tone: "routines", sub: "Class & exam schedules" },
+  { key: "calendar", label: "Academic Calendar", icon: "CalendarRange", path: "/calendar", tone: "calendar", sub: "Semesters, exams & holidays" },
+  { key: "faculty", label: "Faculty Directory", icon: "GraduationCap", path: "/faculty", tone: "faculty", sub: "Teachers & professors" },
 ];
 // CGPA calculator is students-only (RequireRole below), like Cover Page/PDF
 // Maker — ACADEMICS itself is shared with Admin's nav, so it can't go there.
-const CGPA = { key: "cgpa", label: "CGPA", icon: "Calculator", path: "/cgpa" };
+const CGPA = { key: "cgpa", label: "CGPA Calculator", icon: "Calculator", path: "/cgpa", tone: "study", sub: "Grade & target tracker" };
 // Shared "Campus Life" group — things happening around campus, not coursework.
 const CAMPUS_LIFE = [
-  { key: "clubs", label: "Clubs", icon: "UsersRound", path: "/clubs" },
-  { key: "events", label: "Events", icon: "CalendarDays", path: "/events" },
-  { key: "announcements", label: "Announcements", icon: "Megaphone", path: "/announcements" },
-  { key: "prayer", label: "Prayer Times", icon: "Moon", path: "/prayer" },
-  { key: "jobs", label: "Jobs & Internships", icon: "Briefcase", path: "/jobs" },
+  { key: "clubs", label: "Clubs", icon: "UsersRound", path: "/clubs", tone: "clubs", sub: "Student clubs & communities" },
+  { key: "events", label: "Events", icon: "CalendarDays", path: "/events", tone: "events", sub: "Campus events & seminars" },
+  { key: "announcements", label: "Announcements", icon: "Megaphone", path: "/announcements", tone: "announce", sub: "Official notices & circulars" },
+  { key: "prayer", label: "Prayer Times", icon: "Moon", path: "/prayer", tone: "prayer", sub: "Azan, jamaat & musallahs" },
+  { key: "jobs", label: "Jobs & Internships", icon: "Briefcase", path: "/jobs", tone: "jobs", sub: "Career & part-time roles" },
 ];
 // Bus lives in Services with Medical — it's campus logistics, not an activity.
-const BUS = { key: "bus", label: "Bus Schedule", icon: "Bus", path: "/bus" };
-const MEDICAL = { key: "medical", label: "Medical Center", icon: "Stethoscope", path: "/medical" };
+const BUS = { key: "bus", label: "Bus Schedule", icon: "Bus", path: "/bus", tone: "bus", sub: "Routes & departure times" };
+const MEDICAL = { key: "medical", label: "Medical Center", icon: "Stethoscope", path: "/medical", tone: "medical", sub: "On-campus clinic & doctors" };
 // Shared "Community" group (grows as features ship: ride share, blood…).
 const COMMUNITY = [
-  { key: "marketplace", label: "Marketplace", icon: "Store", path: "/marketplace" },
-  { key: "rideshare", label: "Ride Share", icon: "Car", path: "/rides" },
-  { key: "blood", label: "Blood Donation", icon: "Droplet", path: "/blood" },
+  { key: "marketplace", label: "Marketplace", icon: "Store", path: "/marketplace", tone: "market", sub: "Buy & sell student items" },
+  { key: "rideshare", label: "Ride Share", icon: "Car", path: "/rides", tone: "ride", sub: "Campus carpool & rides" },
+  { key: "blood", label: "Blood Donation", icon: "Droplet", path: "/blood", tone: "blood", sub: "Donors & emergency requests" },
 ];
 
 const NAV_BY_ROLE = {
@@ -78,13 +79,13 @@ const NAV_BY_ROLE = {
       section: "Services", items: [
         MEDICAL,
         BUS,
-        { key: "lost-found", label: "Lost & Found", icon: "PackageSearch", path: "/lost-found" },
+        { key: "lost-found", label: "Lost & Found", icon: "PackageSearch", path: "/lost-found", tone: "lostfound", sub: "Report & claim campus items" },
       ]
     },
     {
       section: "Community", items: [
         ...COMMUNITY,
-        { key: "directory", label: "Students", icon: "Users", path: "/students" },
+        { key: "directory", label: "Students", icon: "Users", path: "/students", tone: "directory", sub: "Student directory & chat" },
       ]
     },
     {
@@ -128,10 +129,10 @@ const NAV_BY_ROLE = {
     // they open daily and every role now fits the same shape of nav.
     {
       section: "Manage", items: [
-        { key: "users", label: "Users", icon: "Users", path: "/admin/users" },
-        { key: "faculty-admin", label: "Faculty Profiles", icon: "GraduationCap", path: "/admin/faculty" },
-        { key: "studyhub-admin", label: "Study Hub", icon: "BookMarked", path: "/admin/study-hub" },
-        { key: "clubs-admin", label: "Clubs", icon: "UsersRound", path: "/admin/clubs" },
+        { key: "users", label: "Users", icon: "Users", path: "/admin/users", tone: "directory", sub: "Manage user roles & access" },
+        { key: "faculty-admin", label: "Faculty Profiles", icon: "GraduationCap", path: "/admin/faculty", tone: "faculty", sub: "Teacher directory records" },
+        { key: "studyhub-admin", label: "Study Hub", icon: "BookMarked", path: "/admin/study-hub", tone: "study", sub: "Departments & sections" },
+        { key: "clubs-admin", label: "Clubs", icon: "UsersRound", path: "/admin/clubs", tone: "clubs", sub: "Approve & manage clubs" },
       ]
     },
     { section: "Academics", items: ACADEMICS },
@@ -254,37 +255,88 @@ function SidebarContent({ nav, activeKey, onNavigate, onLogout, badges = {}, ope
                 <button
                   onClick={() => onToggleSection(group.section)}
                   aria-expanded={open}
-                  className="flex w-full items-center gap-1.5 rounded-md px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.06em] text-ink-3 hover:bg-surface-2 hover:text-ink-2"
+                  className={`flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-xs font-bold uppercase tracking-wider transition-colors ${
+                    open ? "bg-surface-2/70 text-ink" : "text-ink-3 hover:bg-surface-2 hover:text-ink-2"
+                  }`}
                 >
-                  <ChevronDown size={13} className={`transition-transform ${open ? "" : "-rotate-90"}`} />
-                  {group.section}
-                  {hidden > 0 && (
-                    <span className="ml-auto inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-danger px-1 text-[10px] leading-none text-white">
-                      {hidden > 9 ? "9+" : hidden}
+                  <span className="flex items-center gap-2">
+                    <ChevronDown size={14} className={`transition-transform duration-200 text-ink-3 ${open ? "" : "-rotate-90"}`} />
+                    <span>{group.section}</span>
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="text-[10px] font-semibold tracking-normal lowercase text-ink-3/80">
+                      {group.items.length} features
                     </span>
-                  )}
-                </button>
-              )}
-              {open && group.items.map((item) => {
-                const active = item.key === activeKey;
-                return (
-                  <button
-                    key={item.key}
-                    data-active={active ? "true" : undefined}
-                    onClick={() => onNavigate(item.path)}
-                    className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-base font-semibold transition-colors ${active ? "bg-brand-50 text-brand-700" : "text-ink-2 hover:bg-surface-2 hover:text-ink"
-                      }`}
-                  >
-                    <Icon name={item.icon} size={18} className={active ? "text-brand" : "text-ink-3"} />
-                    {item.label}
-                    {badges[item.key] > 0 && (
-                      <span className="ml-auto inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-danger px-1.5 text-[11px] font-bold leading-none text-white">
-                        {badges[item.key] > 9 ? "9+" : badges[item.key]}
+                    {hidden > 0 && (
+                      <span className="inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-danger px-1 text-[10px] font-bold leading-none text-white">
+                        {hidden > 9 ? "9+" : hidden}
                       </span>
                     )}
-                  </button>
-                );
-              })}
+                  </span>
+                </button>
+              )}
+              {open && (
+                collapsible ? (
+                  <div className="ml-2 pl-2.5 border-l-2 border-brd/80 space-y-1 my-1">
+                    {group.items.map((item) => {
+                      const active = item.key === activeKey;
+                      return (
+                        <button
+                          key={item.key}
+                          data-active={active ? "true" : undefined}
+                          onClick={() => onNavigate(item.path)}
+                          className={`group flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left transition-all ${
+                            active
+                              ? "bg-brand-50/90 dark:bg-brand-950/40 border border-brand/30 shadow-xs"
+                              : "hover:bg-surface-2 text-ink-2 hover:text-ink"
+                          }`}
+                        >
+                          <AccentTile icon={item.icon} tone={item.tone || "slate"} size={28} iconSize={14} />
+                          <div className="min-w-0 flex-1">
+                            <p className={`truncate text-xs font-bold leading-tight ${active ? "text-brand" : "text-ink group-hover:text-brand"}`}>
+                              {item.label}
+                            </p>
+                            {item.sub && (
+                              <p className="truncate text-[10.5px] font-normal text-ink-3 leading-tight mt-0.5">
+                                {item.sub}
+                              </p>
+                            )}
+                          </div>
+                          {badges[item.key] > 0 && (
+                            <span className="ml-auto inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-danger px-1 text-[10px] font-bold leading-none text-white">
+                              {badges[item.key] > 9 ? "9+" : badges[item.key]}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  group.items.map((item) => {
+                    const active = item.key === activeKey;
+                    return (
+                      <button
+                        key={item.key}
+                        data-active={active ? "true" : undefined}
+                        onClick={() => onNavigate(item.path)}
+                        className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
+                          active
+                            ? "bg-brand text-white shadow-xs"
+                            : "text-ink-2 hover:bg-surface-2 hover:text-ink"
+                        }`}
+                      >
+                        <Icon name={item.icon} size={18} className={active ? "text-white" : "text-ink-3"} />
+                        <span className="flex-1 text-left">{item.label}</span>
+                        {badges[item.key] > 0 && (
+                          <span className="ml-auto inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-danger px-1.5 text-[11px] font-bold leading-none text-white">
+                            {badges[item.key] > 9 ? "9+" : badges[item.key]}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })
+                )
+              )}
             </div>
           );
         })}
@@ -375,27 +427,44 @@ function NavMenu({ group, activeKey, onNavigate, badges }) {
       </button>
 
       {open && (
-        <div role="menu" aria-label={group.section} className="absolute left-0 top-full z-40 mt-2 w-56 rounded-2xl border border-brd bg-surface p-1.5 shadow-xl">
-          {group.items.map((item) => {
-            const active = item.key === activeKey;
-            return (
-              <button
-                key={item.key}
-                role="menuitem"
-                onClick={() => { setOpen(false); onNavigate(item.path); }}
-                className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-base font-semibold transition-colors ${active ? "bg-brand-50 text-brand-700" : "text-ink-2 hover:bg-surface-2 hover:text-ink"
-                  }`}
-              >
-                <Icon name={item.icon} size={17} className={active ? "text-brand" : "text-ink-3"} />
-                {item.label}
-                {badges[item.key] > 0 && (
-                  <span className="ml-auto inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-danger px-1.5 text-[11px] font-bold leading-none text-white">
-                    {badges[item.key] > 9 ? "9+" : badges[item.key]}
-                  </span>
-                )}
-              </button>
-            );
-          })}
+        <div role="menu" aria-label={group.section} className="absolute left-0 top-full z-40 mt-2 w-72 rounded-2xl border border-brd bg-surface p-2 shadow-xl animate-in fade-in slide-in-from-top-1 duration-150">
+          <div className="px-2 py-1 mb-1 border-b border-brd flex items-center justify-between">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-ink-3">{group.section}</span>
+            <span className="text-[10px] font-semibold text-ink-3">{group.items.length} features</span>
+          </div>
+          <div className="space-y-1">
+            {group.items.map((item) => {
+              const active = item.key === activeKey;
+              return (
+                <button
+                  key={item.key}
+                  role="menuitem"
+                  onClick={() => { setOpen(false); onNavigate(item.path); }}
+                  className={`group flex w-full items-center gap-2.5 rounded-xl p-2 text-left transition-all ${active
+                      ? "bg-brand-50/90 dark:bg-brand-950/40 border border-brand/20 shadow-xs"
+                      : "hover:bg-surface-2 text-ink-2 hover:text-ink"
+                    }`}
+                >
+                  <AccentTile icon={item.icon} tone={item.tone || "slate"} size={30} iconSize={15} />
+                  <div className="min-w-0 flex-1">
+                    <p className={`truncate text-xs font-bold leading-tight ${active ? "text-brand" : "text-ink group-hover:text-brand"}`}>
+                      {item.label}
+                    </p>
+                    {item.sub && (
+                      <p className="truncate text-[11px] font-normal text-ink-3 leading-tight mt-0.5">
+                        {item.sub}
+                      </p>
+                    )}
+                  </div>
+                  {badges[item.key] > 0 && (
+                    <span className="ml-auto inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-danger px-1 text-[10px] font-bold leading-none text-white">
+                      {badges[item.key] > 9 ? "9+" : badges[item.key]}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>
