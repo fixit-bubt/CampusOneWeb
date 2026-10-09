@@ -117,6 +117,85 @@ Expo SDK 56 enforces Android 15 edge-to-edge mode. This breaks two standard Reac
   {data.length === 0 ? <EmptyView /> : <FlatList inverted data={data} ... />}
   ```
 
+### 6.3 Floating Nav Capsule & Responsive Shell (`AppShell.jsx`)
+- **Nav Capsule:** The classic vertical sidebar was eliminated. Desktop navigation renders inside a floating horizontal capsule pill centered at the top of the viewport.
+- **CRITICAL Breakpoint is `xl` (≥ 1280px):**
+  - At `xl` and above: Floating capsule displays logo, grouped menu dropdowns (`Academics`, `Campus Life`, `Community`, `Services`, `Manage`), and account profile controls.
+  - Below `xl` (< 1280px): The layout switches to mobile navigation:
+    - **Top Header (`h-11`):** Left 3-line hamburger menu button (`Menu`) triggering drawer, centered two-tone `CampusOne` branding (`Campus` + emerald `One`) with a compact tagline (`Full campus in one app`), and notification bell on right with unread badge.
+    - **Bottom Navigation Bar:** 5 primary tabs: Home (`/dashboard`), Study Hub (`/study-hub`), AI Orb (`/chatbot`), Academic Tools (`/tools`), and Profile (`/profile`). Replaced the drawer trigger with direct 1-tap profile navigation.
+  - **LOAD-BEARING RULE:** Never use `lg` for the capsule breakpoint! At `lg` (1024px), Admin nav items overflow horizontally and intercept clicks intended for the account dropdown.
+  - **LOAD-BEARING RULE:** Never set `overflow-hidden` or `overflow-x-auto` on the nav container element. Any overflow setting clips the dropdown panels that hang below the bar, rendering them completely invisible.
+- **Sticky Offsets:** Top floating capsule consumes 84–88px of vertical clearance on desktop; mobile sticky top header consumes 44px (`h-11`). Sticky elements (e.g., CoverPage preview, public CGPA cards) must use `top-24` or higher to clear the capsule.
+
+---
+
+## 7. Design System, Tokens & UI Components
+
+### 7.1 Typography
+Configured in `src/index.css` via `@fontsource/plus-jakarta-sans` and `@fontsource/hind-siliguri`:
+- **Primary Latin Font:** Plus Jakarta Sans (400, 500, 600, 700, 800)
+- **Bengali Script Font:** Hind Siliguri (400, 500, 600, 700) with adjusted line-height (`~1.6`) for matras
+- **Heading Styles:** 700/800 font weight with tight letter tracking (`-0.02em` on h1).
+- **Uppercase Labels:** 700 font weight with tracking `+0.06em`.
+
+### 7.2 Color Tokens & CSS Variables
+Styles strictly flow through CSS custom variables in `src/index.css` and extended Tailwind utility classes:
+
+| Token Name | Light Theme | Dark Theme (`.dark`) | Utility Class |
+|---|---|---|---|
+| Brand Primary | `#2b5be3` | `#5b85f7` | `bg-brand`, `text-brand` |
+| Brand Hover / 700 | `#1f47c4` | `#7b9ef8` | `bg-brand-700` |
+| Background | `#f5f7fb` | `#000000` | `bg-bg` |
+| Surface (Card) | `#ffffff` | `#121212` | `bg-surface` |
+| Surface Alt | `#eef2f8` | `#1c1c1c` | `bg-surface-2` |
+| Border | `#e4e9f1` | `#262626` | `border-brd` |
+| Primary Text | `#0f1a2e` | `#f4f4f5` | `text-ink` |
+| Secondary Text | `#46536e` | `#a1a1aa` | `text-ink-2` |
+| Muted Text | `#8693aa` | `#71717a` | `text-ink-3` |
+| Success | `#12915e` | `#34d399` | `text-success`, `bg-success-bg` |
+| Warning | `#b9760a` | `#fbbf24` | `text-warn`, `bg-warn-bg` |
+| Danger | `#d63d35` | `#f87171` | `text-danger`, `bg-danger-bg` |
+
+### 7.3 Sector Accents
+Each feature domain has a dedicated accent color for iconography, category chips, and badges:
+- `sector-reports`: `#4f6bed`
+- `sector-lostfound`: `#c77d1a`
+- `sector-clubs`: `#8b5cf0`
+- `sector-events`: `#e0568a`
+- `sector-jobs`: `#0e9c8a`
+- `sector-study`: `#2ba0c9`
+- `sector-bus`: `#e08a2b`
+- `sector-medical`: `#e2483d`
+- `sector-market`: `#2e9e63`
+- `sector-ride`: `#6e8b1f`
+- `sector-blood`: `#c7344a`
+- `sector-directory`: `#5b6b86`
+- `sector-prayer`: `#1f8a5b`
+- `sector-faculty`: `#0e9c8a`
+- `sector-routines`: `#5c6bc0`
+- `sector-coverpage`: `#00838f`
+
+### 7.4 Layout Rules & Component Recipes (`src/components/ui.jsx`)
+- **Full-Width Navigation Rows:** List navigation items must render as full-width rows (icon on left, title/description center, chevron on right). Never use 2-column cards for navigation destinations.
+- **Button Primitives:**
+  - Primary: `bg-brand text-white hover:bg-brand-700 rounded-md shadow-sm h-11 px-4 font-bold`
+  - Secondary: `bg-surface text-ink-2 border border-brd hover:bg-surface-2 rounded-md`
+  - Destructive: `bg-danger text-white hover:brightness-95 rounded-md`
+- **Modal Accessibility Gotcha:** `Modal` in `ui.jsx` isolates focus. Never pass inline arrow functions to `onClose` inside parent effect dependencies, as this triggers focus theft and prevents keyboard typing in modal inputs.
+
+---
+
+## 8. Database Schema & Ground-Truth Reference
+
+### 8.1 Database Migration Engine & Deployment Rule
+- All schema DDL, RLS policies, indexes, and triggers reside sequentially in `supabase/migrations/` (`0001_init.sql` through `0087_seed_announcements_and_events.sql`).
+- **TO APPLY A NEW MIGRATION:**
+  ```bash
+  supabase db query --linked --file supabase/migrations/00NN_name.sql
+>>>>>>> Stashed changes
+  ```
+
 ### 6.3 WebView Transparent Background Bleed
 - Modern Android WebViews render `rgba(0,0,0,0)` transparently if the target webpage (such as BUBT's Annex portal) lacks an explicit background color.
 - **Rule:** Always set explicit opaque `backgroundColor: '#fff'` on the `WebView` component (`style={{ backgroundColor: '#fff' }}`), preventing the app's dark theme from bleeding through.
@@ -294,6 +373,7 @@ In `RootNavigator.tsx`, students who have not completed onboarding (`!profile?.s
 
 ## 13. UI/UX & Institutional Polish Standards (Varsity Pitch Ready)
 
+<<<<<<< Updated upstream
 The mobile and web applications are actively pitched and presented to BUBT administration, department heads, and academic review committees. The following design and implementation patterns are strictly mandatory across all screens:
 
 ### 13.1 Native Direct Contact Flow (`ContactSheet.tsx`)
@@ -366,13 +446,17 @@ The mobile and web applications are actively pitched and presented to BUBT admin
 - `src/components/ui/Logo.tsx`: `LogoMark` renders `assets/logo-mark.png` with dynamic `size` and elevation `shadow`. Also exports `LogoFull` and `LogoText`.
 - `Brand` component in `LandingScreen.tsx` wraps `LogoMark`, automatically providing the new logo to `LandingScreen`, `LoginScreen`, `RegisterScreen`, `OnboardingScreen`, `ResetPasswordScreen`, `VerifyEmailScreen`, and `TopBar`.
 
----
+## 15. Unified Brand Identity & Memory Synchronization Mandate
 
-## 15. Memory Synchronization Mandate
-Whenever the user instructs to "update memorys", the agent MUST synchronously update ALL memory references across both projects:
-1. `CampusOne/AGENTS.md` & `CampusOne/CampusOne/AGENTS.md`
-2. `CampusOne/CLAUDE.md` & `CampusOne/CampusOne/CLAUDE.md`
-3. `fixit-campus/AGENTS.md`, `fixit-campus/agent.md`, and `fixit-campus/CLAUDE.md`
+### 15.1 CampusOne Brand Identity
+- **Unified Branding:** Both web and mobile applications are officially branded **CampusOne**.
+- **Visual Identity:** Two-tone wordmark (`Campus` in primary text, `One` in emerald green `text-emerald-400` / `#34d399`), paired with the compact tagline `"Full campus in one app"`.
+- **Academic Utilities & Study Hub:** Centralized `AcademicTools.jsx` at `#/tools`, simplified student view on `#/study-hub`, and compact, image-free AI assistant chatbot interface.
+
+### 15.2 Memory Synchronization Rule
+Whenever the user instructs to "update memorys", the agent MUST synchronously update ALL memory references across the workspace:
+1. `AGENTS.md` and `agent.md`
+2. `CLAUDE.md`
 
 ---
 
