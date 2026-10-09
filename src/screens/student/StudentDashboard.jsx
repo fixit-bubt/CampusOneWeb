@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { PackageSearch, ArrowRight, CircleDot, Loader, CircleCheck, FileText, CirclePlus, Search, X, CalendarDays, Megaphone, Clock, Sparkles, ChevronRight, BookMarked, Calculator, Bus, Moon } from "lucide-react";
+import { PackageSearch, ArrowRight, CircleDot, Loader, CircleCheck, FileText, CirclePlus, Search, X, CalendarDays, Megaphone, Clock, Sparkles, ChevronRight, BookMarked, Calculator, Bus, Moon, Newspaper, Users, Briefcase, Heart, Car, ShoppingBag, Wrench } from "lucide-react";
 import { useApp } from "../../data/store.jsx";
 import { navigate, Link } from "../../lib/router.jsx";
 import { Button, Card, EmptyState, StatCard, Loading } from "../../components/ui.jsx";
@@ -8,6 +8,7 @@ import { ReportListRow } from "../../components/ReportListRow.jsx";
 import { CampusToday } from "../../components/CampusToday.jsx";
 import { usePrayerSchedule, prayerState } from "../prayer/Prayer.jsx";
 import { nextDeparture, minutesToHHMM, fmtTime, fmtCountdown, toMinutes, useTick } from "../../components/featureKit.jsx";
+import { fmtDate } from "../../lib/helpers.js";
 
 const DASHBOARD_SEARCH_ITEMS = [
   { label: "Study Hub", sub: "Lecture notes, question banks & textbooks", path: "/study-hub", icon: BookMarked },
@@ -53,7 +54,7 @@ const DEFAULT_DASHBOARD_SLIDES = [
     id: "dash-slide-3",
     type: "Notice",
     tag: "Official Notice",
-    title: "10th Convocation Ceremony — Registration Open",
+    title: "10th Convocation Ceremony - Registration Open",
     subtitle: "Office of the Registrar · Graduating Students",
     path: "/announcements",
     btnText: "Read Notice",
@@ -73,12 +74,278 @@ const DEFAULT_DASHBOARD_SLIDES = [
   },
 ];
 
+// Sets of 4 frequently used campus features that rotate automatically
+const FREQUENT_FEATURE_SETS = [
+  [
+    {
+      id: "study-hub",
+      title: "Study Hub",
+      sub: "Lecture notes & books",
+      path: "/study-hub",
+      icon: BookMarked,
+      color: "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20",
+    },
+    {
+      id: "routines",
+      title: "Class Routines",
+      sub: "Routine & exam timing",
+      path: "/routines",
+      icon: Clock,
+      color: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20",
+    },
+    {
+      id: "cover-page",
+      title: "Cover Page",
+      sub: "Assignment & lab PDF",
+      path: "/cover-page",
+      icon: FileText,
+      color: "bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/20",
+    },
+    {
+      id: "cgpa",
+      title: "CGPA Calc",
+      sub: "Grade & semester GPA",
+      path: "/cgpa",
+      icon: Calculator,
+      color: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20",
+    },
+  ],
+  [
+    {
+      id: "lost-found",
+      title: "Lost & Found",
+      sub: "Post or claim items",
+      path: "/lost-found",
+      icon: PackageSearch,
+      color: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
+    },
+    {
+      id: "rides",
+      title: "Campus Rides",
+      sub: "Student ride sharing",
+      path: "/rides",
+      icon: Car,
+      color: "bg-lime-500/10 text-lime-600 dark:text-lime-400 border-lime-500/20",
+    },
+    {
+      id: "marketplace",
+      title: "Marketplace",
+      sub: "Buy & sell student items",
+      path: "/marketplace",
+      icon: ShoppingBag,
+      color: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+    },
+    {
+      id: "blood",
+      title: "Blood Registry",
+      sub: "Emergency donor list",
+      path: "/blood",
+      icon: Heart,
+      color: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20",
+    },
+  ],
+  [
+    {
+      id: "chatbot",
+      title: "Fixi AI",
+      sub: "Campus AI companion",
+      path: "/chatbot",
+      icon: Sparkles,
+      color: "bg-brand/10 text-brand border-brand/20",
+    },
+    {
+      id: "clubs",
+      title: "Clubs & Events",
+      sub: "Student communities",
+      path: "/clubs",
+      icon: Users,
+      color: "bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/20",
+    },
+    {
+      id: "jobs",
+      title: "Student Jobs",
+      sub: "Internships & vacancies",
+      path: "/jobs",
+      icon: Briefcase,
+      color: "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20",
+    },
+    {
+      id: "reports",
+      title: "Report Issue",
+      sub: "Campus maintenance",
+      path: "/reports/new",
+      icon: Wrench,
+      color: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
+    },
+  ],
+];
+
+const DEFAULT_COMMUNITY_NEWS = [
+  {
+    id: "news-1",
+    category: "Event",
+    source: "Campus Auditorium",
+    title: "Innovate & Code: BUBT Inter-University Hackathon 2026",
+    body: "Annual 36-hour hackathon with students across national universities competing in AI, Web, and Mobile tracks.",
+    date: "Upcoming",
+    image: "/events/hackathon-2026.jpg",
+    icon: CalendarDays,
+    badgeColor: "bg-pink-500/10 text-pink-600 border-pink-500/20 dark:text-pink-400",
+    path: "/events",
+  },
+  {
+    id: "news-2",
+    category: "Notice",
+    source: "Controller of Examinations",
+    title: "Tri-Semester Final Examination Routine Published",
+    body: "Official schedule for undergraduate and graduate programs. Check section timing and room allocation.",
+    date: "Official",
+    image: "/announcements/exam-routine.jpg",
+    icon: Megaphone,
+    badgeColor: "bg-amber-500/10 text-amber-600 border-amber-500/20 dark:text-amber-400",
+    path: "/routines",
+  },
+  {
+    id: "news-3",
+    category: "Notice",
+    source: "Office of the Registrar",
+    title: "10th Convocation Ceremony - Registration Open",
+    body: "Graduating students are requested to complete online registration and cap & gown sizing before the deadline.",
+    date: "Notice",
+    image: "/announcements/convocation-2026.jpg",
+    icon: Megaphone,
+    badgeColor: "bg-amber-500/10 text-amber-600 border-amber-500/20 dark:text-amber-400",
+    path: "/announcements",
+  },
+  {
+    id: "news-4",
+    category: "Club Update",
+    source: "BUBT IT Club",
+    title: "Spring Executive Panel & Workshop Series Announced",
+    body: "Join hands-on sessions in Cloud Architecture, Competitive Programming, and UI/UX Design this semester.",
+    date: "Club Feed",
+    image: null,
+    icon: Users,
+    badgeColor: "bg-purple-500/10 text-purple-600 border-purple-500/20 dark:text-purple-400",
+    path: "/clubs",
+  },
+];
+
 export default function StudentDashboard() {
-  const { currentUser, reports, dataLoading, announcements = [], events = [], busRoutes = [], savedBusRoutes = [] } = useApp();
+  const {
+    currentUser,
+    reports = [],
+    dataLoading,
+    announcements = [],
+    events = [],
+    busRoutes = [],
+    savedBusRoutes = [],
+    clubs = [],
+    clubPosts = [],
+    bloodRequests = [],
+  } = useApp();
   if (!currentUser) return null;
   const mine = reports.filter((r) => r.studentId === currentUser.id);
   const count = (s) => mine.filter((r) => r.status === s).length;
   const recent = [...mine].sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? "")).slice(0, 5);
+
+  // Frequently used options auto-rotation state
+  const [frequentSetIdx, setFrequentSetIdx] = useState(0);
+  const [isHoveredFrequent, setIsHoveredFrequent] = useState(false);
+
+  useEffect(() => {
+    if (isHoveredFrequent) return;
+    const timer = setInterval(() => {
+      setFrequentSetIdx((prev) => (prev + 1) % FREQUENT_FEATURE_SETS.length);
+    }, 4800);
+    return () => clearInterval(timer);
+  }, [isHoveredFrequent]);
+
+  // News system category filter state
+  const [newsFilter, setNewsFilter] = useState("All");
+
+  // Community News list: aggregate announcements, club posts, events, and urgent blood requests
+  const communityNews = useMemo(() => {
+    const list = [];
+
+    (announcements || []).forEach((a) => {
+      list.push({
+        id: `ann-${a.id}`,
+        category: "Notice",
+        source: a.department || "Administration",
+        title: a.title,
+        body: a.body || "",
+        date: a.date ? fmtDate(a.date) : "Recent",
+        rawDate: a.date || "",
+        image: a.image || a.imageUrl || null,
+        icon: Megaphone,
+        badgeColor: a.priority === "Urgent"
+          ? "bg-rose-500/10 text-rose-600 border-rose-500/20 dark:text-rose-400"
+          : "bg-amber-500/10 text-amber-600 border-amber-500/20 dark:text-amber-400",
+        path: `/announcements/${a.id}`,
+      });
+    });
+
+    (clubPosts || []).forEach((p) => {
+      const club = (clubs || []).find((c) => c.id === p.clubId);
+      list.push({
+        id: `club-post-${p.id}`,
+        category: "Club Update",
+        source: club ? club.name : "Campus Club",
+        title: p.title || `${club?.name || "Club"} Update`,
+        body: p.body || "",
+        date: p.createdAt ? fmtDate(p.createdAt.split("T")[0]) : "Recent",
+        rawDate: p.createdAt ? p.createdAt.split("T")[0] : "",
+        image: p.imageUrl || null,
+        icon: Users,
+        badgeColor: "bg-purple-500/10 text-purple-600 border-purple-500/20 dark:text-purple-400",
+        path: p.clubId ? `/clubs/${p.clubId}` : "/clubs",
+      });
+    });
+
+    (events || []).forEach((e) => {
+      list.push({
+        id: `event-${e.id}`,
+        category: "Event",
+        source: e.venue || "BUBT Campus",
+        title: e.title,
+        body: e.description || `${e.venue} ${e.time ? `· ${e.time}` : ""}`,
+        date: e.date ? fmtDate(e.date) : "Upcoming",
+        rawDate: e.date || "",
+        image: e.banner || e.bannerUrl || null,
+        icon: CalendarDays,
+        badgeColor: "bg-pink-500/10 text-pink-600 border-pink-500/20 dark:text-pink-400",
+        path: e.id ? `/events/${e.id}` : "/events",
+      });
+    });
+
+    (bloodRequests || []).filter((b) => b.urgency === "Immediate" || b.status === "open").slice(0, 2).forEach((b) => {
+      list.push({
+        id: `blood-${b.id}`,
+        category: "Urgent",
+        source: `${b.hospital} (${b.area || "Dhaka"})`,
+        title: `Urgent ${b.bloodGroup} Blood Required`,
+        body: `Needed at ${b.hospital}. Can you donate or help connect a donor?`,
+        date: b.dateNeeded ? fmtDate(b.dateNeeded) : "Urgent",
+        rawDate: b.dateNeeded || "",
+        image: null,
+        icon: Heart,
+        badgeColor: "bg-red-500/10 text-red-600 border-red-500/20 dark:text-red-400",
+        path: "/blood",
+      });
+    });
+
+    list.sort((a, b) => (b.rawDate || "").localeCompare(a.rawDate || ""));
+    return list.length > 0 ? list : DEFAULT_COMMUNITY_NEWS;
+  }, [announcements, clubPosts, clubs, events, bloodRequests]);
+
+  const filteredNews = useMemo(() => {
+    if (newsFilter === "All") return communityNews;
+    if (newsFilter === "Notices") return communityNews.filter((n) => n.category === "Notice");
+    if (newsFilter === "Clubs") return communityNews.filter((n) => n.category === "Club Update");
+    if (newsFilter === "Events") return communityNews.filter((n) => n.category === "Event");
+    return communityNews;
+  }, [communityNews, newsFilter]);
 
   // Auto-refresh countdowns every 15 seconds
   useTick(15000);
@@ -569,20 +836,165 @@ export default function StudentDashboard() {
         </div>
       </div>
 
-      <div className="mt-2.5 sm:mt-3">
-        <button
-          onClick={() => navigate("/lost-found")}
-          className="group flex w-full items-center gap-3.5 sm:gap-4 rounded-lg border border-brd bg-surface p-3.5 sm:p-4 text-left shadow-sm transition-colors hover:border-brand hover:bg-brand-50"
-        >
-          <span className="flex h-11 w-11 items-center justify-center rounded-md bg-surface-3 text-ink-2">
-            <PackageSearch size={22} />
-          </span>
-          <div className="flex-1">
-            <p className="text-base font-bold text-ink">Browse Lost &amp; Found</p>
-            <p className="text-xs text-ink-3">Find a lost item or post one you found.</p>
+      {/* Frequently Used Options — 4 auto-changing features */}
+      <div
+        className="mt-3 sm:mt-3.5"
+        onMouseEnter={() => setIsHoveredFrequent(true)}
+        onMouseLeave={() => setIsHoveredFrequent(false)}
+      >
+        <div className="mb-2 flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
+            <Sparkles size={14} className="text-brand" />
+            <h3 className="text-xs font-bold uppercase tracking-[0.06em] text-ink-3">
+              Frequently used options
+            </h3>
           </div>
-          <ArrowRight size={18} className="text-ink-3 group-hover:text-brand" />
-        </button>
+          {/* Pagination Indicators */}
+          <div className="flex items-center gap-1">
+            {FREQUENT_FEATURE_SETS.map((_, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => setFrequentSetIdx(idx)}
+                aria-label={`Slide ${idx + 1}`}
+                className="group p-0.5 focus:outline-none"
+              >
+                <span
+                  className={`block h-1.5 rounded-full transition-all duration-300 ${
+                    frequentSetIdx === idx
+                      ? "w-5 bg-brand"
+                      : "w-2 bg-ink/20 dark:bg-white/20 group-hover:bg-brand/50"
+                  }`}
+                />
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 4 Cards Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5">
+          {FREQUENT_FEATURE_SETS[frequentSetIdx].map((feat) => {
+            const FeatIcon = feat.icon;
+            return (
+              <button
+                key={feat.id}
+                type="button"
+                onClick={() => navigate(feat.path)}
+                className="group flex flex-col items-start rounded-xl border border-brd bg-surface p-2.5 sm:p-3 text-left shadow-2xs transition-all duration-200 hover:border-brand hover:shadow-xs active:scale-[0.98]"
+              >
+                <div className="flex w-full items-center justify-between mb-2">
+                  <span className={`inline-flex h-8 w-8 items-center justify-center rounded-lg border ${feat.color}`}>
+                    <FeatIcon size={16} />
+                  </span>
+                  <ChevronRight size={13} className="text-ink-3 opacity-0 transition-opacity group-hover:opacity-100 group-hover:text-brand" />
+                </div>
+                <span className="font-bold text-xs sm:text-sm text-ink truncate w-full group-hover:text-brand transition-colors">
+                  {feat.title}
+                </span>
+                <span className="text-[10px] sm:text-[11px] text-ink-3 truncate w-full mt-0.5">
+                  {feat.sub}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Community Updates — News System */}
+      <div className="mt-3.5 sm:mt-4">
+        <div className="mb-2.5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-1.5">
+            <Newspaper size={15} className="text-brand" />
+            <h3 className="text-xs font-bold uppercase tracking-[0.06em] text-ink-3">
+              Community updates
+            </h3>
+          </div>
+          {/* News Category Filter Pills */}
+          <div className="flex items-center gap-1 overflow-x-auto pb-0.5 sm:pb-0">
+            {["All", "Notices", "Clubs", "Events"].map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => setNewsFilter(tab)}
+                className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition-all ${
+                  newsFilter === tab
+                    ? "bg-brand text-white shadow-xs"
+                    : "border border-brd bg-surface text-ink-3 hover:text-ink hover:bg-surface-2"
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* News Feed List */}
+        {filteredNews.length === 0 ? (
+          <div className="rounded-xl border border-brd bg-surface p-4 text-center text-xs text-ink-3">
+            No community updates found for this category.
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {filteredNews.slice(0, 4).map((item) => {
+              const ItemIcon = item.icon || Megaphone;
+              return (
+                <div
+                  key={item.id}
+                  onClick={() => navigate(item.path)}
+                  className="group relative flex items-start gap-3 rounded-xl border border-brd bg-surface p-3 sm:p-3.5 transition-all duration-200 hover:border-brand/70 hover:shadow-xs cursor-pointer"
+                >
+                  {/* Thumbnail / Category Icon */}
+                  {item.image ? (
+                    <div className="h-14 w-14 sm:h-16 sm:w-16 shrink-0 overflow-hidden rounded-lg border border-brd bg-surface-2">
+                      <img
+                        src={item.image}
+                        alt=""
+                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
+                    </div>
+                  ) : (
+                    <div className={`flex h-14 w-14 sm:h-16 sm:w-16 shrink-0 flex-col items-center justify-center rounded-lg border ${item.badgeColor} p-1 text-center`}>
+                      <ItemIcon size={18} className="mb-1" />
+                      <span className="text-[8px] sm:text-[9px] font-bold uppercase tracking-wider line-clamp-1">{item.category}</span>
+                    </div>
+                  )}
+
+                  {/* News Content */}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-1.5 mb-1">
+                      <span className={`inline-flex items-center rounded-full px-2 py-0.2 text-[10px] font-semibold border ${item.badgeColor}`}>
+                        {item.category}
+                      </span>
+                      <span className="text-[11px] text-ink-3 font-medium">·</span>
+                      <span className="text-[11px] text-ink-3 font-medium truncate max-w-[130px] sm:max-w-[200px]">
+                        {item.source}
+                      </span>
+                      {item.date && (
+                        <>
+                          <span className="text-[11px] text-ink-3 font-medium">·</span>
+                          <span className="text-[11px] text-ink-3 font-medium">{item.date}</span>
+                        </>
+                      )}
+                    </div>
+
+                    <h4 className="text-xs sm:text-sm font-bold text-ink leading-snug line-clamp-1 group-hover:text-brand transition-colors">
+                      {item.title}
+                    </h4>
+
+                    <p className="mt-0.5 text-[11px] sm:text-xs text-ink-2 line-clamp-2 leading-relaxed">
+                      {item.body}
+                    </p>
+                  </div>
+
+                  {/* Right Arrow */}
+                  <div className="hidden sm:flex h-full items-center self-center pl-1 text-ink-3 group-hover:text-brand">
+                    <ChevronRight size={15} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <div className="mt-3.5 sm:mt-4">
