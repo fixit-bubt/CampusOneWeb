@@ -297,8 +297,9 @@ In `RootNavigator.tsx`, students who have not completed onboarding (`!profile?.s
 
 ## 11. Specialized Features
 
-### 11.1 AI Chatbot
+### 11.1 AI Assistant ("Fixi")
 - **Service:** `src/services/chatbotService.ts` (Mobile) / `src/screens/chatbot/chatCore.jsx` (Web)
+- **Persona:** "Fixi" — campus companion with an immediate, static friendly greeting bubble and clickable suggestions upon opening chat (zero API cost on mount).
 - **Edge Function:** `supabase/functions/chat/index.ts`
 - **Model:** Google Gemini (`gemini-flash-lite-latest`), API key securely stored in Supabase secrets.
 - **Grounding Tools (10 tools):** Bus routes, prayer times, lost & found, clubs, rides, class routines, events, blood requests, jobs, faculty directory. CGPA calculations are solved directly by system prompt.
