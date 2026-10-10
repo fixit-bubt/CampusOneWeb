@@ -25,6 +25,23 @@ export const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 export const URGENCY_TONE = { Urgent: "red", Today: "amber", "This week": "slate" };
 export const URGENCY_RANK = { Urgent: 0, Today: 1, "This week": 2 };
 
+export const COMPATIBLE_DONOR_GROUPS = {
+  "A+": ["A+", "A-", "O+", "O-"],
+  "A-": ["A-", "O-"],
+  "B+": ["B+", "B-", "O+", "O-"],
+  "B-": ["B-", "O-"],
+  "AB+": ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"],
+  "AB-": ["A-", "B-", "AB-", "O-"],
+  "O+": ["O+", "O-"],
+  "O-": ["O-"],
+};
+
+export function isBloodCompatible(donorGroup, recipientGroup) {
+  if (!donorGroup || !recipientGroup) return false;
+  const list = COMPATIBLE_DONOR_GROUPS[recipientGroup.trim().toUpperCase()];
+  return list ? list.includes(donorGroup.trim().toUpperCase()) : false;
+}
+
 // Eligibility — the 90-day wait between donations (mirrors the mobile app).
 export const DONATION_WAIT_DAYS = 90;
 export function donorEligibility(lastDonated) {
@@ -380,7 +397,7 @@ export function BloodDonation() {
             )}
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               {visibleRequests.map((r) => (
-                <RequestCard key={r.id} req={r} requester={userById(r.requesterId)} mine={r.requesterId === currentUser?.id} pledged={r.pledges.includes(currentUser?.id)} canRespond={!!myDonor && myDonor.group === r.group} onDonate={() => donate(r)} onManage={() => setManage(r)} />
+                <RequestCard key={r.id} req={r} requester={userById(r.requesterId)} mine={r.requesterId === currentUser?.id} pledged={r.pledges.includes(currentUser?.id)} canRespond={!!myDonor && isBloodCompatible(myDonor.group, r.group)} onDonate={() => donate(r)} onManage={() => setManage(r)} />
               ))}
             </div>
           </>

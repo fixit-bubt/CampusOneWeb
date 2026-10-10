@@ -228,15 +228,16 @@ export default function StudentDashboard() {
       });
     });
 
-    (bloodRequests || []).filter((b) => b.urgency === "Immediate" || b.status === "open").slice(0, 2).forEach((b) => {
+    (bloodRequests || []).filter((b) => b.urgency === "Urgent" || b.urgency === "Today").slice(0, 2).forEach((b) => {
+      const bloodGrp = b.group || b.bloodGroup || "";
       list.push({
         id: `blood-${b.id}`,
         category: "Urgent",
         source: `${b.hospital} (${b.area || "Dhaka"})`,
-        title: `Urgent ${b.bloodGroup} Blood Required`,
+        title: `Urgent ${bloodGrp} Blood Required`,
         body: `Needed at ${b.hospital}. Can you donate or help connect a donor?`,
-        date: b.dateNeeded ? fmtDate(b.dateNeeded) : "Urgent",
-        rawDate: b.dateNeeded || "",
+        date: b.createdAt ? fmtDate(b.createdAt) : "Urgent",
+        rawDate: b.createdAt || "",
         image: null,
         icon: Heart,
         badgeColor: "bg-surface-2 text-ink-2 border-brd",
