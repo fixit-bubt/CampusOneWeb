@@ -244,7 +244,7 @@ function RequesterContact({ code, requesterId }) {
 
 // --- Detail -----------------------------------------------------------------
 export function RideDetail({ id }) {
-  const { currentUser, rides, userById, requestSeat, deleteRide, dataLoading } = useApp();
+  const { currentUser, rides, userById, requestSeat, cancelSeatRequest, deleteRide, dataLoading } = useApp();
   const toast = useToast();
   const ride = rides.find((r) => r.id === id);
   const [confirmDelete, setConfirmDelete] = React.useState(false);
@@ -279,7 +279,17 @@ export function RideDetail({ id }) {
               <p className="text-base text-ink-3">{ride.direction} · {ride.vehicle}</p>
             </div>
           </div>
-          {canDelete && <Button variant="secondary" icon="Trash2" className="text-danger" onClick={() => setConfirmDelete(true)}>Delete</Button>}
+          <div className="flex items-center gap-2">
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ride.origin + ', Dhaka')}`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex h-9 items-center gap-1.5 rounded-md border border-brd bg-surface px-3 text-sm font-semibold text-ink-2 hover:bg-surface-2 transition-colors"
+            >
+              <Icon name="MapPin" size={14} className="text-indigo-500" /> Open in Maps
+            </a>
+            {canDelete && <Button variant="secondary" icon="Trash2" className="text-danger" onClick={() => setConfirmDelete(true)}>Delete</Button>}
+          </div>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-3">
@@ -331,7 +341,32 @@ export function RideDetail({ id }) {
                       return (
                         <div key={uid} className="flex items-center justify-between gap-2 rounded-md border border-brd bg-surface-2 p-2.5">
                           <div className="flex items-center gap-2 min-w-0"><Avatar name={u?.name || "?"} size={26} /><span className="truncate text-base text-ink-2">{u?.name}</span></div>
-                          <RequesterContact code={ride.id} requesterId={uid} />
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <RequesterContact code={ride.id} requesterId={uid} />
+                            <button
+                              title="Remove passenger"
+                              aria-label="Remove passenger"
+                              disabled={actionBusy}
+                              onClick={async () => {
+                                if (actionBusy) return;
+                                if (!window.confirm(`Remove ${u?.name || "this passenger"} from this ride?`)) return;
+                                setActionBusy(true);
+                                try {
+                                  const r = await cancelSeatRequest(ride.id, uid);
+                                  if (!r.ok) {
+                                    toast({ type: "error", title: "Couldn't remove passenger", message: r.error });
+                                    return;
+                                  }
+                                  toast({ type: "success", title: "Passenger removed" });
+                                } finally {
+                                  setActionBusy(false);
+                                }
+                              }}
+                              className="inline-flex h-8 w-8 items-center justify-center rounded-md text-ink-3 hover:text-danger hover:bg-danger-bg transition-colors"
+                            >
+                              <Icon name="X" size={14} />
+                            </button>
+                          </div>
                         </div>
                       );
                     })}
@@ -347,8 +382,32 @@ export function RideDetail({ id }) {
               <Card className="p-5">
                 <h3 className="text-base font-semibold text-ink">{requested ? "Seat requested" : "Request a seat"}</h3>
                 {requested ? (
-                  <div className="mt-3">
+                  <div className="mt-3 space-y-3">
                     <DriverContact code={ride.id} driverId={ride.driverId} driverName={driver?.name} />
+                    <Button
+                      variant="secondary"
+                      full
+                      className="text-danger hover:bg-danger-bg border-brd"
+                      icon="X"
+                      disabled={actionBusy}
+                      onClick={async () => {
+                        if (actionBusy) return;
+                        if (!window.confirm("Cancel your seat on this ride? The driver will be notified.")) return;
+                        setActionBusy(true);
+                        try {
+                          const r = await cancelSeatRequest(ride.id);
+                          if (!r.ok) {
+                            toast({ type: "error", title: "Couldn't cancel seat", message: r.error });
+                            return;
+                          }
+                          toast({ type: "success", title: "Seat cancelled", message: "Your seat request has been removed." });
+                        } finally {
+                          setActionBusy(false);
+                        }
+                      }}
+                    >
+                      Cancel seat request
+                    </Button>
                   </div>
                 ) : left <= 0 ? (
                   <p className="mt-2 text-base text-danger">This ride is full.</p>

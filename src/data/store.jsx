@@ -2405,6 +2405,20 @@ export function AppProvider({ children }) {
     await loadRides();
     return { ok: true };
   }
+  async function cancelSeatRequest(id, requesterId = null) {
+    if (!currentUser) return { ok: false, error: "Not signed in." };
+    const ride = rides.find((r) => r.id === id);
+    if (!ride) return { ok: false, error: "Ride not found." };
+    const targetUserId = requesterId || currentUser.id;
+    const { error } = await supabase
+      .from("ride_requests")
+      .delete()
+      .eq("ride_id", ride.uuid)
+      .eq("requester_id", targetUserId);
+    if (error) return { ok: false, error: error.message };
+    await loadRides();
+    return { ok: true };
+  }
   async function deleteRide(id) {
     const { data, error } = await supabase.from("rides").delete().eq("code", id).select("code");
     if (error) return { ok: false, error: error.message };
@@ -3523,7 +3537,7 @@ export function AppProvider({ children }) {
     listings, addListing, updateListing, deleteListing, markListingSold, getListingContact,
     events, canCreateEvents, addEvent, toggleRSVP, deleteEvent,
     jobs, jobReports, jobBookmarks, canPostJobs, addJob, updateJob, withdrawJob, removeJob, restoreJob, reportJob, toggleJobBookmark,
-    rides, addRide, requestSeat, deleteRide, getRideContact,
+    rides, addRide, requestSeat, cancelSeatRequest, deleteRide, getRideContact,
     bloodRequests, donors, addBloodRequest, pledgeBlood, registerDonor, getDonorContact, getBloodRequesterContact,
     markDonatedToday, getBloodResponders, confirmBloodDonation, markBloodRequestFulfilled,
     doctors, doctorById,
