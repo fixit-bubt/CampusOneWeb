@@ -123,10 +123,7 @@ export function RideShare() {
       <PageHeader title="Ride Share"
         subtitle={isAdmin ? "View and moderate all active ride posts." : "Share rides to and from campus with fellow students."}
         action={isAdmin ? null : (
-          <div className="flex items-center gap-2">
-            <Button variant="secondary" icon="Search" onClick={() => navigate("/rides/new?type=request")}>Request Ride</Button>
-            <Button icon="Plus" onClick={() => navigate("/rides/new")}>Offer Ride</Button>
-          </div>
+          <Button icon="Plus" onClick={() => navigate("/rides/new")}>Post a Ride</Button>
         )} />
 
       <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
