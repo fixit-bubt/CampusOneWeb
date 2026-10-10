@@ -1,10 +1,14 @@
 import React from "react";
-import { ArrowRight, GraduationCap, ClipboardList, Search, CalendarDays, Store, Stethoscope, Moon, FileText, Calculator, Bus } from "lucide-react";
+import {
+  ArrowRight, GraduationCap, ClipboardList, Search, CalendarDays, Store, Stethoscope,
+  Moon, FileText, Calculator, Bus,
+} from "lucide-react";
 import { navigate } from "../../lib/router.jsx";
 import { Button, Badge, Card } from "../../components/ui.jsx";
 import { Logo } from "../../components/Brand.jsx";
 import { ACCENT_TILE } from "../../components/featureKit.jsx";
 import { PublicNav, EXPLORE_NAV } from "./Explore.jsx";
+import { ScrollVelocityRow } from "../../components/ui/scroll-velocity-text";
 import campusPhoto from "../../assets/bubt-campus.jpg";
 import heroVideo from "../../assets/hero-bg.mp4";
 import { useT } from "../../i18n/index.js";
@@ -36,15 +40,33 @@ const STATS = [
   { value: "12+", label: "Campus tools" },
 ];
 
+const CAMPUS_FEATURES = [
+  "Bus Schedules",
+  "Study Hub",
+  "Lost & Found",
+  "Fixi AI Assistant",
+  "Faculty Directory",
+  "Campus Maintenance",
+  "Student Marketplace",
+  "Blood Donation",
+  "Campus Rides",
+  "Prayer Times",
+  "Clubs & Communities",
+  "Events & Notices",
+  "Student Jobs",
+  "CGPA Calculator",
+  "Cover Page Generator",
+  "Medical Center",
+];
+
 export default function Landing() {
   const t = useT();
   return (
     <div className="min-h-screen bg-surface">
       {/* Hero — BUBT campus photo under a theme-aware veil, with the nav capsule
-          floating ON it. The nav is overlaid rather than stacked above so the
-          photo runs to the top of the window; in normal flow the nav's own
-          padding showed as a band of page background above the image. */}
-      <section className="relative overflow-hidden">
+          floating ON it. Fits 100dvh so on any display size the user only sees down
+          to the bottom line on initial load, with lower sections scrollable beneath. */}
+      <section className="relative flex min-h-[100dvh] flex-col justify-between overflow-hidden">
         <video
           autoPlay
           loop
@@ -63,40 +85,58 @@ export default function Landing() {
             this file used to carry a near-identical copy. */}
         <PublicNav overlay />
 
-        {/* Top padding clears the overlaid capsule */}
-        <div className="relative mx-auto max-w-6xl px-6 pb-16 pt-36 sm:pb-20 md:pt-28">
+        {/* Top clearance for overlaid fixed capsule */}
+        <div className="h-24 shrink-0 sm:h-28 md:h-24" />
+
+        {/* Hero content centered within viewport height */}
+        <div className="relative mx-auto my-auto flex w-full max-w-6xl flex-1 flex-col items-center justify-center px-6 py-4 sm:py-6">
           <div className="mx-auto max-w-2xl text-center">
-            <Badge tone="blue" icon={GraduationCap} className="mb-6">{t.landing.badge}</Badge>
-            <h1 className="text-[40px] leading-[1.08] font-extrabold tracking-tight text-ink sm:text-[54px]">
+            <Badge tone="blue" icon={GraduationCap} className="mb-3 sm:mb-5">{t.landing.badge}</Badge>
+            <h1 className="text-[32px] leading-[1.08] font-extrabold tracking-tight text-ink sm:text-[46px] md:text-[54px]">
               {t.landing.heroTitle1}
               <br />
               <span className="bg-gradient-to-r from-brand to-sector-clubs bg-clip-text text-transparent">
                 {t.landing.heroTitle2}
               </span>
             </h1>
-            <p className="mx-auto mt-5 max-w-xl text-xl leading-relaxed text-ink-2">
+            <p className="mx-auto mt-3 sm:mt-5 max-w-xl text-base leading-relaxed text-ink-2 sm:text-lg md:text-xl">
               {t.landing.heroBody}
             </p>
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            <div className="mt-5 sm:mt-8 flex flex-wrap items-center justify-center gap-3">
               <Button size="md" className="px-6" onClick={() => navigate("/register")} iconRight={ArrowRight}>
                 {t.landing.getStarted}
               </Button>
             </div>
             <button
               onClick={() => document.getElementById("explore-without-account")?.scrollIntoView({ behavior: "smooth" })}
-              className="mt-4 text-base font-semibold text-brand hover:underline"
+              className="mt-3 sm:mt-4 text-sm sm:text-base font-semibold text-brand hover:underline"
             >
               {t.landing.browseFaculty}
             </button>
-            <div className="mt-12 flex flex-wrap items-center justify-center gap-x-12 gap-y-4">
+            <div className="mt-6 sm:mt-10 mb-2 flex flex-wrap items-center justify-center gap-x-8 sm:gap-x-12 gap-y-3">
               {STATS.map((s) => (
                 <div key={s.label} className="text-center">
-                  <div className="text-3xl font-extrabold text-ink">{s.value}</div>
-                  <div className="mt-0.5 text-sm font-medium text-ink-3">{s.label}</div>
+                  <div className="text-2xl sm:text-3xl font-extrabold text-ink">{s.value}</div>
+                  <div className="mt-0.5 text-xs sm:text-sm font-medium text-ink-3">{s.label}</div>
                 </div>
               ))}
             </div>
           </div>
+        </div>
+
+        {/* Moving features at the bottom of hero section */}
+        <div className="relative w-full py-3.5 sm:py-5 overflow-hidden select-none">
+          <ScrollVelocityRow baseVelocity={3}>
+            {CAMPUS_FEATURES.map((feature) => (
+              <span
+                key={feature}
+                className="mx-4 sm:mx-6 font-semibold text-sm sm:text-base tracking-wide text-ink-2/75 hover:text-ink transition-colors cursor-default"
+              >
+                {feature}
+                <span className="mx-4 sm:mx-6 text-ink-3/40">•</span>
+              </span>
+            ))}
+          </ScrollVelocityRow>
         </div>
       </section>
 

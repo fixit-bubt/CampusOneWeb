@@ -3,7 +3,7 @@
 // variables (src/index.css), so `.dark` on <html> re-themes every token class.
 // Tailwind's default palette stays available (extend) while screens migrate.
 export default {
-  content: ["./index.html", "./src/**/*.{js,jsx}"],
+  content: ["./index.html", "./src/**/*.{js,jsx,ts,tsx}"],
   darkMode: "class",
   theme: {
     extend: {

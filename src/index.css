@@ -16,24 +16,51 @@
 /* Design tokens — shared with the CampusOne mobile app. Light is the default;
    `.dark` on <html> flips every token, so token-based classes need no dark: twin. */
 :root {
-  --brand: #2b5be3; --brand-700: #1f47c4; --brand-50: #eef3ff; --brand-100: #dde7ff;
-  --bg: #eaf4fb; --surface: #ffffff; --surface-2: #e1eff8; --surface-3: #d5e6f3;
-  --border: #d4e5f2; --border-2: #c3dbed;
-  --text: #0f1a2e; --text-2: #46536e; --text-3: #8693aa;
-  --success: #12915e; --success-bg: #e3f5ec;
-  --warn: #b9760a;    --warn-bg: #fbefdb;
-  --danger: #d63d35;  --danger-bg: #fbe7e5;
-  --info: #2b5be3;    --info-bg: #eef3ff;
+  --brand: #2b5be3;
+  --brand-700: #1f47c4;
+  --brand-50: #eef3ff;
+  --brand-100: #dde7ff;
+  --bg: #eaf4fb;
+  --surface: #ffffff;
+  --surface-2: #e1eff8;
+  --surface-3: #d5e6f3;
+  --border: #d4e5f2;
+  --border-2: #c3dbed;
+  --text: #0f1a2e;
+  --text-2: #46536e;
+  --text-3: #8693aa;
+  --success: #12915e;
+  --success-bg: #e3f5ec;
+  --warn: #b9760a;
+  --warn-bg: #fbefdb;
+  --danger: #d63d35;
+  --danger-bg: #fbe7e5;
+  --info: #2b5be3;
+  --info-bg: #eef3ff;
 }
+
 .dark {
-  --brand: #5b85f7; --brand-700: #7b9ef8; --brand-50: #1a1a1a; --brand-100: #262626;
-  --bg: #000000; --surface: #121212; --surface-2: #1c1c1c; --surface-3: #262626;
-  --border: #262626; --border-2: #383838;
-  --text: #f4f4f5; --text-2: #a1a1aa; --text-3: #71717a;
-  --success: #34d399; --success-bg: #0a2416;
-  --warn: #fbbf24;    --warn-bg: #261a05;
-  --danger: #f87171;  --danger-bg: #280c0c;
-  --info: #5b85f7;    --info-bg: #1a1a1a;
+  --brand: #5b85f7;
+  --brand-700: #7b9ef8;
+  --brand-50: #1a1a1a;
+  --brand-100: #262626;
+  --bg: #000000;
+  --surface: #121212;
+  --surface-2: #1c1c1c;
+  --surface-3: #262626;
+  --border: #262626;
+  --border-2: #383838;
+  --text: #f4f4f5;
+  --text-2: #a1a1aa;
+  --text-3: #71717a;
+  --success: #34d399;
+  --success-bg: #0a2416;
+  --warn: #fbbf24;
+  --warn-bg: #261a05;
+  --danger: #f87171;
+  --danger-bg: #280c0c;
+  --info: #5b85f7;
+  --info-bg: #1a1a1a;
 }
 
 html {
@@ -59,46 +86,57 @@ body {
   min-height: 100vh;
 }
 
-h1 { letter-spacing: -0.02em; }
-h2 { letter-spacing: -0.01em; }
+h1 {
+  letter-spacing: -0.02em;
+}
+
+h2 {
+  letter-spacing: -0.01em;
+}
 
 /* Translucent top bar — Tailwind can't alpha-modify var() colors, so do it here. */
-.topbar-blur { background: color-mix(in srgb, var(--surface) 88%, transparent); }
+.topbar-blur {
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+}
 
 /* Landing hero glow — same var() alpha limitation as above. */
 .hero-glow {
-  background: radial-gradient(
-    56rem 30rem at 50% -6rem,
-    color-mix(in srgb, var(--brand) 16%, transparent),
-    transparent 70%
-  );
+  background: radial-gradient(56rem 30rem at 50% -6rem,
+      color-mix(in srgb, var(--brand) 16%, transparent),
+      transparent 70%);
 }
 
 /* Veil over the hero campus photo — --bg flips with the theme, and the
    bottom fades to solid so the hero blends into the next section.
    Light needs a much heavier veil: pale bg over a pale photo washes out. */
 .hero-photo-veil {
-  background: linear-gradient(
-    to bottom,
-    color-mix(in srgb, var(--bg) 87%, transparent),
-    color-mix(in srgb, var(--bg) 74%, transparent) 55%,
-    var(--bg) 100%
-  );
+  background: linear-gradient(to bottom,
+      color-mix(in srgb, var(--bg) 87%, transparent),
+      color-mix(in srgb, var(--bg) 74%, transparent) 55%,
+      var(--bg) 100%);
 }
+
 /* The pale photo needs extra punch to read through the light veil. */
-.hero-photo { filter: saturate(1.25) contrast(1.06); }
-.dark .hero-photo { filter: none; }
+.hero-photo {
+  filter: saturate(1.25) contrast(1.06);
+}
+
+.dark .hero-photo {
+  filter: none;
+}
+
 .dark .hero-photo-veil {
-  background: linear-gradient(
-    to bottom,
-    color-mix(in srgb, var(--bg) 82%, transparent),
-    color-mix(in srgb, var(--bg) 66%, transparent) 55%,
-    var(--bg) 100%
-  );
+  background: linear-gradient(to bottom,
+      color-mix(in srgb, var(--bg) 82%, transparent),
+      color-mix(in srgb, var(--bg) 66%, transparent) 55%,
+      var(--bg) 100%);
 }
 
 /* Bengali glyphs need vertical room for matras. */
-:lang(bn) { font-family: "Hind Siliguri", sans-serif; line-height: 1.6; }
+:lang(bn) {
+  font-family: "Hind Siliguri", sans-serif;
+  line-height: 1.6;
+}
 
 /* Mobile bottom nav: the AI FAB center button's ambient glow ring. */
 .ai-fab-glow {
@@ -107,18 +145,21 @@ h2 { letter-spacing: -0.01em; }
     0 4px 16px rgba(43, 91, 227, 0.35),
     0 0 28px rgba(43, 91, 227, 0.15);
 }
+
 .dark .ai-fab-glow {
   box-shadow:
     0 0 0 3px var(--surface),
     0 4px 20px rgba(91, 133, 247, 0.45),
     0 0 36px rgba(91, 133, 247, 0.18);
 }
+
 .ai-fab-glow.active {
   box-shadow:
     0 0 0 3px var(--surface),
     0 4px 20px rgba(43, 91, 227, 0.50),
     0 0 36px rgba(43, 91, 227, 0.25);
 }
+
 .dark .ai-fab-glow.active {
   box-shadow:
     0 0 0 3px var(--surface),
@@ -128,23 +169,90 @@ h2 { letter-spacing: -0.01em; }
 
 /* Animated square loader chasing loop */
 @keyframes square-animation {
-  0% { left: 0; top: 0; }
-  10.5% { left: 0; top: 0; }
-  12.5% { left: 32px; top: 0; }
-  23% { left: 32px; top: 0; }
-  25% { left: 64px; top: 0; }
-  35.5% { left: 64px; top: 0; }
-  37.5% { left: 64px; top: 32px; }
-  48% { left: 64px; top: 32px; }
-  50% { left: 32px; top: 32px; }
-  60.5% { left: 32px; top: 32px; }
-  62.5% { left: 32px; top: 64px; }
-  73% { left: 32px; top: 64px; }
-  75% { left: 0; top: 64px; }
-  85.5% { left: 0; top: 64px; }
-  87.5% { left: 0; top: 32px; }
-  98% { left: 0; top: 32px; }
-  100% { left: 0; top: 0; }
+  0% {
+    left: 0;
+    top: 0;
+  }
+
+  10.5% {
+    left: 0;
+    top: 0;
+  }
+
+  12.5% {
+    left: 32px;
+    top: 0;
+  }
+
+  23% {
+    left: 32px;
+    top: 0;
+  }
+
+  25% {
+    left: 64px;
+    top: 0;
+  }
+
+  35.5% {
+    left: 64px;
+    top: 0;
+  }
+
+  37.5% {
+    left: 64px;
+    top: 32px;
+  }
+
+  48% {
+    left: 64px;
+    top: 32px;
+  }
+
+  50% {
+    left: 32px;
+    top: 32px;
+  }
+
+  60.5% {
+    left: 32px;
+    top: 32px;
+  }
+
+  62.5% {
+    left: 32px;
+    top: 64px;
+  }
+
+  73% {
+    left: 32px;
+    top: 64px;
+  }
+
+  75% {
+    left: 0;
+    top: 64px;
+  }
+
+  85.5% {
+    left: 0;
+    top: 64px;
+  }
+
+  87.5% {
+    left: 0;
+    top: 32px;
+  }
+
+  98% {
+    left: 0;
+    top: 32px;
+  }
+
+  100% {
+    left: 0;
+    top: 0;
+  }
 }
 
 .animate-square {
@@ -152,14 +260,14 @@ h2 { letter-spacing: -0.01em; }
 }
 
 .bg-grid {
-  background-image: 
+  background-image:
     linear-gradient(rgba(15, 26, 46, 0.08) 1px, transparent 1px),
     linear-gradient(90deg, rgba(15, 26, 46, 0.08) 1px, transparent 1px);
   background-size: 50px 50px;
 }
 
 .dark .bg-grid {
-  background-image: 
+  background-image:
     linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
 }
@@ -167,7 +275,30 @@ h2 { letter-spacing: -0.01em; }
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* Infinite smooth marquee ticker */
+@keyframes marquee-scroll {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee-scroll 40s linear infinite;
+  will-change: transform;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
 }
