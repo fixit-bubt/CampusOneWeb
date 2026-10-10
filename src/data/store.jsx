@@ -372,6 +372,7 @@ function toRide(r, requesterIds) {
     notes: r.notes || "",
     requesterIds: requesterIds || [],
     expiresAt: r.expires_at || null,
+    postType: r.post_type || "offer",
   };
 }
 
@@ -2381,6 +2382,7 @@ export function AppProvider({ children }) {
         fare: data.fare,
         recurring: data.recurring || [],
         notes: data.notes || null,
+        post_type: data.postType || "offer",
       })
       .select("*")
       .single();

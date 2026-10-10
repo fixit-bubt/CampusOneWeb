@@ -21,8 +21,8 @@ import { fmtDate, relativeDate, todayISO } from "../../lib/helpers.js";
 // requesting), offer form, dashboard widget.
 // ============================================================================
 
-export const VEHICLES = ["Car", "CNG", "Bike"];
-export const VEHICLE_ICON = { Car: "Car", CNG: "Truck", Bike: "Bike" };
+export const VEHICLES = ["Car", "CNG", "Bike", "Rickshaw"];
+export const VEHICLE_ICON = { Car: "Car", CNG: "Truck", Bike: "Bike", Rickshaw: "Bike" };
 export const DOW = ["Sat", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri"];
 
 export function seatsLeft(ride) {
@@ -31,8 +31,9 @@ export function seatsLeft(ride) {
 
 // --- Ride card --------------------------------------------------------------
 export function RideCard({ ride, driver, mine, onOpen }) {
+  const isRequest = ride.postType === "request";
   const left = seatsLeft(ride);
-  const full = left <= 0;
+  const full = !isRequest && left <= 0;
   return (
     <Card className="flex flex-col p-5">
       <div className="flex items-start justify-between gap-3">
@@ -40,10 +41,17 @@ export function RideCard({ ride, driver, mine, onOpen }) {
           <Avatar name={driver?.name || "?"} size={38} />
           <div className="min-w-0">
             <p className="text-base font-semibold text-ink">{mine ? "You" : driver?.name || "Unknown"}</p>
-            <p className="text-xs text-ink-3">{ride.direction}</p>
+            <p className="text-xs text-ink-3">{isRequest ? "Passenger" : "Driver"} · {ride.direction}</p>
           </div>
         </div>
-        <Badge tone="indigo" icon={VEHICLE_ICON[ride.vehicle]}>{ride.vehicle}</Badge>
+        <div className="flex items-center gap-1.5">
+          {isRequest ? (
+            <Badge tone="amber" icon="Search">Need Ride</Badge>
+          ) : (
+            <Badge tone="emerald" icon="Car">Offer</Badge>
+          )}
+          <Badge tone="indigo" icon={VEHICLE_ICON[ride.vehicle] || "Car"}>{ride.vehicle}</Badge>
+        </div>
       </div>
 
       <div className="mt-4 flex items-center gap-2 rounded-md bg-surface-2 px-3 py-2.5 text-base">
@@ -58,23 +66,31 @@ export function RideCard({ ride, driver, mine, onOpen }) {
           <p className="text-base font-semibold text-ink">{fmtTime(ride.time)}</p>
         </div>
         <div className="rounded-md border border-brd py-2">
-          <p className="text-[11px] text-ink-3">Seats</p>
-          <p className={`text-base font-semibold ${full ? "text-danger" : "text-ink"}`}>{left}/{ride.seatsTotal}</p>
+          <p className="text-[11px] text-ink-3">{isRequest ? "Needed" : "Seats"}</p>
+          <p className={`text-base font-semibold ${full ? "text-danger" : "text-ink"}`}>
+            {isRequest ? `${ride.seatsTotal} seat${ride.seatsTotal > 1 ? "s" : ""}` : `${left}/${ride.seatsTotal}`}
+          </p>
         </div>
         <div className="rounded-md border border-brd py-2">
-          <p className="text-[11px] text-ink-3">Fare/seat</p>
+          <p className="text-[11px] text-ink-3">{isRequest ? "Budget" : "Fare/seat"}</p>
           <p className="text-base font-semibold text-ink">{taka(ride.fare)}</p>
         </div>
       </div>
 
       <div className="mt-3 flex items-center justify-between text-xs text-ink-3">
         <span className="inline-flex items-center gap-1"><Icon name="Calendar" size={13} />{fmtDate(ride.date)}</span>
-        {full ? <Badge tone="red">Full</Badge> : <Badge tone="emerald">Seats available</Badge>}
+        {isRequest ? (
+          <Badge tone="amber">Passenger request</Badge>
+        ) : full ? (
+          <Badge tone="red">Full</Badge>
+        ) : (
+          <Badge tone="emerald">Seats available</Badge>
+        )}
       </div>
 
       <div className="mt-4 border-t border-brd pt-3">
         <Button size="sm" full variant={full ? "secondary" : "primary"} iconRight="ArrowRight" onClick={onOpen} disabled={full && !mine}>
-          {mine ? "Manage ride" : full ? "Full" : "Request seat"}
+          {mine ? (isRequest ? "Manage request" : "Manage ride") : isRequest ? "Offer lift / Contact" : full ? "Full" : "Request seat"}
         </Button>
       </div>
     </Card>
@@ -87,12 +103,14 @@ export function RideShare() {
   const isAdmin = currentUser?.role === "Admin";
   const [intent, setIntent] = React.useState("find");
   const [direction, setDirection] = React.useState("All");
+  const [postTypeFilter, setPostTypeFilter] = React.useState("all");
   const [area, setArea] = React.useState("");
 
   const mineRides = rides.filter((r) => r.driverId === currentUser?.id);
   const browseRides = rides
     .filter((r) => isAdmin || r.driverId !== currentUser?.id)
     .filter((r) => direction === "All" || r.direction === direction)
+    .filter((r) => postTypeFilter === "all" || (r.postType || "offer") === postTypeFilter)
     .filter((r) => {
       const q = area.trim().toLowerCase();
       if (!q) return true;
@@ -104,7 +122,12 @@ export function RideShare() {
     <AppShell activeKey="rideshare" title="Ride Share">
       <PageHeader title="Ride Share"
         subtitle={isAdmin ? "View and moderate all active ride posts." : "Share rides to and from campus with fellow students."}
-        action={isAdmin ? null : <Button icon="Plus" onClick={() => navigate("/rides/new")}>Offer a Ride</Button>} />
+        action={isAdmin ? null : (
+          <div className="flex items-center gap-2">
+            <Button variant="secondary" icon="Search" onClick={() => navigate("/rides/new?type=request")}>Request Ride</Button>
+            <Button icon="Plus" onClick={() => navigate("/rides/new")}>Offer Ride</Button>
+          </div>
+        )} />
 
       <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         {!isAdmin && (
@@ -120,6 +143,11 @@ export function RideShare() {
               <input value={area} onChange={(e) => setArea(e.target.value)} aria-label="Filter rides by area" placeholder="Filter by area…"
                 className="h-10 w-full rounded-md border border-brd bg-surface pl-9 pr-3 text-base placeholder:text-ink-3 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand-100" />
             </div>
+            <Select value={postTypeFilter} onChange={(e) => setPostTypeFilter(e.target.value)} className="sm:w-36">
+              <option value="all">All posts</option>
+              <option value="offer">Offers only</option>
+              <option value="request">Requests only</option>
+            </Select>
             <Select value={direction} onChange={(e) => setDirection(e.target.value)} className="sm:w-44">
               <option value="All">Any direction</option>
               <option value="To Campus">To Campus</option>
@@ -257,6 +285,7 @@ export function RideDetail({ id }) {
       </AppShell>
     );
   }
+  const isRequest = ride.postType === "request";
   const driver = userById(ride.driverId);
   const isAdmin = currentUser?.role === "Admin";
   const mine = ride.driverId === currentUser?.id;
@@ -273,10 +302,10 @@ export function RideDetail({ id }) {
 
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
-            <AccentTile icon={VEHICLE_ICON[ride.vehicle]} tone="indigo" size={48} />
+            <AccentTile icon={VEHICLE_ICON[ride.vehicle] || "Car"} tone="indigo" size={48} />
             <div className="min-w-0">
               <h2 className="text-3xl font-bold tracking-tight text-ink sm:text-4xl">{ride.origin} → {ride.destination}</h2>
-              <p className="text-base text-ink-3">{ride.direction} · {ride.vehicle}</p>
+              <p className="text-base text-ink-3">{isRequest ? "Need a Ride" : "Offer"} · {ride.direction} · {ride.vehicle}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -298,8 +327,8 @@ export function RideDetail({ id }) {
               {[
                 { l: "Date", v: fmtDate(ride.date), icon: "Calendar" },
                 { l: "Departs", v: fmtTime(ride.time), icon: "Clock" },
-                { l: "Seats left", v: `${left}/${ride.seatsTotal}`, icon: "Users" },
-                { l: "Fare/seat", v: taka(ride.fare), icon: "Wallet" },
+                { l: isRequest ? "Seats needed" : "Seats left", v: isRequest ? `${ride.seatsTotal} needed` : `${left}/${ride.seatsTotal}`, icon: "Users" },
+                { l: isRequest ? "Max budget" : "Fare/seat", v: taka(ride.fare), icon: "Wallet" },
               ].map((s) => (
                 <div key={s.l}>
                   <p className="flex items-center gap-1.5 text-xs text-ink-3"><Icon name={s.icon} size={13} />{s.l}</p>
@@ -373,10 +402,13 @@ export function RideDetail({ id }) {
                   </div>
                 )}
               </Card>
-            ) : isAdmin ? (
+            ) : isRequest ? (
               <Card className="p-5">
-                <h3 className="text-base font-semibold text-ink">Seat requests</h3>
-                <p className="mt-2 text-base text-ink-3">{ride.requesterIds.length} request{ride.requesterIds.length === 1 ? "" : "s"}.</p>
+                <h3 className="text-base font-semibold text-ink">Contact passenger</h3>
+                <p className="mt-1 text-base text-ink-3">Offer a lift or coordinate carpooling directly with the passenger.</p>
+                <div className="mt-3">
+                  <DriverContact code={ride.id} driverId={ride.driverId} driverName={driver?.name} />
+                </div>
               </Card>
             ) : (
               <Card className="p-5">
@@ -436,18 +468,23 @@ export function OfferRide() {
   const { currentUser, addRide } = useApp();
   const toast = useToast();
   React.useEffect(() => { if (currentUser?.role === "Admin") navigate("/rides"); }, [currentUser?.role]);
-  const [form, setForm] = React.useState({ origin: "", destination: "", direction: "To Campus", date: todayISO(), time: "07:30", seatsTotal: "3", fare: "", vehicle: "Car", recurring: [], notes: "" });
+  
+  const isReqInit = typeof window !== "undefined" && window.location.hash.includes("type=request");
+  const [postType, setPostType] = React.useState(isReqInit ? "request" : "offer");
+  const [form, setForm] = React.useState({ origin: "", destination: "", direction: "To Campus", date: todayISO(), time: "07:30", seatsTotal: "1", fare: "", vehicle: "Car", recurring: [], notes: "" });
   const [errors, setErrors] = React.useState({});
   const [saving, setSaving] = React.useState(false);
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
   const toggleDay = (d) => setForm((f) => ({ ...f, recurring: f.recurring.includes(d) ? f.recurring.filter((x) => x !== d) : [...f.recurring, d] }));
 
+  const isRequest = postType === "request";
+
   function validate() {
     const er = {};
     if (!form.origin.trim()) er.origin = "Enter the pickup point.";
     if (!form.destination.trim()) er.destination = "Enter the destination.";
-    if (!form.fare || isNaN(Number(form.fare)) || Number(form.fare) < 0) er.fare = "Enter a fare per seat.";
-    if (!form.seatsTotal || Number(form.seatsTotal) < 1) er.seatsTotal = "At least 1 seat.";
+    if (!form.fare || isNaN(Number(form.fare)) || Number(form.fare) < 0) er.fare = isRequest ? "Enter your budget." : "Enter a fare per seat.";
+    if (!form.seatsTotal || Number(form.seatsTotal) < 1) er.seatsTotal = isRequest ? "At least 1 passenger." : "At least 1 seat.";
     return er;
   }
   async function submit(e) {
@@ -458,9 +495,9 @@ export function OfferRide() {
     if (Object.keys(er).length) return;
     setSaving(true);
     try {
-      const r = await addRide({ origin: form.origin.trim(), destination: form.destination.trim(), direction: form.direction, date: form.date, time: form.time, seatsTotal: Number(form.seatsTotal), fare: Number(form.fare), vehicle: form.vehicle, recurring: form.recurring, notes: form.notes.trim() });
+      const r = await addRide({ origin: form.origin.trim(), destination: form.destination.trim(), direction: form.direction, date: form.date, time: form.time, seatsTotal: Number(form.seatsTotal), fare: Number(form.fare), vehicle: form.vehicle, recurring: form.recurring, notes: form.notes.trim(), postType });
       if (!r.ok) { toast({ type: "error", title: "Couldn't post ride", message: r.error }); return; }
-      toast({ type: "success", title: "Ride posted", message: `${form.origin.trim()} → ${form.destination.trim()} is now live.` });
+      toast({ type: "success", title: isRequest ? "Ride requested" : "Ride posted", message: `${form.origin.trim()} → ${form.destination.trim()} is now live.` });
       navigate(`/rides/${r.id}`);
     } finally {
       setSaving(false);
@@ -468,14 +505,22 @@ export function OfferRide() {
   }
 
   return (
-    <AppShell activeKey="rideshare" title="Offer a Ride">
+    <AppShell activeKey="rideshare" title={isRequest ? "Need a Ride" : "Offer a Ride"}>
       <div className="mx-auto max-w-2xl">
         <button onClick={() => navigate("/rides")} className="mb-4 inline-flex items-center gap-1.5 text-base font-semibold text-ink-3 hover:text-ink-2">
           <Icon name="ArrowLeft" size={16} /> Back to Ride Share
         </button>
-        <PageHeader title="Offer a Ride" subtitle="Share your commute and split the fare." />
+        <PageHeader title={isRequest ? "Request a Ride" : "Offer a Ride"} subtitle={isRequest ? "Post your commute request for campus drivers and carpoolers." : "Share your commute and split the fare."} />
         <form onSubmit={submit} className="space-y-6">
           <Card className="space-y-5 p-6">
+            <SegmentToggle
+              options={[
+                { value: "offer", label: "Offer Ride (Driver)", icon: "Car" },
+                { value: "request", label: "Need Ride (Passenger)", icon: "Search" },
+              ]}
+              value={postType}
+              onChange={setPostType}
+            />
             <SegmentToggle options={[{ value: "To Campus", label: "To Campus" }, { value: "From Campus", label: "From Campus" }]} value={form.direction} onChange={(v) => set("direction", v)} />
             <div className="grid gap-5 sm:grid-cols-2">
               <Field label="From" htmlFor="ro" required error={errors.origin}><Input id="ro" placeholder="e.g. Uttara Sector 7" value={form.origin} error={!!errors.origin} onChange={(e) => set("origin", e.target.value)} /></Field>
@@ -486,8 +531,8 @@ export function OfferRide() {
               <Field label="Departure time" htmlFor="rtime"><Input id="rtime" type="time" value={form.time} onChange={(e) => set("time", e.target.value)} /></Field>
             </div>
             <div className="grid gap-5 sm:grid-cols-3">
-              <Field label="Seats" htmlFor="rseats" required error={errors.seatsTotal}><Input id="rseats" type="number" min="1" max="6" value={form.seatsTotal} error={!!errors.seatsTotal} onChange={(e) => set("seatsTotal", e.target.value)} /></Field>
-              <Field label="Fare/seat (৳)" htmlFor="rfare" required error={errors.fare}><Input id="rfare" type="number" min="0" placeholder="e.g. 80" value={form.fare} error={!!errors.fare} onChange={(e) => set("fare", e.target.value)} /></Field>
+              <Field label={isRequest ? "Seats needed" : "Seats"} htmlFor="rseats" required error={errors.seatsTotal}><Input id="rseats" type="number" min="1" max="6" value={form.seatsTotal} error={!!errors.seatsTotal} onChange={(e) => set("seatsTotal", e.target.value)} /></Field>
+              <Field label={isRequest ? "Budget (৳)" : "Fare/seat (৳)"} htmlFor="rfare" required error={errors.fare}><Input id="rfare" type="number" min="0" placeholder="e.g. 80" value={form.fare} error={!!errors.fare} onChange={(e) => set("fare", e.target.value)} /></Field>
               <Field label="Vehicle" htmlFor="rveh"><Select id="rveh" value={form.vehicle} onChange={(e) => set("vehicle", e.target.value)}>{VEHICLES.map((v) => <option key={v}>{v}</option>)}</Select></Field>
             </div>
             <div>
@@ -499,11 +544,11 @@ export function OfferRide() {
                 })}
               </div>
             </div>
-            <Field label="Notes" htmlFor="rnotes" hint="Pickup details, AC, luggage space, etc."><Textarea id="rnotes" rows={3} placeholder="Anything riders should know…" value={form.notes} onChange={(e) => set("notes", e.target.value)} /></Field>
+            <Field label="Notes" htmlFor="rnotes" hint="Pickup details, preferred route, luggage, etc."><Textarea id="rnotes" rows={3} placeholder="Anything riders or drivers should know…" value={form.notes} onChange={(e) => set("notes", e.target.value)} /></Field>
           </Card>
           <div className="flex justify-end gap-3">
             <Button type="button" variant="secondary" onClick={() => navigate("/rides")}>Cancel</Button>
-            <Button type="submit" icon="Plus" disabled={saving}>{saving ? <Spinner size={16} className="border-white/40 border-t-white" /> : "Post ride"}</Button>
+            <Button type="submit" icon={isRequest ? "Search" : "Plus"} disabled={saving}>{saving ? <Spinner size={16} className="border-white/40 border-t-white" /> : (isRequest ? "Post request" : "Post ride")}</Button>
           </div>
         </form>
       </div>
