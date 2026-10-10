@@ -1300,25 +1300,25 @@ export function StudyHubIntake({ intakeId, deptId: propDeptId, semesterNum }) {
   const sections = studySectionsIn(intake.id);
   const backTarget = semNum
     ? `/study-hub/dept/${dept.id}/semester/${semNum}`
-    : `/study-hub/dept/${dept.id}`;
+    : "/study-hub";
 
   return (
     <AppShell activeKey="study-hub" title="Study Hub">
       <div className="mb-3 flex items-center gap-1.5 text-xs text-ink-3">
         <button onClick={() => navigate("/study-hub")} className="hover:text-ink">Study Hub</button>
         <span>/</span>
-        <button onClick={() => navigate(`/study-hub/dept/${dept.id}`)} className="hover:text-ink">{deptCode(dept.name)}</button>
-        {semNum && (
+        {semNum ? (
           <>
+            <button onClick={() => navigate(`/study-hub/dept/${dept.id}`)} className="hover:text-ink">{deptCode(dept.name)}</button>
             <span>/</span>
             <button onClick={() => navigate(`/study-hub/dept/${dept.id}/semester/${semNum}`)} className="hover:text-ink">Semester {semNum}</button>
+            <span>/</span>
           </>
-        )}
-        <span>/</span>
+        ) : null}
         <span className="font-semibold text-ink">Intake {intake.number}</span>
       </div>
       <button onClick={() => navigate(backTarget)} className="mb-4 inline-flex items-center gap-1.5 text-base font-semibold text-ink-3 hover:text-ink-2">
-        <Icon name="ArrowLeft" size={16} /> {semNum ? `Semester ${semNum} Intakes` : deptCode(dept.name)}
+        <Icon name="ArrowLeft" size={16} /> {semNum ? `Semester ${semNum} Intakes` : "Study Hub"}
       </button>
       <PageHeader
         title={`Intake ${intake.number} · Sections`}
@@ -1661,7 +1661,7 @@ export function StudyHubSection({ sectionId }) {
   const myMembership = studyMembers.find(
     (m) => m.sectionId === section.id && m.userId === currentUser?.id && m.status === "approved"
   );
-  const back = () => navigate(section.isMine ? "/study-hub" : `/study-hub/intake/${section.intakeId}`);
+  const back = () => navigate("/study-hub");
 
   if (!canView) {
     const noMembership = !mine;
@@ -1733,7 +1733,7 @@ export function StudyHubSection({ sectionId }) {
   return (
     <AppShell activeKey="study-hub" title="Study Hub">
       <button onClick={back} className="mb-4 inline-flex items-center gap-1.5 text-base font-semibold text-ink-3 hover:text-ink-2">
-        <Icon name="ArrowLeft" size={16} /> {section.isMine ? "Study Hub" : `Intake ${intake.number}`}
+        <Icon name="ArrowLeft" size={16} /> Study Hub
       </button>
       <SectionHeader section={section} dept={dept} intake={intake} manager={manager} onLeave={myMembership ? () => setLeaveOpen(true) : null} />
 
