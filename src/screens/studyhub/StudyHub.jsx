@@ -290,14 +290,15 @@ function SemesterCard({ sem, deptId, completedCount, currentCount }) {
 export function StudyHub() {
   const {
     currentUser, studyMembers, studySections, resolveMySection,
-    studyCoursesIn, studyPinsIn, deleteStudyPin, removeMember,
-    dataLoading, myPendingCreateRequest,
+    studyCoursesIn, studyPinsIn, deleteStudyPin, removeMember, handoverCRAndLeave,
+    dataLoading, myPendingCreateRequest, studyPersonName, users, userById,
   } = useApp();
   const toast = useToast();
   const [query, setQuery] = React.useState("");
   const [unpinBusy, setUnpinBusy] = React.useState(false);
   const [leaveOpen, setLeaveOpen] = React.useState(false);
   const [leaving, setLeaving] = React.useState(false);
+  const [newCrUserId, setNewCrUserId] = React.useState("");
 
   const mine = resolveMySection();
   const studentDept = useStudentDept();
@@ -338,6 +339,13 @@ export function StudyHub() {
   const myMembership = studyMembers.find(
     (m) => m.sectionId === mySection.id && m.userId === currentUser?.id && m.status === "approved"
   );
+  const otherCRs = studyMembers.filter(
+    (m) => m.sectionId === mySection.id && m.role === "cr" && m.status === "approved" && m.userId !== currentUser?.id
+  );
+  const isSoleCR = manager && otherCRs.length === 0;
+  const eligibleCandidates = studyMembers.filter(
+    (m) => m.sectionId === mySection.id && m.status === "approved" && m.userId !== currentUser?.id
+  );
 
   async function unpin(pin) {
     if (unpinBusy) return;
@@ -357,10 +365,28 @@ export function StudyHub() {
     if (leaving || !myMembership) return;
     setLeaving(true);
     try {
-      const r = await removeMember(myMembership.id);
-      if (!r.ok) { toast({ type: "error", title: "Couldn't leave", message: r.error }); return; }
-      toast({ type: "success", title: "Left section" });
-      setLeaveOpen(false);
+      if (isSoleCR && eligibleCandidates.length > 0) {
+        if (!newCrUserId) {
+          toast({ type: "error", title: "Select a new CR", message: "Please choose a classmate to take over as Class Representative." });
+          setLeaving(false);
+          return;
+        }
+        const r = await handoverCRAndLeave(mySection.id, newCrUserId);
+        if (!r.ok) {
+          toast({ type: "error", title: "Couldn't transfer CR role", message: r.error || "Please run migration 0089 in Supabase." });
+          return;
+        }
+        toast({ type: "success", title: "CR role transferred", message: "You have left the section." });
+        setLeaveOpen(false);
+        setNewCrUserId("");
+      } else {
+        const r = await removeMember(myMembership.id);
+        if (!r.ok) { toast({ type: "error", title: "Couldn't leave", message: r.error }); return; }
+        toast({ type: "success", title: "Left section" });
+        setLeaveOpen(false);
+      }
+    } catch {
+      toast({ type: "error", title: "Couldn't leave", message: "Please try again." });
     } finally {
       setLeaving(false);
     }
@@ -392,9 +418,13 @@ export function StudyHub() {
             >
               All 12 Semesters
             </Button>
-            {myMembership && !manager && (
-              <Button variant="secondary" icon="LogOut" onClick={() => setLeaveOpen(true)}>
-                Leave
+            {myMembership && (
+              <Button
+                variant="destructive"
+                icon="LogOut"
+                onClick={() => { setLeaveOpen(true); setNewCrUserId(""); }}
+              >
+                Leave section
               </Button>
             )}
           </div>
@@ -470,16 +500,70 @@ export function StudyHub() {
 
       {/* Leave Section Modal */}
       <Modal
-        open={leaveOpen} onClose={() => setLeaveOpen(false)} icon="LogOut" tone="red"
-        title="Leave this section?"
-        description="You'll lose access to this section's materials. You can rejoin later."
+        open={leaveOpen}
+        onClose={() => setLeaveOpen(false)}
+        icon={isSoleCR && eligibleCandidates.length > 0 ? "UserCheck" : "LogOut"}
+        tone="red"
+        title={
+          isSoleCR && eligibleCandidates.length > 0
+            ? "Select a new CR before leaving"
+            : `Leave Section ${sectionNumber}?`
+        }
+        description={
+          isSoleCR && eligibleCandidates.length > 0
+            ? `As the only Class Representative of Section ${sectionNumber}, you must select an approved classmate to take over as CR before you can leave.`
+            : isSoleCR
+            ? `You are currently the only member in Section ${sectionNumber}. If you leave, the section will have no active members.`
+            : manager
+            ? `There is another CR managing Section ${sectionNumber}. You will leave the section and step down from your CR role.`
+            : `You will lose access to Section ${sectionNumber} materials. You can join another section afterwards.`
+        }
         footer={
           <>
-            <Button variant="secondary" onClick={() => setLeaveOpen(false)} disabled={leaving}>Cancel</Button>
-            <Button variant="destructive" loading={leaving} onClick={doLeave}>Leave section</Button>
+            <Button variant="secondary" onClick={() => setLeaveOpen(false)} disabled={leaving}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              loading={leaving}
+              disabled={isSoleCR && eligibleCandidates.length > 0 && !newCrUserId}
+              onClick={doLeave}
+            >
+              {isSoleCR && eligibleCandidates.length > 0 ? "Transfer & Leave" : "Leave section"}
+            </Button>
           </>
         }
-      />
+      >
+        {isSoleCR && eligibleCandidates.length > 0 && (
+          <div className="space-y-3">
+            <Field
+              label="Select new Class Representative"
+              required
+              hint="Choose an approved student from your section to become the new CR."
+            >
+              <Select
+                value={newCrUserId}
+                onChange={(e) => setNewCrUserId(e.target.value)}
+              >
+                <option value="">Select a classmate…</option>
+                {eligibleCandidates.map((m) => {
+                  const u = userById ? userById(m.userId) : users?.find((x) => x.id === m.userId);
+                  const name = studyPersonName(m.userId) || u?.name || "Student";
+                  const sid = u?.studentId ? ` (${u.studentId})` : "";
+                  return (
+                    <option key={m.userId} value={m.userId}>
+                      {name}{sid}
+                    </option>
+                  );
+                })}
+              </Select>
+            </Field>
+            <p className="text-xs text-ink-3">
+              The selected classmate will be promoted to CR immediately upon your departure.
+            </p>
+          </div>
+        )}
+      </Modal>
     </AppShell>
   );
 }
@@ -1551,6 +1635,16 @@ export function StudyHubSection({ sectionId }) {
   }
 
   const mine = resolveMySection();
+  const isMine = Boolean(section?.isMine || (mine && mine.section.id === sectionId));
+
+  React.useEffect(() => {
+    if (isMine) {
+      navigate("/study-hub");
+    }
+  }, [isMine]);
+
+  if (isMine) return null;
+
   const myDeptId = mine?.section?.deptId;
   const myIntakeId = mine?.section?.intakeId;
   const sectionIntake = studyIntakes.find((i) => i.id === section.intakeId);
@@ -2311,11 +2405,15 @@ export function StudyHubManage({ sectionId }) {
   const {
     departments, studyIntakes, studySectionById, studyMembers, resolveMySection,
     approveMember, removeMember, setMemberRole, toggleSectionPublic, checkExpiredVotes, dataLoading,
+    handoverCRAndLeave, studyPersonName, users, userById, currentUser,
   } = useApp();
   const toast = useToast();
   const [tab, setTab] = React.useState("Members");
   const [actBusy, setActBusy] = React.useState(false);
   const [toggleBusy, setToggleBusy] = React.useState(false);
+  const [leaveOpen, setLeaveOpen] = React.useState(false);
+  const [leaving, setLeaving] = React.useState(false);
+  const [newCrUserId, setNewCrUserId] = React.useState("");
 
   const section = studySectionById(sectionId);
   const intake = section && studyIntakes.find((i) => i.id === section.intakeId);
@@ -2341,13 +2439,55 @@ export function StudyHubManage({ sectionId }) {
     return (
       <AppShell activeKey="study-hub" title="Study Hub">
         <EmptyState icon="Lock" title="You don't manage this section" message="Only a section's CR can manage its members."
-          action={<Button onClick={() => navigate(`/study-hub/section/${section.id}`)}>Back to section</Button>} />
+            action={<Button onClick={() => navigate("/study-hub")}>Back to Study Hub</Button>} />
       </AppShell>
     );
   }
 
   const members = studyMembers.filter((m) => m.sectionId === section.id);
   const pendingCount = members.filter((m) => m.status === "pending").length;
+  const otherCRs = studyMembers.filter(
+    (m) => m.sectionId === section.id && m.role === "cr" && m.status === "approved" && m.userId !== currentUser?.id
+  );
+  const isSoleCR = otherCRs.length === 0;
+  const eligibleCandidates = studyMembers.filter(
+    (m) => m.sectionId === section.id && m.status === "approved" && m.userId !== currentUser?.id
+  );
+  const myMembership = studyMembers.find(
+    (m) => m.sectionId === section.id && m.userId === currentUser?.id && m.status === "approved"
+  );
+
+  async function doLeave() {
+    if (leaving || !myMembership) return;
+    setLeaving(true);
+    try {
+      if (isSoleCR && eligibleCandidates.length > 0) {
+        if (!newCrUserId) {
+          toast({ type: "error", title: "Select a new CR", message: "Please choose a classmate to take over as Class Representative." });
+          setLeaving(false);
+          return;
+        }
+        const r = await handoverCRAndLeave(section.id, newCrUserId);
+        if (!r.ok) {
+          toast({ type: "error", title: "Couldn't transfer CR role", message: r.error || "Please run migration 0089 in Supabase." });
+          return;
+        }
+        toast({ type: "success", title: "CR role transferred", message: "You have left the section." });
+        setLeaveOpen(false);
+        navigate("/study-hub");
+      } else {
+        const r = await removeMember(myMembership.id);
+        if (!r.ok) { toast({ type: "error", title: "Couldn't leave", message: r.error }); return; }
+        toast({ type: "success", title: "Left section" });
+        setLeaveOpen(false);
+        navigate("/study-hub");
+      }
+    } catch {
+      toast({ type: "error", title: "Couldn't leave", message: "Please try again." });
+    } finally {
+      setLeaving(false);
+    }
+  }
 
   async function onAct(kind, m) {
     if (actBusy) return;
@@ -2384,10 +2524,22 @@ export function StudyHubManage({ sectionId }) {
 
   return (
     <AppShell activeKey="study-hub" title="Study Hub">
-      <button onClick={() => navigate(`/study-hub/section/${section.id}`)} className="mb-4 inline-flex items-center gap-1.5 text-base font-semibold text-ink-3 hover:text-ink-2">
-        <Icon name="ArrowLeft" size={16} /> Section {section.number}
+      <button onClick={() => navigate("/study-hub")} className="mb-4 inline-flex items-center gap-1.5 text-base font-semibold text-ink-3 hover:text-ink-2">
+        <Icon name="ArrowLeft" size={16} /> Study Hub
       </button>
-      <PageHeader title={`Manage Section ${section.number}`} subtitle={`${deptCode(dept.name)} · Intake ${intake.number}`} />
+      <PageHeader
+        title={`Manage Section ${section.number}`}
+        subtitle={`${deptCode(dept.name)} · Intake ${intake.number}`}
+        action={
+          <Button
+            variant="destructive"
+            icon="LogOut"
+            onClick={() => { setLeaveOpen(true); setNewCrUserId(""); }}
+          >
+            Leave section
+          </Button>
+        }
+      />
       <div className="mb-5">
         <FilterTabs
           options={["Members", "Settings"]}
@@ -2397,6 +2549,71 @@ export function StudyHubManage({ sectionId }) {
       </div>
       {tab === "Members" && <MembersTab section={section} members={members} onAct={onAct} actBusy={actBusy} />}
       {tab === "Settings" && <SettingsTab section={section} intake={intake} onTogglePublic={handleTogglePublic} toggleBusy={toggleBusy} />}
+
+      {/* Leave Section Modal */}
+      <Modal
+        open={leaveOpen}
+        onClose={() => setLeaveOpen(false)}
+        icon={isSoleCR && eligibleCandidates.length > 0 ? "UserCheck" : "LogOut"}
+        tone="red"
+        title={
+          isSoleCR && eligibleCandidates.length > 0
+            ? "Select a new CR before leaving"
+            : `Leave Section ${section.number}?`
+        }
+        description={
+          isSoleCR && eligibleCandidates.length > 0
+            ? `As the only Class Representative of Section ${section.number}, you must select an approved classmate to take over as CR before you can leave.`
+            : isSoleCR
+            ? `You are currently the only member in Section ${section.number}. If you leave, the section will have no active members.`
+            : `There is another CR managing Section ${section.number}. You will leave the section and step down from your CR role.`
+        }
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setLeaveOpen(false)} disabled={leaving}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              loading={leaving}
+              disabled={isSoleCR && eligibleCandidates.length > 0 && !newCrUserId}
+              onClick={doLeave}
+            >
+              {isSoleCR && eligibleCandidates.length > 0 ? "Transfer & Leave" : "Leave section"}
+            </Button>
+          </>
+        }
+      >
+        {isSoleCR && eligibleCandidates.length > 0 && (
+          <div className="space-y-3">
+            <Field
+              label="Select new Class Representative"
+              required
+              hint="Choose an approved student from your section to become the new CR."
+            >
+              <Select
+                value={newCrUserId}
+                onChange={(e) => setNewCrUserId(e.target.value)}
+              >
+                <option value="">Select a classmate…</option>
+                {eligibleCandidates.map((m) => {
+                  const u = userById ? userById(m.userId) : users?.find((x) => x.id === m.userId);
+                  const name = studyPersonName(m.userId) || u?.name || "Student";
+                  const sid = u?.studentId ? ` (${u.studentId})` : "";
+                  return (
+                    <option key={m.userId} value={m.userId}>
+                      {name}{sid}
+                    </option>
+                  );
+                })}
+              </Select>
+            </Field>
+            <p className="text-xs text-ink-3">
+              The selected classmate will be promoted to CR immediately upon your departure.
+            </p>
+          </div>
+        )}
+      </Modal>
     </AppShell>
   );
 }

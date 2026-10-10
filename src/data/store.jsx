@@ -2829,6 +2829,13 @@ export function AppProvider({ children }) {
   // --- membership (student requests; CR approves/promotes/removes) ---
   async function requestJoinSection(sectionId) {
     if (!currentUser) return { ok: false, error: "Not signed in." };
+    const existing = studyMembers.find((m) => m.userId === currentUser.id && m.status === "approved");
+    if (existing) {
+      if (existing.sectionId === sectionId) return { ok: false, error: "You are already a member of this section." };
+      return { ok: false, error: "You can only be in 1 section. Please leave your current section before joining another." };
+    }
+    // Remove any previous pending requests in other sections so only 1 request is active
+    await supabase.from("study_section_members").delete().eq("user_id", currentUser.id).eq("status", "pending");
     const { error } = await supabase.from("study_section_members")
       .insert({ section_id: sectionId, user_id: currentUser.id, role: "member", status: "pending", joined_via: "request" });
     if (error) return { ok: false, error: error.code === "23505" ? "You've already requested to join this section." : error.message };
@@ -2836,6 +2843,11 @@ export function AppProvider({ children }) {
     return { ok: true };
   }
   async function approveMember(memberId) {
+    const mem = studyMembers.find((m) => m.id === memberId);
+    if (mem) {
+      // 1 user only in 1 section: remove any other section memberships for this student
+      await supabase.from("study_section_members").delete().eq("user_id", mem.userId).neq("id", memberId);
+    }
     const { error } = await supabase.from("study_section_members").update({ status: "approved" }).eq("id", memberId);
     if (error) return { ok: false, error: error.message };
     await loadStudyHub();
@@ -2855,6 +2867,17 @@ export function AppProvider({ children }) {
     await loadStudyHub();
     return { ok: true };
   }
+  async function handoverCRAndLeave(sectionId, newCrUserId) {
+    if (!currentUser) return { ok: false, error: "Not signed in." };
+    const { data, error } = await supabase.rpc("study_handover_cr_and_leave", {
+      p_section_id: sectionId,
+      p_new_cr_id: newCrUserId,
+    });
+    if (error) return { ok: false, error: error.message };
+    if (!data?.ok) return { ok: false, error: data?.error || "Could not transfer CR role." };
+    await loadStudyHub();
+    return { ok: true };
+  }
 
   // --- 0057 actions ---
   // Student requests admin to create a new section for them (they become CR on approval).
@@ -2871,17 +2894,31 @@ export function AppProvider({ children }) {
   // Join a section instantly via its 6-char join code (SECURITY DEFINER RPC).
   async function joinByCode(code) {
     if (!currentUser) return { ok: false, error: "Not signed in." };
+    const oldMems = studyMembers.filter((m) => m.userId === currentUser.id);
     const { data, error } = await supabase.rpc("join_section_by_code", { p_code: code.trim().toUpperCase() });
     if (error) return { ok: false, error: error.message };
     if (!data?.ok) return { ok: false, error: data?.error || "Invalid code." };
+    // 1 user only in 1 section: remove any previous section memberships
+    if (oldMems.length > 0) {
+      for (const m of oldMems) {
+        if (m.sectionId !== data.sectionId) {
+          await supabase.from("study_section_members").delete().eq("id", m.id);
+        }
+      }
+    }
     await loadStudyHub();
     return { ok: true, sectionId: data.sectionId };
   }
   // Admin: approve a pending section-creation request (RPC creates section + assigns CR + sets join_code).
   async function approveSectionRequest(reqId) {
+    const req = studySectionRequests.find((r) => r.id === reqId);
     const { data, error } = await supabase.rpc("approve_section_request", { p_request_id: reqId });
     if (error) return { ok: false, error: error.message };
     if (!data?.ok) return { ok: false, error: data?.error || "Approval failed." };
+    // 1 user only in 1 section: remove any older section memberships for the new CR
+    if (req?.requestedBy && data.sectionId) {
+      await supabase.from("study_section_members").delete().eq("user_id", req.requestedBy).neq("section_id", data.sectionId);
+    }
     await loadStudyHub();
     return { ok: true, sectionId: data.sectionId, joinCode: data.joinCode };
   }
@@ -3095,6 +3132,8 @@ export function AppProvider({ children }) {
     return { ok: true };
   }
   async function assignSectionCR(sectionId, userId) {
+    // 1 user only in 1 section: remove any other section memberships for this student
+    await supabase.from("study_section_members").delete().eq("user_id", userId).neq("section_id", sectionId);
     const { error } = await supabase.from("study_section_members")
       .upsert({ section_id: sectionId, user_id: userId, role: "cr", status: "approved" }, { onConflict: "section_id,user_id" });
     if (error) return { ok: false, error: error.message };
@@ -3559,7 +3598,7 @@ export function AppProvider({ children }) {
     // study hub (files)
     getStudyFileUrl,
     // study hub (actions)
-    requestJoinSection, approveMember, setMemberRole, removeMember,
+    requestJoinSection, approveMember, setMemberRole, removeMember, handoverCRAndLeave,
     addStudyCourse, deleteStudyCourse, uploadStudyMaterial, deleteStudyMaterial,
     uploadStudyQB, setQBVerified, deleteStudyQB, addStudyBook, deleteStudyBook, addStudyPin, deleteStudyPin,
     getStudyBookmarks, toggleStudyBookmark,
