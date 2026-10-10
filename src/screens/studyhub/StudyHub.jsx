@@ -222,17 +222,17 @@ function CRBanner({ section, sectionNumber }) {
   const pending = studyMembers.filter((m) => m.sectionId === section.id && m.status === "pending").length;
   const editors = (section.editorIds || []).length;
   return (
-    <div className="mb-6 flex flex-col gap-3 rounded-md border border-teal-200 dark:border-teal-500/30 bg-teal-50 dark:bg-teal-500/15 p-4 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex items-center gap-3">
-        <AccentTile icon="ShieldCheck" tone={ACCENT} size={40} />
+    <div className="mb-4 flex flex-col gap-2 rounded-md border border-teal-200 dark:border-teal-500/30 bg-teal-50/70 dark:bg-teal-500/10 p-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex items-center gap-2.5">
+        <AccentTile icon="ShieldCheck" tone={ACCENT} size={32} />
         <div className="min-w-0">
-          <p className="text-base font-semibold text-ink">You're the CR of Section {sectionNumber}</p>
-          <p className="text-xs text-ink-2">
+          <p className="text-sm font-semibold text-ink">You're the CR of Section {sectionNumber}</p>
+          <p className="text-xs text-ink-3">
             {pending} join request{pending === 1 ? "" : "s"} pending · {editors} editor{editors === 1 ? "" : "s"}
           </p>
         </div>
       </div>
-      <Button className="shrink-0" icon="Settings" onClick={() => navigate(`/study-hub/section/${section.id}/manage`)}>
+      <Button size="sm" variant="secondary" className="shrink-0" icon="Settings" onClick={() => navigate(`/study-hub/section/${section.id}/manage`)}>
         Manage section
       </Button>
     </div>
@@ -299,6 +299,7 @@ export function StudyHub() {
   const [leaveOpen, setLeaveOpen] = React.useState(false);
   const [leaving, setLeaving] = React.useState(false);
   const [newCrUserId, setNewCrUserId] = React.useState("");
+  const [courseOpen, setCourseOpen] = React.useState(false);
 
   const mine = resolveMySection();
   const studentDept = useStudentDept();
@@ -334,6 +335,7 @@ export function StudyHub() {
 
   const { section: mySection, deptCode: code, intakeNumber, sectionNumber, myRole } = mine;
   const manager = isCR(myRole);
+  const canAddCourse = canContribute(myRole) || currentUser?.role === "Admin";
   const pins = studyPinsIn(mySection.id);
   const courses = studyCoursesIn(mySection.id);
   const myMembership = studyMembers.find(
@@ -403,8 +405,18 @@ export function StudyHub() {
         title="Study Hub"
         subtitle={`${code} · Intake ${intakeNumber} · Section ${sectionNumber}`}
         action={
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+            {canAddCourse && (
+              <Button
+                size="sm"
+                icon="Plus"
+                onClick={() => setCourseOpen(true)}
+              >
+                Add course
+              </Button>
+            )}
             <Button
+              size="sm"
               variant="secondary"
               icon="Users"
               onClick={() => navigate(`/study-hub/intake/${mySection.intakeId}`)}
@@ -412,6 +424,7 @@ export function StudyHub() {
               Other Sections
             </Button>
             <Button
+              size="sm"
               variant="secondary"
               icon="GraduationCap"
               onClick={() => navigate(`/study-hub/dept/${dept.id}`)}
@@ -420,6 +433,7 @@ export function StudyHub() {
             </Button>
             {myMembership && (
               <Button
+                size="sm"
                 variant="destructive"
                 icon="LogOut"
                 onClick={() => { setLeaveOpen(true); setNewCrUserId(""); }}
@@ -450,7 +464,7 @@ export function StudyHub() {
 
       {/* Primary View: Own Intake/Section Courses */}
       <div className="space-y-3">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h3 className="text-base font-bold text-ink">
               Courses <span className="text-xs font-normal text-ink-3">({courses.length})</span>
@@ -459,27 +473,34 @@ export function StudyHub() {
               Section {sectionNumber} curriculum, lecture notes, CT questions & books
             </p>
           </div>
-          {courses.length > 2 && (
-            <div className="relative w-full sm:max-w-xs">
-              <Icon name="Search" size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-3" />
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search courses…"
-                className="h-10 w-full rounded-md border border-brd bg-surface pl-9 pr-3 text-sm text-ink placeholder:text-ink-3 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand-100"
-              />
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            {courses.length > 2 && (
+              <div className="relative w-full sm:w-52">
+                <Icon name="Search" size={14} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-3" />
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search courses…"
+                  className="h-8 w-full rounded-md border border-brd bg-surface pl-8 pr-2.5 text-xs text-ink placeholder:text-ink-3 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand-100"
+                />
+              </div>
+            )}
+            {canAddCourse && (
+              <Button size="sm" icon="Plus" onClick={() => setCourseOpen(true)}>
+                Add course
+              </Button>
+            )}
+          </div>
         </div>
 
         {courses.length === 0 ? (
           <EmptyState
             icon="BookOpen"
             title="No courses yet"
-            message={manager ? "Add your section's courses in Manage section." : "Your CR will add courses here."}
-            action={manager ? (
-              <Button icon="Plus" onClick={() => navigate(`/study-hub/section/${mySection.id}/manage`)}>
-                Add courses
+            message={canAddCourse ? "Add courses to your section so classmates can upload study notes, CT questions and books." : "Your CR will add courses here."}
+            action={canAddCourse ? (
+              <Button size="sm" icon="Plus" onClick={() => setCourseOpen(true)}>
+                Add course
               </Button>
             ) : null}
           />
@@ -564,6 +585,13 @@ export function StudyHub() {
           </div>
         )}
       </Modal>
+
+      {/* Add Course Modal */}
+      <AddCourseModal
+        open={courseOpen}
+        onClose={() => setCourseOpen(false)}
+        sectionId={mySection.id}
+      />
     </AppShell>
   );
 }
@@ -1491,7 +1519,7 @@ function PinnedTab({ pins, manager, onPin, onUnpin }) {
   // Pins are CR-only (RLS): gate on manager, not canEdit.
   return (
     <div>
-      {manager && <div className="mb-4 flex justify-end"><Button icon="Pin" onClick={onPin}>Add a pin</Button></div>}
+      {manager && <div className="mb-3 flex justify-end"><Button size="sm" icon="Pin" onClick={onPin}>Add a pin</Button></div>}
       {pins.length === 0 ? (
         <EmptyState icon="Pin" title="Nothing pinned" message={manager ? "Pin a note or file to surface it for your section." : "Your CR hasn't pinned anything yet."} />
       ) : (
@@ -1511,24 +1539,24 @@ function CoursesTab({ section, courses, canEdit, manager, onAddCourse, onDeleteC
   );
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="space-y-3">
+      <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
         <h3 className="text-base font-semibold text-ink">
           Courses <span className="text-xs font-normal text-ink-3">({courses.length})</span>
         </h3>
         <div className="flex items-center gap-2">
           {courses.length > 2 && (
-            <div className="relative w-full sm:w-64">
-              <Icon name="Search" size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-3" />
+            <div className="relative w-full sm:w-56">
+              <Icon name="Search" size={14} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-3" />
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search courses…"
-                className="h-10 w-full rounded-md border border-brd bg-surface pl-9 pr-3 text-sm text-ink placeholder:text-ink-3 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand-100"
+                className="h-8 w-full rounded-md border border-brd bg-surface pl-8 pr-2.5 text-xs text-ink placeholder:text-ink-3 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand-100"
               />
             </div>
           )}
-          {canEdit && <Button icon="Plus" onClick={onAddCourse}>Add course</Button>}
+          {canEdit && <Button size="sm" icon="Plus" onClick={onAddCourse}>Add course</Button>}
         </div>
       </div>
       {courses.length === 0 ? (
@@ -1536,7 +1564,7 @@ function CoursesTab({ section, courses, canEdit, manager, onAddCourse, onDeleteC
           icon="BookOpen"
           title="No courses yet"
           message={canEdit ? "Add a course so classmates can upload its materials." : "No courses have been added to this section yet."}
-          action={canEdit ? <Button icon="Plus" onClick={onAddCourse}>Add course</Button> : null}
+          action={canEdit ? <Button size="sm" icon="Plus" onClick={onAddCourse}>Add course</Button> : null}
         />
       ) : filtered.length === 0 ? (
         <EmptyState icon="Search" title="No matching courses" message="Try another search term." />
@@ -1787,8 +1815,8 @@ function SectionHeader({ section, dept, intake, manager, onLeave }) {
       subtitle={subtitle}
       action={onLeave ? (
         <div className="flex gap-2">
-          {manager && <Button icon="Settings" onClick={() => navigate(`/study-hub/section/${section.id}/manage`)}>Manage section</Button>}
-          <Button variant="secondary" icon="LogOut" onClick={onLeave}>Leave section</Button>
+          {manager && <Button size="sm" variant="secondary" icon="Settings" onClick={() => navigate(`/study-hub/section/${section.id}/manage`)}>Manage section</Button>}
+          <Button size="sm" variant="destructive" icon="LogOut" onClick={onLeave}>Leave section</Button>
         </div>
       ) : null}
     />
@@ -2152,20 +2180,20 @@ export function StudyHubCourse({ sectionId, courseId }) {
         />
         <div className="flex items-center gap-2">
           {(notes.length > 2 || qb.length > 2 || books.length > 2 || slides.length > 2 || query) && (
-            <div className="relative w-full sm:w-56">
-              <Icon name="Search" size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-3" />
+            <div className="relative w-full sm:w-52">
+              <Icon name="Search" size={14} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-3" />
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search…"
-                className="h-10 w-full rounded-md border border-brd bg-surface pl-9 pr-3 text-sm text-ink placeholder:text-ink-3 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand-100"
+                className="h-8 w-full rounded-md border border-brd bg-surface pl-8 pr-2.5 text-xs text-ink placeholder:text-ink-3 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand-100"
               />
             </div>
           )}
-          {canUpload && tab === "Class Notes" && <Button icon="Upload" onClick={() => setUploadOpen(true)}>Upload note</Button>}
-          {canUpload && tab === "CT Questions" && <Button icon="Upload" onClick={() => setQbOpen(true)}>Upload question</Button>}
-          {canUpload && tab === "Books" && <Button icon="Plus" onClick={() => setBookOpen(true)}>Add book</Button>}
-          {canUpload && tab === "Slides" && <Button icon="Presentation" onClick={() => setSlideOpen(true)}>Upload slide</Button>}
+          {canUpload && tab === "Class Notes" && <Button size="sm" icon="Upload" onClick={() => setUploadOpen(true)}>Upload note</Button>}
+          {canUpload && tab === "CT Questions" && <Button size="sm" icon="Upload" onClick={() => setQbOpen(true)}>Upload question</Button>}
+          {canUpload && tab === "Books" && <Button size="sm" icon="Plus" onClick={() => setBookOpen(true)}>Add book</Button>}
+          {canUpload && tab === "Slides" && <Button size="sm" icon="Presentation" onClick={() => setSlideOpen(true)}>Upload slide</Button>}
         </div>
       </div>
 
@@ -2532,6 +2560,7 @@ export function StudyHubManage({ sectionId }) {
         subtitle={`${deptCode(dept.name)} · Intake ${intake.number}`}
         action={
           <Button
+            size="sm"
             variant="destructive"
             icon="LogOut"
             onClick={() => { setLeaveOpen(true); setNewCrUserId(""); }}
