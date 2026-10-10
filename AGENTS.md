@@ -233,7 +233,7 @@ The live Supabase database (`xhgpxvyqrufbbuivttmi`) is the single source of trut
 | **Clubs** | `clubs` & `club_posts` | `clubs.about` (NOT `description`), filter `is_active = true`. Posts: `club_posts.body` (NOT `content`), `author_id`. |
 | **Jobs** | `jobs` | **NO status column**. Removed jobs have `deleted_at IS NOT NULL`. Withdraw a job by setting `deleted_at = now()`. |
 | **Reports** | `reports` | Columns: `code`, `reporter_id`, `assigned_staff_id`, `status` (`'Open'`, `'In Progress'`, `'Resolved'`, `'Rejected'`, `'Closed'`). Trade assignment matches `profiles.expertise`. |
-| **Connections** | `connections` | `requester_id`, `addressee_id`, `status` (`'pending'`, `'accepted'`). |
+| **Connections** | `connections` | `requester_id`, `addressee_id`, `status` (`'pending'`, `'accepted'`). Contact reveal via `student_profile_detail(p_target_id)` RPC. Atomic disconnect via `disconnect_student(p_target_id)` RPC. Event notification trigger `trg_notify_connection_event` for alerts and lockscreen push. |
 | **Medical** | `doctors` & `appointments` | Clinic is walk-in / directory only. Doctors: `room`. Appointments: `student_id`, `slot`, `date`. |
 | **Account Deletion** | `delete_own_account()` RPC | SECURITY DEFINER. Removes dependent records and caller from `auth.users` (cascading to `profiles`). Revoked from anon; authenticated only. |
 
@@ -425,6 +425,40 @@ The mobile and web applications are actively pitched and presented to BUBT admin
 ### 14.7 Theme-Aware Dark Mode Tokens (`pillBg`)
 - Never use hardcoded light pastel constants (`Accent.tealBg = #e4f5f4`, `greenBg = #e8f8f0`, `grayBg = #f0f2f6`) on cards or badges in dark mode.
 - Use `pillBg(fgHex, isDark)` from `src/theme/colors.ts`, generating `${fgHex}2e` on dark and `${fgHex}18` on light.
+
+### 14.8 Student Directory Architecture & Peer Discovery (`StudentDirectory.jsx` & `DirectoryScreen.tsx`)
+- **Segmented Discovery Track Switcher:** Full-width segmented track with native spring sliding indicator physics (`Animated.spring`, `tension: 68`, `friction: 10`, `useNativeDriver: true`) matching `LostFoundBrowseScreen.tsx`. Features three dedicated discovery scopes:
+  - `All Students`: University-wide student roster with live total count badge.
+  - `Connections`: Mutual accepted peer network with one-tap chat and phone actions.
+  - `Requests`: Pending incoming and outgoing connection requests with live count badge and alert indicator.
+- **Option A Funnel Layout (Zero Sandwich Effect):** Solves stacked bar clutter by organizing controls into a natural visual hierarchy:
+  1. Top Scope: Segmented Track Switcher (`All Students | Connections | Requests`).
+  2. Sub-Filters: Dual Control Bar (`[ ✨ My Sec (Intake-Section) ]` + `[ 🏛️ All Depts ▾ ]`) directly beneath tabs.
+  3. Fine-Grained Search: Search input directly above the student card feed (`🔍 Search by name, intake, section, dept, blood...`).
+- **Structured Dual Control Bar:**
+  - **Left Button (`My Section`):** One-tap toggle filtering the directory down to students in the user's exact intake and section (e.g. `51-1`). Theme-aware styling across both light and dark modes.
+  - **Right Button (`Department Picker`):** Displays current department with dynamic signature emblem and accent color.
+- **Varsity-Grade Department Picker Modal:**
+  - Modern slide-up bottom sheet modal (`animationType="slide"`) with grab handle, safe area insets (`useSafeAreaInsets`), and 9 BUBT faculties/departments:
+    - `All Departments`: Royal Blue (`#2563EB`) · `globe`
+    - `CSE (Computer Science & Engineering)`: Tech Cyan (`#0891B2`) · `cpu`
+    - `EEE (Electrical & Electronic Engineering)`: Electric Amber (`#D97706`) · `zap`
+    - `BBA (Business Administration)`: Growth Emerald (`#059669`) · `briefcase`
+    - `Law (Department of Law)`: Justice Crimson (`#E11D48`) · `shield`
+    - `English (Department of English)`: Literature Violet (`#7C3AED`) · `book-open`
+    - `Civil (Civil Engineering)`: Infrastructure Orange (`#EA580C`) · `compass`
+    - `Textile (Textile Engineering)`: Material Rose (`#DB2777`) · `layers`
+    - `Economics (Department of Economics)`: Financial Indigo (`#4F46E5`) · `trending-up`
+  - Real-time student count badges per department (`[count] peers`).
+  - Active selection receives glowing colored border, tinted background, and checkmark pill.
+- **Database & Backend Architecture:**
+  - `disconnect_student(p_target_id UUID)`: SECURITY DEFINER RPC for atomic mutual disconnection.
+  - `student_profile_detail(p_target_id UUID)`: SECURITY DEFINER RPC returning full profile details for single-student lookups.
+  - `student_directory()`: Returns `student_id` and `is_cr` (checking `study_section_members.role = 'cr'`).
+  - `connections_delete` RLS policy: Allows mutual deletion for both `pending` and `accepted` connections.
+  - `trg_notify_connection_event`: In-app notification and FCM lockscreen push on connection request and acceptance.
+- **1:1 Web Parity (`StudentDirectory.jsx`):**
+  - Sibling web app equipped with Department filter select dropdown, Classmates toggle, CR & Blood badges, and modal Disconnect action. Verified via `vite build`.
 
 ---
 

@@ -134,6 +134,15 @@ All visual styles must strictly flow from `src/theme/` (mobile) or `src/index.cs
   - **LOAD-BEARING RULE:** Never set `overflow-hidden` or `overflow-x-auto` on the nav container element. Any overflow setting clips the dropdown panels that hang below the bar, rendering them completely invisible.
 - **Sticky Offsets:** Top floating capsule consumes 84-88px of vertical clearance on desktop; mobile sticky top header consumes 44px (`h-11`). Sticky elements (e.g., CoverPage preview, public CGPA cards) must use `top-24` or higher to clear the capsule.
 
+### 6.5 Public Navigation Capsule & Landing Architecture (`Explore.jsx` & `Landing.jsx`)
+- **Landing Hero Video:** Uses HTML5 autoplaying background (`src/assets/hero-bg.mp4`) with `autoPlay`, `loop`, `muted`, `playsInline`, and static fallback poster (`bubt-campus.jpg`). Theme-aware overlay `.hero-photo-veil` guarantees WCAG contrast across light and dark modes.
+- **Public Navigation Links (`EXPLORE_NAV`):** Strictly limited to 5 essentials: `Bus Schedule` (`/explore/bus`), `Cover Page` (`/explore/cover-page`), `CGPA` (`/explore/cgpa`), `Prayer` (`/explore/prayer`), and `Faculty` (`/explore/faculty`).
+- **Responsive Capsule Layout:**
+  - Desktop / Tablet (`md` and above): Links render centered inside the top floating capsule (`hidden md:flex`).
+  - Mobile (< `md`): Secondary sub-capsule renders links as a compact, centered pill (`w-fit mx-auto`).
+  - **No Scrollbar / Non-Slidable:** Mobile sub-capsule must never use `overflow-x-auto` or slider tracks. Utilizes `.no-scrollbar` and tight padding (`px-2 py-1 text-xs sm:text-sm`).
+- **Top Card Mobile Constraint:** Logo uses `size="sm"` on public nav (`Logo size="sm" onDark`). Auth buttons use `size="sm"` and `!rounded-full` (`!h-8 !rounded-full !px-3`) so Sign Up / Log In buttons never poke out or overflow the curved capsule boundaries on narrow viewports.
+
 ---
 
 ## 7. Web Design System, Tokens & UI Components
@@ -224,7 +233,7 @@ The live Supabase database (`xhgpxvyqrufbbuivttmi`) is the single source of trut
 | **Clubs** | `clubs` & `club_posts` | `clubs.about` (NOT `description`), filter `is_active = true`. Posts: `club_posts.body` (NOT `content`), `author_id`. |
 | **Jobs** | `jobs` | **NO status column**. Removed jobs have `deleted_at IS NOT NULL`. Withdraw a job by setting `deleted_at = now()`. |
 | **Reports** | `reports` | Columns: `code`, `reporter_id`, `assigned_staff_id`, `status` (`'Open'`, `'In Progress'`, `'Resolved'`, `'Rejected'`, `'Closed'`). Trade assignment matches `profiles.expertise`. |
-| **Connections** | `connections` | `requester_id`, `addressee_id`, `status` (`'pending'`, `'accepted'`). |
+| **Connections** | `connections` | `requester_id`, `addressee_id`, `status` (`'pending'`, `'accepted'`). Contact reveal via `student_profile_detail(p_target_id)` RPC. Atomic disconnect via `disconnect_student(p_target_id)` RPC. Event notification trigger `trg_notify_connection_event` for alerts and lockscreen push. |
 | **Medical** | `doctors` & `appointments` | Clinic is walk-in / directory only. Doctors: `room`. Appointments: `student_id`, `slot`, `date`. |
 | **Account Deletion** | `delete_own_account()` RPC | SECURITY DEFINER. Removes dependent records and caller from `auth.users` (cascading to `profiles`). Revoked from anon; authenticated only. |
 
@@ -416,6 +425,40 @@ The mobile and web applications are actively pitched and presented to BUBT admin
 ### 14.7 Theme-Aware Dark Mode Tokens (`pillBg`)
 - Never use hardcoded light pastel constants (`Accent.tealBg = #e4f5f4`, `greenBg = #e8f8f0`, `grayBg = #f0f2f6`) on cards or badges in dark mode.
 - Use `pillBg(fgHex, isDark)` from `src/theme/colors.ts`, generating `${fgHex}2e` on dark and `${fgHex}18` on light.
+
+### 14.8 Student Directory Architecture & Peer Discovery (`StudentDirectory.jsx` & `DirectoryScreen.tsx`)
+- **Segmented Discovery Track Switcher:** Full-width segmented track with native spring sliding indicator physics (`Animated.spring`, `tension: 68`, `friction: 10`, `useNativeDriver: true`) matching `LostFoundBrowseScreen.tsx`. Features three dedicated discovery scopes:
+  - `All Students`: University-wide student roster with live total count badge.
+  - `Connections`: Mutual accepted peer network with one-tap chat and phone actions.
+  - `Requests`: Pending incoming and outgoing connection requests with live count badge and alert indicator.
+- **Option A Funnel Layout (Zero Sandwich Effect):** Solves stacked bar clutter by organizing controls into a natural visual hierarchy:
+  1. Top Scope: Segmented Track Switcher (`All Students | Connections | Requests`).
+  2. Sub-Filters: Dual Control Bar (`[ ✨ My Sec (Intake-Section) ]` + `[ 🏛️ All Depts ▾ ]`) directly beneath tabs.
+  3. Fine-Grained Search: Search input directly above the student card feed (`🔍 Search by name, intake, section, dept, blood...`).
+- **Structured Dual Control Bar:**
+  - **Left Button (`My Section`):** One-tap toggle filtering the directory down to students in the user's exact intake and section (e.g. `51-1`). Theme-aware styling across both light and dark modes.
+  - **Right Button (`Department Picker`):** Displays current department with dynamic signature emblem and accent color.
+- **Varsity-Grade Department Picker Modal:**
+  - Modern slide-up bottom sheet modal (`animationType="slide"`) with grab handle, safe area insets (`useSafeAreaInsets`), and 9 BUBT faculties/departments:
+    - `All Departments`: Royal Blue (`#2563EB`) · `globe`
+    - `CSE (Computer Science & Engineering)`: Tech Cyan (`#0891B2`) · `cpu`
+    - `EEE (Electrical & Electronic Engineering)`: Electric Amber (`#D97706`) · `zap`
+    - `BBA (Business Administration)`: Growth Emerald (`#059669`) · `briefcase`
+    - `Law (Department of Law)`: Justice Crimson (`#E11D48`) · `shield`
+    - `English (Department of English)`: Literature Violet (`#7C3AED`) · `book-open`
+    - `Civil (Civil Engineering)`: Infrastructure Orange (`#EA580C`) · `compass`
+    - `Textile (Textile Engineering)`: Material Rose (`#DB2777`) · `layers`
+    - `Economics (Department of Economics)`: Financial Indigo (`#4F46E5`) · `trending-up`
+  - Real-time student count badges per department (`[count] peers`).
+  - Active selection receives glowing colored border, tinted background, and checkmark pill.
+- **Database & Backend Architecture:**
+  - `disconnect_student(p_target_id UUID)`: SECURITY DEFINER RPC for atomic mutual disconnection.
+  - `student_profile_detail(p_target_id UUID)`: SECURITY DEFINER RPC returning full profile details for single-student lookups.
+  - `student_directory()`: Returns `student_id` and `is_cr` (checking `study_section_members.role = 'cr'`).
+  - `connections_delete` RLS policy: Allows mutual deletion for both `pending` and `accepted` connections.
+  - `trg_notify_connection_event`: In-app notification and FCM lockscreen push on connection request and acceptance.
+- **1:1 Web Parity (`StudentDirectory.jsx`):**
+  - Sibling web app equipped with Department filter select dropdown, Classmates toggle, CR & Blood badges, and modal Disconnect action. Verified via `vite build`.
 
 ---
 
@@ -648,4 +691,57 @@ Whenever the user instructs to "update memorys" (or "update memories"), the agen
   - Added `guard_item_update` trigger on `lost_found_items` to protect immutable fields and prevent reopening resolved items with approved claims.
   - Updated RLS policies (`items_select`, `items_update`) to enable admin moderation.
   - Sanitized push notification lockscreen text to prevent leaking private item details.
+
+---
+
+## 23. Native Spring Animated Segmented Track Pattern
+
+### 23.1 Design Principles & Visual Standard
+Segmented tab switcher tracks are used throughout CampusOne to toggle between core data feeds (e.g. Lost & Found tabs, Blood Requests vs Donors, Job types, Routine categories). To eliminate static transitions and give every tab its own distinctive institutional personality:
+- **Zero-Latency Sliding Pill:** An elevated floating indicator glides fluidly beneath active options with physical spring dynamics (`Animated.spring`).
+- **Dynamic Thematic Color Identity:** Rather than a uniform monochrome highlight, each tab defines its own semantic foreground and soft background tint (e.g. Danger Crimson for requests/lost, Success Emerald for recovered/donors/open, Violet for personal/my posts, Sector Accents for general feeds).
+- **Responsive Geometry:** Automatically adapts to 2, 3, or 4 tab segments using layout callbacks (`onLayout`).
+
+### 23.2 Mathematical Specification & Spring Physics
+- **Track Padding:** `TRACK_PADDING = 3`
+- **Inner Track Width:** `innerTrackWidth = Math.max(0, trackWidth - TRACK_PADDING * 2)`
+- **Dynamic Segment Width:** `tabWidth = innerTrackWidth > 0 ? innerTrackWidth / N : 0` (where `N` is the number of tabs)
+- **Native Translation:**
+  ```tsx
+  const translateX = animIndex.interpolate({
+    inputRange: [0, 1, ..., N - 1],
+    outputRange: [0, tabWidth, ..., tabWidth * (N - 1)],
+  });
+  ```
+- **Physics Calibration:**
+  ```tsx
+  Animated.spring(animIndex, {
+    toValue: activeIndex,
+    tension: 68,
+    friction: 10,
+    useNativeDriver: true,
+  }).start();
+  ```
+- **Elevated Indicator Design Tokens:**
+  - `position: 'absolute'`, `top: 3`, `left: 3`, `bottom: 3`
+  - `borderRadius: 11`, `borderWidth: 1.5`, `elevation: 2`
+  - `shadowColor: '#000'`, `shadowOffset: { width: 0, height: 1.5 }`, `shadowOpacity: 0.12`, `shadowRadius: 3`
+  - `backgroundColor: C.surface`, `borderColor: isDark ? `${cfg.fg}55` : `${cfg.fg}35``
+- **Badge Counters:** Live count badges dynamically light up in the active tab's soft background tint (`${cfg.fg}18` or `rgba(..., 0.18)`) and text color (`cfg.fg`). Inactive badges render subtle neutral borders/surfaces.
+
+### 23.3 Comprehensive CampusOne Segmented Track Catalog
+The following screens contain segmented control bars slated for this animated pattern:
+1. **Lost & Found (`LostFoundBrowseScreen.tsx`):** `All` (Sector Amber) · `Lost` (Crimson) · `Found` (Emerald) · `My Posts` (Violet) [Implemented].
+2. **Blood Donation (`BloodScreen.tsx`):** `Requests` (Blood Crimson `#d63d35`) vs `Donors` (Medical Emerald `#16a34a`) [Implemented].
+3. **Home Community Updates (`HomeCommunityUpdates.tsx`):** `All` (Brand Blue `#2563eb`) · `Notices` (Announce Orange `#ea580c`) · `Clubs` (Emerald `#059669`) · `Events` (Violet `#8b5cf6`) [Implemented].
+4. **Student Jobs (`JobsBrowseScreen.tsx`):** `Open` (Emerald) · `Closing Soon` (Amber) · `Expired` (Slate) · `Saved` (Rose/Pink) (4 tabs).
+5. **Marketplace (`MarketScreen.tsx`):** `All Listings` (Slate/Brand) vs `My Listings` (Market Amber) (2 tabs).
+6. **Campus Rides (`RidesScreen.tsx`):** `All` (Ride Cyan) · `To Campus` (Emerald) · `From Campus` (Royal Blue) (3 tabs).
+7. **Campus Events (`EventsBrowseScreen.tsx`):** `Upcoming` (Violet) vs `Past` (Muted Slate) (2 tabs).
+8. **Class & Exam Routines (`RoutinesBrowseScreen.tsx`):** `Class Routines` (Indigo) vs `Exam Routines` (Orange) (2 tabs).
+9. **Study Hub Course Details (`CourseDetailScreen.tsx`):** `Materials` (Amber) · `Questions` (Blue) · `Books` (Emerald) · `Saved` (Violet) (4 tabs).
+10. **Campus Issues & Reports (`CampusIssuesScreen.tsx`, `MyReportsScreen.tsx`, `AssignedToMeScreen.tsx`, `AllReportsScreen.tsx`):** Status switchers (`All` · `Open` · `In Progress` · `Resolved`).
+11. **Notifications (`NotificationsScreen.tsx`):** `All` (Slate) vs `Unread` (Crimson) (2 tabs).
+12. **Club Details (`ClubDetailScreen.tsx`):** `Feed` (Club Accent) vs `Members` (Indigo) (2 tabs).
+13. **Admin Management (`ManageStaffScreen.tsx` & `JobsModerateScreen.tsx`):** `Staff` vs `Admins` (2 tabs), `Reported` vs `Removed` (2 tabs).
 
