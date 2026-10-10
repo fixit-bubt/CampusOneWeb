@@ -34,6 +34,8 @@ export default function StudentDirectory() {
   const [list, setList] = useState(null); // null = still loading
   const [loadError, setLoadError] = useState(false);
   const [query, setQuery] = useState("");
+  const [deptFilter, setDeptFilter] = useState("All");
+  const [classmatesOnly, setClassmatesOnly] = useState(false);
   const [selected, setSelected] = useState(null);
   const [busy, setBusy] = useState(false);
 
@@ -126,9 +128,15 @@ export default function StudentDirectory() {
   const filtered = all
     .filter((s) => s.status !== "pending_incoming") // shown in the Requests section above
     .filter((s) => {
+      if (deptFilter !== "All" && s.department?.toLowerCase() !== deptFilter.toLowerCase()) return false;
+      if (classmatesOnly && currentUser?.intake && currentUser?.section) {
+        if (s.intake !== currentUser.intake || s.section !== currentUser.section) return false;
+      }
       const q = query.trim().toLowerCase();
       if (!q) return true;
-      return [s.name, s.intake, s.section, s.department].filter((v) => v != null).some((v) => String(v).toLowerCase().includes(q));
+      return [s.name, s.intake, s.section, s.department, s.bloodGroup, s.studentId]
+        .filter((v) => v != null)
+        .some((v) => String(v).toLowerCase().includes(q));
     });
 
   return (
@@ -177,15 +185,49 @@ export default function StudentDirectory() {
             </div>
           )}
 
-          <div className="relative mb-5 w-full sm:max-w-xs">
-            <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-3" />
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              aria-label="Search students"
-              placeholder="Search by name, intake, section…"
-              className="h-10 w-full rounded-md border border-brd bg-surface pl-9 pr-3 text-base placeholder:text-ink-3 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand-100"
-            />
+          <div className="mb-5 flex flex-wrap items-center gap-3">
+            <div className="relative w-full sm:w-72">
+              <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-3" />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                aria-label="Search students"
+                placeholder="Search by name, intake, section…"
+                className="h-10 w-full rounded-md border border-brd bg-surface pl-9 pr-3 text-base placeholder:text-ink-3 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand-100"
+              />
+            </div>
+
+            <select
+              value={deptFilter}
+              onChange={(e) => setDeptFilter(e.target.value)}
+              className="h-10 rounded-md border border-brd bg-surface px-3 text-base text-ink focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand-100"
+            >
+              <option value="All">All Departments</option>
+              <option value="CSE">CSE · Computer Science</option>
+              <option value="EEE">EEE · Electrical & Electronic</option>
+              <option value="BBA">BBA · Business Administration</option>
+              <option value="Law">Law · Department of Law</option>
+              <option value="English">English · Department of English</option>
+              <option value="Civil">Civil · Civil Engineering</option>
+              <option value="Textile">Textile · Textile Engineering</option>
+              <option value="Economics">Economics · Social Sciences</option>
+            </select>
+
+            {currentUser?.intake && currentUser?.section && (
+              <button
+                type="button"
+                onClick={() => setClassmatesOnly(!classmatesOnly)}
+                className={`h-10 rounded-md border px-3 text-base font-medium transition-colors ${
+                  classmatesOnly
+                    ? "border-amber-400 bg-amber-50 text-amber-800"
+                    : "border-brd bg-surface text-ink-2 hover:bg-surface-2"
+                }`}
+              >
+                {classmatesOnly
+                  ? `My Sec (${currentUser.intake}-${currentUser.section})`
+                  : `✨ My Sec (${currentUser.intake}-${currentUser.section})`}
+              </button>
+            )}
           </div>
 
           {filtered.length === 0 ? (
