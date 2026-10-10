@@ -46,7 +46,7 @@ import { Events, EventDetail, EventForm } from "./screens/events/Events.jsx";
 import { RideShare, RideDetail, OfferRide } from "./screens/rides/Rides.jsx";
 import { BloodDonation, RegisterDonor, RequestBlood } from "./screens/blood/Blood.jsx";
 import { MedicalCenter } from "./screens/medical/Medical.jsx";
-import { StudyHub, StudyHubBrowse, StudyHubDept, StudyHubIntake, StudyHubSection, StudyHubCourse, StudyHubManage } from "./screens/studyhub/StudyHub.jsx";
+import { StudyHub, StudyHubBrowse, StudyHubDept, StudyHubSemester, StudyHubIntake, StudyHubSection, StudyHubCourse, StudyHubManage } from "./screens/studyhub/StudyHub.jsx";
 import { ClubsHome, ClubHome, ClubMembers, ClubPostForm, ClubManage, AdminManageClubs } from "./screens/clubs/Clubs.jsx";
 import { Jobs, JobDetail, JobForm, ModerateJobs, SavedJobs } from "./screens/jobs/Jobs.jsx";
 import { Notifications, NotifSettings } from "./screens/notifications/Notifications.jsx";
@@ -270,6 +270,8 @@ function AuthedRoutes({ path }) {
   // / manage) are added as those screens ship.
   if (path === "/study-hub") return <RequireRole role="Student"><StudyHub /></RequireRole>;
   if (path === "/study-hub/browse") return <RequireRole role="Student"><StudyHubBrowse /></RequireRole>;
+  if ((m = matchRoute("/study-hub/dept/:deptId/semester/:semesterNum/intake/:intakeId", path))) return <RequireRole role="Student"><StudyHubIntake intakeId={m.intakeId} deptId={m.deptId} semesterNum={m.semesterNum} /></RequireRole>;
+  if ((m = matchRoute("/study-hub/dept/:deptId/semester/:semesterNum", path))) return <RequireRole role="Student"><StudyHubSemester deptId={m.deptId} semesterNum={m.semesterNum} /></RequireRole>;
   if ((m = matchRoute("/study-hub/dept/:deptId", path))) return <RequireRole role="Student"><StudyHubDept deptId={m.deptId} /></RequireRole>;
   if ((m = matchRoute("/study-hub/intake/:intakeId", path))) return <RequireRole role="Student"><StudyHubIntake intakeId={m.intakeId} /></RequireRole>;
   if ((m = matchRoute("/study-hub/section/:sectionId/course/:courseId", path))) return <RequireRole role="Student"><StudyHubCourse sectionId={m.sectionId} courseId={m.courseId} /></RequireRole>;

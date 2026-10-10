@@ -57,6 +57,45 @@ const BRANCH_ORDER = [
   "Law",
 ];
 
+// Resolves the enrolled student's department from their active section, pending request, or profile
+function useStudentDept() {
+  const { currentUser, departments, studyMembers, studySections, studyIntakes, resolveMySection } = useApp();
+  const mine = resolveMySection();
+
+  return React.useMemo(() => {
+    if (!departments || departments.length === 0) return null;
+
+    // 1. Approved home section
+    if (mine?.section?.deptId) {
+      const d = departments.find((dept) => dept.id === mine.section.deptId);
+      if (d) return d;
+    }
+
+    // 2. Pending membership section
+    const pendingSecId = studyMembers.find((m) => m.userId === currentUser?.id)?.sectionId;
+    if (pendingSecId) {
+      const s = studySections.find((x) => x.id === pendingSecId);
+      const intake = s && studyIntakes.find((i) => i.id === s.intakeId);
+      const d = intake && departments.find((dept) => dept.id === intake.deptId);
+      if (d) return d;
+    }
+
+    // 3. User profile department or program string
+    const userDeptStr = (currentUser?.dept || currentUser?.program || "").trim().toLowerCase();
+    if (userDeptStr) {
+      const matched = departments.find((d) => {
+        const n = d.name.toLowerCase();
+        const c = deptCode(d.name).toLowerCase();
+        return n.includes(userDeptStr) || userDeptStr.includes(c) || userDeptStr.includes(n);
+      });
+      if (matched) return matched;
+    }
+
+    // 4. Default to CSE (dept_number '27') or first department in list
+    return departments.find((d) => d.deptNumber === "27") || departments[0] || null;
+  }, [currentUser, departments, studyMembers, studySections, studyIntakes, mine]);
+}
+
 // --- Shared: download a private file via a signed URL -----------------------
 function DownloadButton({ path, name }) {
   const { getStudyFileUrl } = useApp();
@@ -132,12 +171,15 @@ function ActivityRow({ ev }) {
 // --- Course row -------------------------------------------------------------
 function CourseRow({ course, sectionId, onDelete }) {
   const { studyFilesIn, studyQuestionsIn, studyBooksInCourse } = useApp();
-  const notesCount = studyFilesIn(course.id).length;
+  const allFiles = studyFilesIn(course.id);
+  const notesCount = allFiles.filter((f) => f.type !== "Lecture Slide" && !["ppt", "pptx"].includes(f.kind)).length;
+  const slidesCount = allFiles.filter((f) => f.type === "Lecture Slide" || ["ppt", "pptx"].includes(f.kind)).length;
   const qbCount = studyQuestionsIn(course.id).length;
   const booksCount = studyBooksInCourse(course.id).length;
 
   const parts = [];
   if (notesCount > 0) parts.push(`${notesCount} note${notesCount === 1 ? "" : "s"}`);
+  if (slidesCount > 0) parts.push(`${slidesCount} slide${slidesCount === 1 ? "" : "s"}`);
   if (qbCount > 0) parts.push(`${qbCount} question${qbCount === 1 ? "" : "s"}`);
   if (booksCount > 0) parts.push(`${booksCount} book${booksCount === 1 ? "" : "s"}`);
   const summary = parts.length > 0 ? parts.join(" · ") : "No materials yet";
@@ -198,7 +240,52 @@ function CRBanner({ section, sectionNumber }) {
 }
 
 // ============================================================================
-// Landing — your section overview / pending / first-run setup
+// Academic Semesters (1 to 12) & Intake progression cards
+// ============================================================================
+const SEMESTER_INFO = [
+  { num: 1, label: "1st Semester", phase: "1st Year · Freshman Term 1" },
+  { num: 2, label: "2nd Semester", phase: "1st Year · Freshman Term 2" },
+  { num: 3, label: "3rd Semester", phase: "1st Year · Freshman Term 3" },
+  { num: 4, label: "4th Semester", phase: "2nd Year · Sophomore Term 1" },
+  { num: 5, label: "5th Semester", phase: "2nd Year · Sophomore Term 2" },
+  { num: 6, label: "6th Semester", phase: "2nd Year · Sophomore Term 3" },
+  { num: 7, label: "7th Semester", phase: "3rd Year · Junior Term 1" },
+  { num: 8, label: "8th Semester", phase: "3rd Year · Junior Term 2" },
+  { num: 9, label: "9th Semester", phase: "3rd Year · Junior Term 3" },
+  { num: 10, label: "10th Semester", phase: "4th Year · Senior Term 1" },
+  { num: 11, label: "11th Semester", phase: "4th Year · Senior Term 2" },
+  { num: 12, label: "12th Semester", phase: "4th Year · Capstone & Final" },
+];
+
+function SemesterCard({ sem, deptId, completedCount, currentCount }) {
+  return (
+    <button
+      onClick={() => navigate(`/study-hub/dept/${deptId}/semester/${sem.num}`)}
+      className="group flex items-center gap-4 rounded-md border border-brd bg-surface p-5 text-left shadow-sm transition-colors hover:border-teal-300 dark:hover:border-teal-500/40 hover:bg-teal-50/40 dark:hover:bg-teal-500/10"
+    >
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-teal-50 dark:bg-teal-500/15 font-bold text-teal-700 dark:text-teal-300 text-sm border border-teal-200 dark:border-teal-500/30">
+        {sem.num}
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-base font-semibold text-ink group-hover:text-teal-600 dark:group-hover:text-teal-300">
+          {sem.label}
+        </p>
+        <p className="truncate text-xs text-ink-3">{sem.phase}</p>
+        <p className="mt-1 truncate text-xs text-ink-2">
+          {completedCount > 0
+            ? `${completedCount} intake${completedCount === 1 ? "" : "s"} completed${currentCount > 0 ? " · current active" : ""}`
+            : currentCount > 0
+            ? "Current intake active"
+            : "No intakes completed yet"}
+        </p>
+      </div>
+      <Icon name="ArrowRight" size={18} className="text-ink-3 group-hover:text-teal-500 dark:group-hover:text-teal-300 shrink-0" />
+    </button>
+  );
+}
+
+// ============================================================================
+// Landing - Student's department study library & 12-semester archive
 // ============================================================================
 export function StudyHub() {
   const {
@@ -213,25 +300,43 @@ export function StudyHub() {
   const [leaving, setLeaving] = React.useState(false);
 
   const mine = resolveMySection();
+  const studentDept = useStudentDept();
 
-  if (!mine) {
-    if (dataLoading && studySections.length === 0) {
-      return <AppShell activeKey="study-hub" title="Study Hub"><Loading /></AppShell>;
-    }
-    const pendingCreate = myPendingCreateRequest();
-    const myRow = studyMembers.find((m) => m.userId === currentUser?.id && m.status === "pending");
-    if (myRow) return <StudyHubPending />;
-    if (pendingCreate) return <StudyHubPending pendingCreate />;
-    return <StudyHubSetup />;
+  if (dataLoading && (!studentDept || studySections.length === 0)) {
+    return (
+      <AppShell activeKey="study-hub" title="Study Hub">
+        <Loading />
+      </AppShell>
+    );
   }
 
-  const { section, deptCode: code, intakeNumber, sectionNumber, myRole } = mine;
-  const manager = isCR(myRole);
-  const pins = studyPinsIn(section.id);
-  const courses = studyCoursesIn(section.id);
+  const dept = studentDept;
+  if (!dept) {
+    return (
+      <AppShell activeKey="study-hub" title="Study Hub">
+        <EmptyState
+          icon="GraduationCap"
+          title="Department not found"
+          message="Could not load your department. Please check back later."
+        />
+      </AppShell>
+    );
+  }
 
+  if (!mine) {
+    const pendingCreate = myPendingCreateRequest();
+    const myRow = studyMembers.find((m) => m.userId === currentUser?.id && m.status === "pending");
+    if (myRow) return <StudyHubPending dept={dept} />;
+    if (pendingCreate) return <StudyHubPending pendingCreate dept={dept} />;
+    return <StudyHubSetup dept={dept} />;
+  }
+
+  const { section: mySection, deptCode: code, intakeNumber, sectionNumber, myRole } = mine;
+  const manager = isCR(myRole);
+  const pins = studyPinsIn(mySection.id);
+  const courses = studyCoursesIn(mySection.id);
   const myMembership = studyMembers.find(
-    (m) => m.sectionId === section.id && m.userId === currentUser?.id && m.status === "approved"
+    (m) => m.sectionId === mySection.id && m.userId === currentUser?.id && m.status === "approved"
   );
 
   async function unpin(pin) {
@@ -272,15 +377,22 @@ export function StudyHub() {
         title="Study Hub"
         subtitle={`${code} · Intake ${intakeNumber} · Section ${sectionNumber}`}
         action={
-          <div className="flex items-center gap-2">
-            <Button variant="secondary" icon="LayoutGrid" onClick={() => navigate("/study-hub/browse")}>
-              Browse all
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="secondary"
+              icon="Users"
+              onClick={() => navigate(`/study-hub/intake/${mySection.intakeId}`)}
+            >
+              Other Sections
             </Button>
-            {manager ? (
-              <Button icon="Settings" onClick={() => navigate(`/study-hub/section/${section.id}/manage`)}>
-                Manage section
-              </Button>
-            ) : myMembership && (
+            <Button
+              variant="secondary"
+              icon="GraduationCap"
+              onClick={() => navigate(`/study-hub/dept/${dept.id}`)}
+            >
+              All 12 Semesters
+            </Button>
+            {myMembership && !manager && (
               <Button variant="secondary" icon="LogOut" onClick={() => setLeaveOpen(true)}>
                 Leave
               </Button>
@@ -289,7 +401,8 @@ export function StudyHub() {
         }
       />
 
-      {manager && <CRBanner section={section} sectionNumber={sectionNumber} />}
+      {/* CR Banner if manager */}
+      {manager && <CRBanner section={mySection} sectionNumber={sectionNumber} />}
 
       {/* Pinned notices (clean and prominent when pins exist; hidden when empty) */}
       {pins.length > 0 && (
@@ -305,12 +418,17 @@ export function StudyHub() {
         </div>
       )}
 
-      {/* Courses */}
+      {/* Primary View: Own Intake/Section Courses */}
       <div className="space-y-3">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h3 className="text-base font-semibold text-ink">
-            Courses <span className="text-xs font-normal text-ink-3">({courses.length})</span>
-          </h3>
+          <div>
+            <h3 className="text-base font-bold text-ink">
+              Courses <span className="text-xs font-normal text-ink-3">({courses.length})</span>
+            </h3>
+            <p className="text-xs text-ink-3">
+              Section {sectionNumber} curriculum, lecture notes, CT questions & books
+            </p>
+          </div>
           {courses.length > 2 && (
             <div className="relative w-full sm:max-w-xs">
               <Icon name="Search" size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-3" />
@@ -329,6 +447,11 @@ export function StudyHub() {
             icon="BookOpen"
             title="No courses yet"
             message={manager ? "Add your section's courses in Manage section." : "Your CR will add courses here."}
+            action={manager ? (
+              <Button icon="Plus" onClick={() => navigate(`/study-hub/section/${mySection.id}/manage`)}>
+                Add courses
+              </Button>
+            ) : null}
           />
         ) : filteredCourses.length === 0 ? (
           <EmptyState
@@ -339,12 +462,13 @@ export function StudyHub() {
         ) : (
           <Card className="divide-y divide-brd overflow-hidden">
             {filteredCourses.map((c) => (
-              <CourseRow key={c.id} course={c} sectionId={section.id} />
+              <CourseRow key={c.id} course={c} sectionId={mySection.id} />
             ))}
           </Card>
         )}
       </div>
 
+      {/* Leave Section Modal */}
       <Modal
         open={leaveOpen} onClose={() => setLeaveOpen(false)} icon="LogOut" tone="red"
         title="Leave this section?"
@@ -363,7 +487,7 @@ export function StudyHub() {
 // ============================================================================
 // First-run setup — join by code / find section / request new section
 // ============================================================================
-function StudyHubSetup() {
+function StudyHubSetup({ dept: propDept, onClose, isModal }) {
   const { departments, studyIntakesIn, studySectionsIn, requestJoinSection, joinByCode, requestCreateSection } = useApp();
   const toast = useToast();
 
@@ -376,34 +500,36 @@ function StudyHubSetup() {
   const [codeSaving, setCodeSaving] = React.useState(false);
 
   // Find-section state
-  const [deptId, setDeptId] = React.useState("");
+  const [deptId, setDeptId] = React.useState(propDept?.id || "");
   const [intakeId, setIntakeId] = React.useState("");
   const [sectionId, setSectionId] = React.useState("");
   const [findSaving, setFindSaving] = React.useState(false);
 
   // Create-section state
-  const [crDeptId, setCrDeptId] = React.useState("");
+  const [crDeptId, setCrDeptId] = React.useState(propDept?.id || "");
   const [crIntakeId, setCrIntakeId] = React.useState("");
   const [crNumber, setCrNumber] = React.useState("");
   const [crError, setCrError] = React.useState("");
   const [crSaving, setCrSaving] = React.useState(false);
 
+  // Filter departments if scoped to student's department
+  const availableDepts = propDept ? [propDept] : departments;
+
   // Derived — find
-  const activeDeptId = deptId || departments[0]?.id || "";
+  const activeDeptId = deptId || propDept?.id || availableDepts[0]?.id || "";
   const intakes = activeDeptId ? studyIntakesIn(activeDeptId) : [];
   const activeIntakeId = intakeId && intakes.some((i) => i.id === intakeId) ? intakeId : (intakes[0]?.id || "");
   const sections = activeIntakeId ? studySectionsIn(activeIntakeId) : [];
   const activeSectionId = sectionId && sections.some((s) => s.id === sectionId) ? sectionId : (sections[0]?.id || "");
 
   // Derived — create
-  const crActiveDeptId = crDeptId || departments[0]?.id || "";
+  const crActiveDeptId = crDeptId || propDept?.id || availableDepts[0]?.id || "";
   const crIntakes = crActiveDeptId ? studyIntakesIn(crActiveDeptId) : [];
   const crActiveIntakeId = crIntakeId && crIntakes.some((i) => i.id === crIntakeId) ? crIntakeId : (crIntakes[0]?.id || "");
 
   async function submitCode(e) {
     if (e) e.preventDefault();
     const trimmed = code.trim().toUpperCase();
-    // Legacy codes are 6 chars (0057); sections approved after 0061 get 8-char codes.
     if (trimmed.length < 6 || trimmed.length > 8) { setCodeError("Enter the 6–8 character code from your CR."); return; }
     if (codeSaving) return;
     setCodeSaving(true); setCodeError("");
@@ -411,6 +537,7 @@ function StudyHubSetup() {
       const r = await joinByCode(trimmed);
       if (!r.ok) { setCodeError(r.error || "Invalid code — check it and try again."); return; }
       toast({ type: "success", title: "Joined!", message: "You're now a member of the section." });
+      if (onClose) onClose();
     } finally { setCodeSaving(false); }
   }
 
@@ -422,13 +549,13 @@ function StudyHubSetup() {
       const r = await requestJoinSection(activeSectionId);
       if (!r.ok) { toast({ type: "error", title: "Couldn't send request", message: r.error }); return; }
       toast({ type: "success", title: "Request sent", message: "Your CR will approve you shortly." });
+      if (onClose) onClose();
     } finally { setFindSaving(false); }
   }
 
   async function submitCreate(e) {
     if (e) e.preventDefault();
     const num = parseInt(crNumber, 10);
-    // The request row is keyed by intake NUMBER, not id (schema: intake_number int).
     const crIntakeNumber = crIntakes.find((i) => i.id === crActiveIntakeId)?.number;
     if (!crActiveIntakeId || !crIntakeNumber) { setCrError("Select an intake."); return; }
     if (!num || num < 1 || num > 99) { setCrError("Enter a valid section number (1–99)."); return; }
@@ -438,114 +565,135 @@ function StudyHubSetup() {
       const r = await requestCreateSection(crActiveDeptId, crIntakeNumber, num);
       if (!r.ok) { setCrError(r.error || "Couldn't send request."); return; }
       toast({ type: "success", title: "Request sent", message: "Admin will review and create your section." });
+      if (onClose) onClose();
     } finally { setCrSaving(false); }
   }
+
+  const formBody = (
+    <div>
+      {!isModal && (
+        <div className="mb-6 flex items-start gap-4">
+          <AccentTile icon="BookMarked" tone={ACCENT} size={48} />
+          <div className="min-w-0">
+            <h3 className="text-base font-semibold text-ink">Get started</h3>
+            <p className="mt-1 text-base text-ink-3">Join your class section to share notes, questions, and books — or request a new section if yours hasn't been created yet.</p>
+          </div>
+        </div>
+      )}
+
+      <SegmentToggle
+        options={[{ value: "join", label: "Join a section", icon: "LogIn" }, { value: "create", label: "Request new section", icon: "Plus" }]}
+        value={mode}
+        onChange={(v) => { setMode(v); setCodeError(""); setCrError(""); }}
+      />
+
+      {mode === "join" && (
+        <div className="mt-5 space-y-5">
+          <SegmentToggle
+            options={[{ value: "code", label: "I have a code", icon: "Hash" }, { value: "find", label: "Find my section", icon: "Search" }]}
+            value={joinMode}
+            onChange={(v) => { setJoinMode(v); setCodeError(""); }}
+          />
+
+          {joinMode === "code" && (
+            <form onSubmit={submitCode} className="space-y-4">
+              <Field label="Join code" htmlFor="su-code" error={codeError} hint="6–8 character code from your CR.">
+                <Input
+                  id="su-code" value={code} error={!!codeError} maxLength={8}
+                  onChange={(e) => { setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "")); setCodeError(""); }}
+                  placeholder="e.g. A3B7C2"
+                  className="tracking-widest font-mono text-center text-2xl"
+                />
+              </Field>
+              <div className="flex justify-end gap-2">
+                {onClose && <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>}
+                <Button type="submit" icon="LogIn" disabled={codeSaving || code.length < 6}>
+                  {codeSaving ? <Spinner size={16} /> : "Join now"}
+                </Button>
+              </div>
+            </form>
+          )}
+
+          {joinMode === "find" && (
+            <form onSubmit={submitFind} className="space-y-4">
+              {!propDept && (
+                <Field label="Department" htmlFor="su-dept">
+                  <Select id="su-dept" value={activeDeptId} onChange={(e) => { setDeptId(e.target.value); setIntakeId(""); setSectionId(""); }}>
+                    {availableDepts.map((d) => <option key={d.id} value={d.id}>{shortDept(d.name)}</option>)}
+                  </Select>
+                </Field>
+              )}
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field label="Intake" htmlFor="su-intake">
+                  <Select id="su-intake" value={activeIntakeId} onChange={(e) => { setIntakeId(e.target.value); setSectionId(""); }} disabled={!intakes.length}>
+                    {intakes.length ? intakes.map((i) => <option key={i.id} value={i.id}>Intake {i.number}</option>) : <option value="">No intakes</option>}
+                  </Select>
+                </Field>
+                <Field label="Section" htmlFor="su-section">
+                  <Select id="su-section" value={activeSectionId} onChange={(e) => setSectionId(e.target.value)} disabled={!sections.length}>
+                    {sections.length ? sections.map((s) => <option key={s.id} value={s.id}>Section {s.number}</option>) : <option value="">No sections</option>}
+                  </Select>
+                </Field>
+              </div>
+              {!sections.length && (
+                <p className="text-xs text-ink-3">No sections here yet — switch to "Request new section" to create yours.</p>
+              )}
+              <div className="flex items-center justify-between gap-3 pt-1">
+                {onClose ? (
+                  <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
+                ) : (
+                  <button type="button" onClick={() => navigate("/study-hub")} className="text-base font-semibold text-ink-3 hover:text-ink-2">Back to Study Hub</button>
+                )}
+                <Button type="submit" icon="Send" disabled={findSaving || !activeSectionId}>
+                  {findSaving ? <Spinner size={16} /> : "Request to join"}
+                </Button>
+              </div>
+            </form>
+          )}
+        </div>
+      )}
+
+      {mode === "create" && (
+        <form onSubmit={submitCreate} className="mt-5 space-y-4">
+          <p className="text-xs text-ink-3">Tell us your intake and the section number you want. Admin will review and set you as Class Representative.</p>
+          {!propDept && (
+            <Field label="Department" htmlFor="cr-dept">
+              <Select id="cr-dept" value={crActiveDeptId} onChange={(e) => { setCrDeptId(e.target.value); setCrIntakeId(""); }}>
+                {availableDepts.map((d) => <option key={d.id} value={d.id}>{shortDept(d.name)}</option>)}
+              </Select>
+            </Field>
+          )}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Intake" htmlFor="cr-intake">
+              <Select id="cr-intake" value={crActiveIntakeId} onChange={(e) => setCrIntakeId(e.target.value)} disabled={!crIntakes.length}>
+                {crIntakes.length ? crIntakes.map((i) => <option key={i.id} value={i.id}>Intake {i.number}</option>) : <option value="">No intakes</option>}
+              </Select>
+            </Field>
+            <Field label="Section number" htmlFor="cr-num" error={crError}>
+              <Input id="cr-num" type="number" min={1} max={99} value={crNumber} error={!!crError}
+                onChange={(e) => { setCrNumber(e.target.value); setCrError(""); }} placeholder="e.g. 3" />
+            </Field>
+          </div>
+          {crError && <p className="text-xs text-danger">{crError}</p>}
+          <div className="flex justify-end gap-2 pt-1">
+            {onClose && <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>}
+            <Button type="submit" icon="Send" disabled={crSaving}>
+              {crSaving ? <Spinner size={16} /> : "Request to create"}
+            </Button>
+          </div>
+        </form>
+      )}
+    </div>
+  );
+
+  if (isModal) return formBody;
 
   return (
     <AppShell activeKey="study-hub" title="Study Hub">
       <div className="mx-auto max-w-lg">
         <PageHeader title="Study Hub" />
         <Card className="p-6">
-          <div className="mb-6 flex items-start gap-4">
-            <AccentTile icon="BookMarked" tone={ACCENT} size={48} />
-            <div className="min-w-0">
-              <h3 className="text-base font-semibold text-ink">Get started</h3>
-              <p className="mt-1 text-base text-ink-3">Join your class section to share notes, questions, and books — or request a new section if yours hasn't been created yet.</p>
-            </div>
-          </div>
-
-          <SegmentToggle
-            options={[{ value: "join", label: "Join a section", icon: "LogIn" }, { value: "create", label: "Request new section", icon: "Plus" }]}
-            value={mode}
-            onChange={(v) => { setMode(v); setCodeError(""); setCrError(""); }}
-          />
-
-          {mode === "join" && (
-            <div className="mt-5 space-y-5">
-              <SegmentToggle
-                options={[{ value: "code", label: "I have a code", icon: "Hash" }, { value: "find", label: "Find my section", icon: "Search" }]}
-                value={joinMode}
-                onChange={(v) => { setJoinMode(v); setCodeError(""); }}
-              />
-
-              {joinMode === "code" && (
-                <form onSubmit={submitCode} className="space-y-4">
-                  <Field label="Join code" htmlFor="su-code" error={codeError} hint="6–8 character code from your CR.">
-                    <Input
-                      id="su-code" value={code} error={!!codeError} maxLength={8}
-                      onChange={(e) => { setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "")); setCodeError(""); }}
-                      placeholder="e.g. A3B7C2"
-                      className="tracking-widest font-mono text-center text-2xl"
-                    />
-                  </Field>
-                  <div className="flex justify-end">
-                    <Button type="submit" icon="LogIn" disabled={codeSaving || code.length < 6}>
-                      {codeSaving ? <Spinner size={16} /> : "Join now"}
-                    </Button>
-                  </div>
-                </form>
-              )}
-
-              {joinMode === "find" && (
-                <form onSubmit={submitFind} className="space-y-4">
-                  <Field label="Department" htmlFor="su-dept">
-                    <Select id="su-dept" value={activeDeptId} onChange={(e) => { setDeptId(e.target.value); setIntakeId(""); setSectionId(""); }}>
-                      {departments.map((d) => <option key={d.id} value={d.id}>{shortDept(d.name)}</option>)}
-                    </Select>
-                  </Field>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <Field label="Intake" htmlFor="su-intake">
-                      <Select id="su-intake" value={activeIntakeId} onChange={(e) => { setIntakeId(e.target.value); setSectionId(""); }} disabled={!intakes.length}>
-                        {intakes.length ? intakes.map((i) => <option key={i.id} value={i.id}>Intake {i.number}</option>) : <option value="">No intakes</option>}
-                      </Select>
-                    </Field>
-                    <Field label="Section" htmlFor="su-section">
-                      <Select id="su-section" value={activeSectionId} onChange={(e) => setSectionId(e.target.value)} disabled={!sections.length}>
-                        {sections.length ? sections.map((s) => <option key={s.id} value={s.id}>Section {s.number}</option>) : <option value="">No sections</option>}
-                      </Select>
-                    </Field>
-                  </div>
-                  {!sections.length && (
-                    <p className="text-xs text-ink-3">No sections here yet — switch to "Request new section" to create yours.</p>
-                  )}
-                  <div className="flex items-center justify-between gap-3 pt-1">
-                    <button type="button" onClick={() => navigate("/study-hub/browse")} className="text-base font-semibold text-ink-3 hover:text-ink-2">Browse first</button>
-                    <Button type="submit" icon="Send" disabled={findSaving || !activeSectionId}>
-                      {findSaving ? <Spinner size={16} /> : "Request to join"}
-                    </Button>
-                  </div>
-                </form>
-              )}
-            </div>
-          )}
-
-          {mode === "create" && (
-            <form onSubmit={submitCreate} className="mt-5 space-y-4">
-              <p className="text-xs text-ink-3">Tell us your intake and the section number you want. Admin will review and set you as Class Representative.</p>
-              <Field label="Department" htmlFor="cr-dept">
-                <Select id="cr-dept" value={crActiveDeptId} onChange={(e) => { setCrDeptId(e.target.value); setCrIntakeId(""); }}>
-                  {departments.map((d) => <option key={d.id} value={d.id}>{shortDept(d.name)}</option>)}
-                </Select>
-              </Field>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Intake" htmlFor="cr-intake">
-                  <Select id="cr-intake" value={crActiveIntakeId} onChange={(e) => setCrIntakeId(e.target.value)} disabled={!crIntakes.length}>
-                    {crIntakes.length ? crIntakes.map((i) => <option key={i.id} value={i.id}>Intake {i.number}</option>) : <option value="">No intakes</option>}
-                  </Select>
-                </Field>
-                <Field label="Section number" htmlFor="cr-num" error={crError}>
-                  <Input id="cr-num" type="number" min={1} max={99} value={crNumber} error={!!crError}
-                    onChange={(e) => { setCrNumber(e.target.value); setCrError(""); }} placeholder="e.g. 3" />
-                </Field>
-              </div>
-              {crError && <p className="text-xs text-danger">{crError}</p>}
-              <div className="flex justify-end pt-1">
-                <Button type="submit" icon="Send" disabled={crSaving}>
-                  {crSaving ? <Spinner size={16} /> : "Request to create"}
-                </Button>
-              </div>
-            </form>
-          )}
+          {formBody}
         </Card>
       </div>
     </AppShell>
@@ -564,7 +712,7 @@ function StudyHubPending({ pendingCreate }) {
             icon="Clock"
             title="Section creation request pending"
             message="Admin is reviewing your request to create a new section. You'll become the Class Representative once it's approved."
-            action={<Button variant="secondary" icon="LayoutGrid" onClick={() => navigate("/study-hub/browse")}>Browse departments</Button>}
+            action={<Button variant="secondary" icon="LayoutGrid" onClick={() => navigate("/study-hub")}>Back to Study Hub</Button>}
           />
         </div>
       </AppShell>
@@ -580,7 +728,7 @@ function StudyHubPending({ pendingCreate }) {
           icon="Clock"
           title="Request pending"
           message={section ? `You've asked to join Section ${section.number}. Your CR will approve it soon — you'll get access then.` : "Your request to join is awaiting CR approval."}
-          action={<Button variant="secondary" icon="LayoutGrid" onClick={() => navigate("/study-hub/browse")}>Browse departments</Button>}
+          action={<Button variant="secondary" icon="LayoutGrid" onClick={() => navigate("/study-hub")}>Back to Study Hub</Button>}
         />
       </div>
     </AppShell>
@@ -599,7 +747,7 @@ function DepartmentCard({ dept, count }) {
       <AccentTile icon={BRANCH_ICON[dept.branch] || "GraduationCap"} tone={ACCENT} size={44} />
       <div className="min-w-0 flex-1">
         <p className="truncate text-base font-semibold text-ink">{shortDept(dept.name)}</p>
-        <p className="mt-0.5 truncate text-xs text-ink-3">{count} intake{count === 1 ? "" : "s"}</p>
+        <p className="mt-0.5 truncate text-xs text-ink-3">12 Semesters · {count} intake{count === 1 ? "" : "s"}</p>
       </div>
       <Icon name="ArrowRight" size={18} className="text-ink-3 group-hover:text-teal-500 dark:group-hover:text-teal-300" />
     </button>
@@ -607,7 +755,37 @@ function DepartmentCard({ dept, count }) {
 }
 
 export function StudyHubBrowse() {
-  const { departments, studyIntakesIn, dataLoading } = useApp();
+  const { currentUser, departments, studyIntakesIn, dataLoading } = useApp();
+  const studentDept = useStudentDept();
+  const isStudent = !currentUser?.role || currentUser.role.toLowerCase() === "student";
+
+  // If a student navigates to /study-hub/browse, guide them to their own department
+  if (isStudent && studentDept) {
+    return (
+      <AppShell activeKey="study-hub" title="Study Hub">
+        <div className="mx-auto max-w-lg pt-6">
+          <PageHeader title="Study Hub" subtitle="Department Scoped" />
+          <Card className="p-6 text-center space-y-4">
+            <div className="flex justify-center">
+              <AccentTile icon="GraduationCap" tone={ACCENT} size={52} />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-ink">{shortDept(studentDept.name)}</h3>
+              <p className="mt-1 text-xs text-ink-3">
+                Study Hub is scoped by department. As an enrolled student of {shortDept(studentDept.name)}, you have access to all 12 academic semesters, intakes, and section materials in your department.
+              </p>
+            </div>
+            <div className="pt-2">
+              <Button icon="ArrowRight" onClick={() => navigate("/study-hub")}>
+                Open {deptCode(studentDept.name)} Study Hub
+              </Button>
+            </div>
+          </Card>
+        </div>
+      </AppShell>
+    );
+  }
+
   const byBranch = {};
   departments.forEach((d) => { (byBranch[d.branch] ||= []).push(d); });
   const order = [...BRANCH_ORDER, ...Object.keys(byBranch).filter((b) => !BRANCH_ORDER.includes(b))];
@@ -639,53 +817,198 @@ export function StudyHubBrowse() {
   );
 }
 
-// ============================================================================
-// Intake list — one department's intakes
-// ============================================================================
-function IntakeCard({ intake, sectionCount }) {
-  return (
-    <button
-      onClick={() => navigate(`/study-hub/intake/${intake.id}`)}
-      className="group flex items-center gap-4 rounded-md border border-brd bg-surface p-5 text-left shadow-sm transition-colors hover:border-teal-300 dark:hover:border-teal-500/40 hover:bg-teal-50/40 dark:hover:bg-teal-500/10"
-    >
-      <AccentTile icon="Users" tone={ACCENT} size={44} />
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-base font-semibold text-ink">Intake {intake.number}</p>
-        <p className="mt-0.5 truncate text-xs text-ink-3">{intake.years ? `${intake.years} · ` : ""}{sectionCount} section{sectionCount === 1 ? "" : "s"}</p>
-      </div>
-      <Icon name="ArrowRight" size={18} className="text-ink-3 group-hover:text-teal-500 dark:group-hover:text-teal-300" />
-    </button>
-  );
-}
-
+// Level 2: Department -> Semesters (1 to 12)
 export function StudyHubDept({ deptId }) {
-  const { departments, studyIntakesIn, studySectionsIn, dataLoading } = useApp();
+  const { currentUser, departments, studyIntakesIn, dataLoading } = useApp();
   const dept = departments.find((d) => d.id === deptId);
+  const studentDept = useStudentDept();
+  const isStudent = !currentUser?.role || currentUser.role.toLowerCase() === "student";
 
   if (!dept) {
     return (
       <AppShell activeKey="study-hub" title="Study Hub">
         {dataLoading ? <Loading /> : (
           <EmptyState icon="GraduationCap" title="Department not found" message="This department may have changed."
-            action={<Button onClick={() => navigate("/study-hub/browse")}>Browse departments</Button>} />
+            action={<Button onClick={() => navigate("/study-hub")}>Back to Study Hub</Button>} />
         )}
       </AppShell>
     );
   }
 
+  // Cross-department access guard for students
+  if (isStudent && studentDept && dept.id !== studentDept.id) {
+    return (
+      <AppShell activeKey="study-hub" title="Study Hub">
+        <div className="mb-3 flex items-center gap-1.5 text-xs text-ink-3">
+          <button onClick={() => navigate("/study-hub")} className="hover:text-ink">Study Hub</button>
+          <span>/</span>
+          <span className="font-semibold text-ink">{deptCode(dept.name)}</span>
+        </div>
+        <EmptyState
+          icon="Lock"
+          title="Department Restricted"
+          message={`Study Hub is scoped to your enrolled department (${shortDept(studentDept.name)}). Students cannot access study materials from other departments.`}
+          action={<Button icon="ArrowLeft" onClick={() => navigate("/study-hub")}>Go to {deptCode(studentDept.name)} Study Hub</Button>}
+        />
+      </AppShell>
+    );
+  }
+
   const intakes = studyIntakesIn(dept.id);
+  const maxIntake = intakes.length > 0 ? Math.max(...intakes.map((i) => i.number)) : 54;
 
   return (
     <AppShell activeKey="study-hub" title="Study Hub">
-      <button onClick={() => navigate("/study-hub/browse")} className="mb-4 inline-flex items-center gap-1.5 text-base font-semibold text-ink-3 hover:text-ink-2">
-        <Icon name="ArrowLeft" size={16} /> Browse departments
+      <div className="mb-3 flex items-center gap-1.5 text-xs text-ink-3">
+        <button onClick={() => navigate("/study-hub")} className="hover:text-ink">Study Hub</button>
+        <span>/</span>
+        <span className="font-semibold text-ink">{deptCode(dept.name)}</span>
+      </div>
+      <button onClick={() => navigate("/study-hub")} className="mb-4 inline-flex items-center gap-1.5 text-base font-semibold text-ink-3 hover:text-ink-2">
+        <Icon name="ArrowLeft" size={16} /> Study Hub
       </button>
-      <PageHeader title={shortDept(dept.name)} subtitle="Pick an intake to open its sections and books." />
-      {intakes.length === 0 ? (
-        <EmptyState icon="Users" title="No intakes yet" message="This department's intakes haven't been set up on Study Hub yet." />
+      <PageHeader
+        title={shortDept(dept.name)}
+        subtitle="Select an academic semester (1–12) to view completed intakes, sections, and study materials."
+      />
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        {SEMESTER_INFO.map((sem) => {
+          const completed = intakes.filter((i) => Math.max(1, (maxIntake - i.number) + 1) > sem.num);
+          const current = intakes.filter((i) => Math.max(1, (maxIntake - i.number) + 1) === sem.num);
+          return (
+            <SemesterCard
+              key={sem.num}
+              sem={sem}
+              deptId={dept.id}
+              completedCount={completed.length}
+              currentCount={current.length}
+            />
+          );
+        })}
+      </div>
+    </AppShell>
+  );
+}
+
+// Level 3: Semester -> Intakes completed that semester
+export function StudyHubSemester({ deptId, semesterNum }) {
+  const { currentUser, departments, studyIntakesIn, studySectionsIn, dataLoading } = useApp();
+  const dept = departments.find((d) => d.id === deptId);
+  const studentDept = useStudentDept();
+  const isStudent = !currentUser?.role || currentUser.role.toLowerCase() === "student";
+  const semNum = Number(semesterNum) || 1;
+  const semMeta = SEMESTER_INFO.find((s) => s.num === semNum) || { num: semNum, label: `Semester ${semNum}`, phase: "" };
+
+  if (!dept) {
+    return (
+      <AppShell activeKey="study-hub" title="Study Hub">
+        {dataLoading ? <Loading /> : (
+          <EmptyState icon="GraduationCap" title="Department not found" message="This department may have changed."
+            action={<Button onClick={() => navigate("/study-hub")}>Back to Study Hub</Button>} />
+        )}
+      </AppShell>
+    );
+  }
+
+  // Cross-department access guard for students
+  if (isStudent && studentDept && dept.id !== studentDept.id) {
+    return (
+      <AppShell activeKey="study-hub" title="Study Hub">
+        <div className="mb-3 flex items-center gap-1.5 text-xs text-ink-3">
+          <button onClick={() => navigate("/study-hub")} className="hover:text-ink">Study Hub</button>
+          <span>/</span>
+          <span className="font-semibold text-ink">{deptCode(dept.name)}</span>
+        </div>
+        <EmptyState
+          icon="Lock"
+          title="Department Restricted"
+          message={`Study Hub is scoped to your enrolled department (${shortDept(studentDept.name)}). Students cannot access study materials from other departments.`}
+          action={<Button icon="ArrowLeft" onClick={() => navigate("/study-hub")}>Go to {deptCode(studentDept.name)} Study Hub</Button>}
+        />
+      </AppShell>
+    );
+  }
+
+  const intakes = studyIntakesIn(dept.id);
+  const maxIntake = intakes.length > 0 ? Math.max(...intakes.map((i) => i.number)) : 54;
+
+  const enrichedIntakes = intakes.map((i) => {
+    const currentSem = Math.max(1, (maxIntake - i.number) + 1);
+    const isCompleted = currentSem > semNum;
+    const isCurrent = currentSem === semNum;
+    const isGraduated = currentSem > 12;
+    return {
+      intake: i,
+      currentSem,
+      isCompleted,
+      isCurrent,
+      isGraduated,
+      sectionsCount: studySectionsIn(i.id).length,
+    };
+  });
+
+  const visibleIntakes = enrichedIntakes
+    .filter((x) => x.isCompleted || x.isCurrent)
+    .sort((a, b) => b.intake.number - a.intake.number);
+
+  return (
+    <AppShell activeKey="study-hub" title="Study Hub">
+      <div className="mb-3 flex items-center gap-1.5 text-xs text-ink-3">
+        <button onClick={() => navigate("/study-hub")} className="hover:text-ink">Study Hub</button>
+        <span>/</span>
+        <button onClick={() => navigate(`/study-hub/dept/${dept.id}`)} className="hover:text-ink">{deptCode(dept.name)}</button>
+        <span>/</span>
+        <span className="font-semibold text-ink">Semester {semNum}</span>
+      </div>
+      <button onClick={() => navigate(`/study-hub/dept/${dept.id}`)} className="mb-4 inline-flex items-center gap-1.5 text-base font-semibold text-ink-3 hover:text-ink-2">
+        <Icon name="ArrowLeft" size={16} /> All Semesters ({deptCode(dept.name)})
+      </button>
+      <PageHeader
+        title={`${semMeta.label} · ${shortDept(dept.name)}`}
+        subtitle={`Intakes that completed or are currently in Semester ${semNum}. Pick an intake to see its sections.`}
+      />
+      {visibleIntakes.length === 0 ? (
+        <EmptyState
+          icon="Users"
+          title="No intakes for this semester yet"
+          message={`No senior or current intakes have completed or reached Semester ${semNum} in ${shortDept(dept.name)} yet.`}
+          action={<Button variant="secondary" onClick={() => navigate(`/study-hub/dept/${dept.id}`)}>View other semesters</Button>}
+        />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {intakes.map((i) => <IntakeCard key={i.id} intake={i} sectionCount={studySectionsIn(i.id).length} />)}
+          {visibleIntakes.map(({ intake, currentSem, isCompleted, isCurrent, isGraduated, sectionsCount }) => (
+            <button
+              key={intake.id}
+              onClick={() => navigate(`/study-hub/dept/${dept.id}/semester/${semNum}/intake/${intake.id}`)}
+              className="group flex items-center gap-4 rounded-md border border-brd bg-surface p-5 text-left shadow-sm transition-colors hover:border-teal-300 dark:hover:border-teal-500/40 hover:bg-teal-50/40 dark:hover:bg-teal-500/10"
+            >
+              <AccentTile icon="Users" tone={ACCENT} size={44} />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className="truncate text-base font-semibold text-ink">Intake {intake.number}</p>
+                  {isGraduated && (
+                    <span className="rounded-full bg-purple-50 dark:bg-purple-500/15 text-purple-700 dark:text-purple-300 px-2 py-0.5 text-[10px] font-semibold">
+                      Graduated
+                    </span>
+                  )}
+                  {isCompleted && !isGraduated && (
+                    <span className="rounded-full bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 text-[10px] font-semibold">
+                      Completed · Now Sem {currentSem}
+                    </span>
+                  )}
+                  {isCurrent && (
+                    <span className="rounded-full bg-teal-50 dark:bg-teal-500/15 text-teal-700 dark:text-teal-300 px-2 py-0.5 text-[10px] font-semibold">
+                      Current Intake
+                    </span>
+                  )}
+                </div>
+                <p className="mt-0.5 truncate text-xs text-ink-3">
+                  {intake.years ? `${intake.years} · ` : ""}{sectionsCount} section{sectionsCount === 1 ? "" : "s"}
+                </p>
+              </div>
+              <Icon name="ArrowRight" size={18} className="text-ink-3 group-hover:text-teal-500 dark:group-hover:text-teal-300 shrink-0" />
+            </button>
+          ))}
         </div>
       )}
     </AppShell>
@@ -850,12 +1173,15 @@ function BooksTab({ books, canAdd, isManager, onAdd, onDelete, saved, onToggleSa
   );
 }
 
-// Study Materials — browse a department's intakes → sections → subjects.
-export function StudyHubIntake({ intakeId }) {
-  const { studyIntakes, departments, studySectionsIn, studyIntakesIn, dataLoading } = useApp();
+// Level 4: Intake -> Sections (if created)
+export function StudyHubIntake({ intakeId, deptId: propDeptId, semesterNum }) {
+  const { currentUser, studyIntakes, departments, studySectionsIn, dataLoading } = useApp();
+  const studentDept = useStudentDept();
+  const isStudent = !currentUser?.role || currentUser.role.toLowerCase() === "student";
 
   const intake = studyIntakes.find((i) => i.id === intakeId);
-  const dept = intake && departments.find((d) => d.id === intake.deptId);
+  const dept = intake && departments.find((d) => d.id === (propDeptId || intake.deptId));
+  const semNum = semesterNum ? Number(semesterNum) : null;
 
   if (!intake || !dept) {
     return (
@@ -868,28 +1194,60 @@ export function StudyHubIntake({ intakeId }) {
     );
   }
 
+  // Cross-department access guard for students
+  if (isStudent && studentDept && dept.id !== studentDept.id) {
+    return (
+      <AppShell activeKey="study-hub" title="Study Hub">
+        <div className="mb-3 flex items-center gap-1.5 text-xs text-ink-3">
+          <button onClick={() => navigate("/study-hub")} className="hover:text-ink">Study Hub</button>
+          <span>/</span>
+          <span className="font-semibold text-ink">{deptCode(dept.name)}</span>
+        </div>
+        <EmptyState
+          icon="Lock"
+          title="Department Restricted"
+          message={`Study Hub is scoped to your enrolled department (${shortDept(studentDept.name)}). Students cannot access study materials from other departments.`}
+          action={<Button icon="ArrowLeft" onClick={() => navigate("/study-hub")}>Go to {deptCode(studentDept.name)} Study Hub</Button>}
+        />
+      </AppShell>
+    );
+  }
+
   const sections = studySectionsIn(intake.id);
-  const intakes = studyIntakesIn(dept.id); // same-department intakes → the switcher
-  const switchIntake = (e) => { const id = e.target.value; if (id && id !== intake.id) navigate(`/study-hub/intake/${id}`); };
+  const backTarget = semNum
+    ? `/study-hub/dept/${dept.id}/semester/${semNum}`
+    : `/study-hub/dept/${dept.id}`;
 
   return (
     <AppShell activeKey="study-hub" title="Study Hub">
-      <button onClick={() => navigate("/study-hub")} className="mb-4 inline-flex items-center gap-1.5 text-base font-semibold text-ink-3 hover:text-ink-2">
-        <Icon name="ArrowLeft" size={16} /> Study Hub
+      <div className="mb-3 flex items-center gap-1.5 text-xs text-ink-3">
+        <button onClick={() => navigate("/study-hub")} className="hover:text-ink">Study Hub</button>
+        <span>/</span>
+        <button onClick={() => navigate(`/study-hub/dept/${dept.id}`)} className="hover:text-ink">{deptCode(dept.name)}</button>
+        {semNum && (
+          <>
+            <span>/</span>
+            <button onClick={() => navigate(`/study-hub/dept/${dept.id}/semester/${semNum}`)} className="hover:text-ink">Semester {semNum}</button>
+          </>
+        )}
+        <span>/</span>
+        <span className="font-semibold text-ink">Intake {intake.number}</span>
+      </div>
+      <button onClick={() => navigate(backTarget)} className="mb-4 inline-flex items-center gap-1.5 text-base font-semibold text-ink-3 hover:text-ink-2">
+        <Icon name="ArrowLeft" size={16} /> {semNum ? `Semester ${semNum} Intakes` : deptCode(dept.name)}
       </button>
-      <PageHeader title="Study Materials" subtitle={`${shortDept(dept.name)} — notes, questions & books shared across the intake`} />
+      <PageHeader
+        title={`Intake ${intake.number} · Sections`}
+        subtitle={`${shortDept(dept.name)}${semNum ? ` · Semester ${semNum}` : ""} — browse section study rooms`}
+      />
 
-      <Card className="mb-6 p-4">
-        <Field label="Intake" hint="Switch to a senior or junior intake to study their materials.">
-          <Select value={intake.id} onChange={switchIntake}>
-            {intakes.map((i) => <option key={i.id} value={i.id}>Intake {i.number}{i.years ? ` · ${i.years}` : ""}</option>)}
-          </Select>
-        </Field>
-      </Card>
-
-      <h3 className="mb-3 text-base font-semibold text-ink">Sections · Intake {intake.number}</h3>
       {sections.length === 0 ? (
-        <EmptyState icon="Users" title="No sections yet" message="This intake has no sections on Study Hub yet." />
+        <EmptyState
+          icon="Users"
+          title="No sections created yet"
+          message={`Section rooms for Intake ${intake.number} haven't been created on Study Hub yet.`}
+          action={<Button variant="secondary" onClick={() => navigate("/study-hub")}>Request section creation</Button>}
+        />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {sections.map((s) => <SectionCard key={s.id} section={s} />)}
@@ -1090,7 +1448,12 @@ function CoursesTab({ section, courses, canEdit, manager, onAddCourse, onDeleteC
         </div>
       </div>
       {courses.length === 0 ? (
-        <EmptyState icon="BookOpen" title="No courses yet" message={canEdit ? "Add a course so classmates can upload its materials." : "No courses have been added yet."} />
+        <EmptyState
+          icon="BookOpen"
+          title="No courses yet"
+          message={canEdit ? "Add a course so classmates can upload its materials." : "No courses have been added to this section yet."}
+          action={canEdit ? <Button icon="Plus" onClick={onAddCourse}>Add course</Button> : null}
+        />
       ) : filtered.length === 0 ? (
         <EmptyState icon="Search" title="No matching courses" message="Try another search term." />
       ) : (
@@ -1341,6 +1704,8 @@ function SectionHeader({ section, dept, intake, manager, onLeave }) {
 // ============================================================================
 // Course files — one course's materials
 // ============================================================================
+const NOTE_TYPES = ["Class Note", "Assignment", "Lab Manual", "Reference"];
+
 function UploadFileModal({ open, onClose, courseId, courseCode }) {
   const { uploadStudyMaterial } = useApp();
   const toast = useToast();
@@ -1368,14 +1733,65 @@ function UploadFileModal({ open, onClose, courseId, courseCode }) {
   }
   return (
     <Modal
-      open={open} onClose={onClose} icon="Upload" tone="blue" title="Upload material"
-      description={courseCode ? `Add a material to ${courseCode}.` : ""}
+      open={open} onClose={onClose} icon="Upload" tone="blue" title="Upload class note"
+      description={courseCode ? `Add a study note, assignment, or manual to ${courseCode}.` : ""}
       footer={<><Button variant="secondary" onClick={onClose}>Cancel</Button><Button icon="Upload" onClick={() => submit()} disabled={saving}>Upload</Button></>}
     >
       <form onSubmit={submit} className="space-y-4">
-        <Field label="Type" htmlFor="uf-type"><Select id="uf-type" value={form.type} onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))}>{MATERIAL_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}</Select></Field>
-        <Field label="Title" htmlFor="uf-title" required error={errors.title}><Input id="uf-title" value={form.title} error={!!errors.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} placeholder="e.g. Chapter 3 — DFD Notes" /></Field>
+        <Field label="Type" htmlFor="uf-type">
+          <Select id="uf-type" value={form.type} onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))}>
+            {NOTE_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+          </Select>
+        </Field>
+        <Field label="Title" htmlFor="uf-title" required error={errors.title}>
+          <Input id="uf-title" value={form.title} error={!!errors.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} placeholder="e.g. Chapter 3 — DFD Notes" />
+        </Field>
         <Field label="File" required error={errors.file}><DocField file={form.file} onChange={(f) => setForm((x) => ({ ...x, file: f }))} /></Field>
+        <button type="submit" className="hidden" aria-hidden="true" tabIndex={-1} />
+      </form>
+    </Modal>
+  );
+}
+
+function UploadSlideModal({ open, onClose, courseId, courseCode }) {
+  const { uploadStudyMaterial } = useApp();
+  const toast = useToast();
+  const [title, setTitle] = React.useState("");
+  const [file, setFile] = React.useState(null);
+  const [errors, setErrors] = React.useState({});
+  const [saving, setSaving] = React.useState(false);
+  React.useEffect(() => { if (!open) { setTitle(""); setFile(null); setErrors({}); } }, [open]);
+  async function submit(e) {
+    if (e) e.preventDefault();
+    if (saving) return;
+    const er = {};
+    if (!title.trim()) er.title = "Enter a title for the presentation.";
+    if (!file) er.file = "Choose a presentation file.";
+    setErrors(er);
+    if (Object.keys(er).length) return;
+    setSaving(true);
+    try {
+      const r = await uploadStudyMaterial(courseId, { title, type: "Lecture Slide", file });
+      if (!r.ok) { toast({ type: "error", title: "Upload failed", message: r.error }); return; }
+      toast({ type: "success", title: "Slide uploaded", message: title.trim() });
+      setTitle(""); setFile(null); setErrors({}); onClose();
+    } finally {
+      setSaving(false);
+    }
+  }
+  return (
+    <Modal
+      open={open} onClose={onClose} icon="Presentation" tone="blue" title="Upload lecture slide"
+      description={courseCode ? `Add presentation slides or lecture decks to ${courseCode}.` : ""}
+      footer={<><Button variant="secondary" onClick={onClose}>Cancel</Button><Button icon="Upload" onClick={() => submit()} disabled={saving}>Upload slide</Button></>}
+    >
+      <form onSubmit={submit} className="space-y-4">
+        <Field label="Slide Title" htmlFor="us-title" required error={errors.title}>
+          <Input id="us-title" value={title} error={!!errors.title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Lecture 05 — Tree Traversals & BST" />
+        </Field>
+        <Field label="Slide File" required error={errors.file} hint="PPT, PPTX, or PDF presentation up to 10 MB">
+          <DocField file={file} onChange={(f) => setFile(f)} />
+        </Field>
         <button type="submit" className="hidden" aria-hidden="true" tabIndex={-1} />
       </form>
     </Modal>
@@ -1401,15 +1817,15 @@ function FileRow({ file, isManager, onDelete, saved, onToggleSave }) {
   );
 }
 
-// Notes (course materials) tab — clean file list.
+// Class Notes tab — clean note/file list.
 function NotesTab({ files, canUpload, manager, onUpload, onDelete, saved, onToggleSave }) {
   if (files.length === 0) {
     return (
       <EmptyState
         icon="FileText"
-        title="No notes yet"
-        message={canUpload ? "Upload notes or slides for this subject." : "Nothing has been uploaded yet."}
-        action={canUpload ? <Button icon="Upload" onClick={onUpload}>Upload</Button> : null}
+        title="No class notes yet"
+        message={canUpload ? "Upload class notes, lab manuals, or assignments for this subject." : "No class notes have been uploaded yet."}
+        action={canUpload ? <Button icon="Upload" onClick={onUpload}>Upload note</Button> : null}
       />
     );
   }
@@ -1429,8 +1845,36 @@ function NotesTab({ files, canUpload, manager, onUpload, onDelete, saved, onTogg
   );
 }
 
+// Lecture Slides tab - presentation decks.
+function SlidesTab({ slides, canUpload, manager, onUpload, onDelete, saved, onToggleSave }) {
+  if (slides.length === 0) {
+    return (
+      <EmptyState
+        icon="Presentation"
+        title="No slides yet"
+        message={canUpload ? "Upload lecture slide decks or PowerPoint presentations for this subject." : "No presentation slides have been uploaded yet."}
+        action={canUpload ? <Button icon="Presentation" onClick={onUpload}>Upload slide</Button> : null}
+      />
+    );
+  }
+  return (
+    <Card className="divide-y divide-brd overflow-hidden">
+      {slides.map((f) => (
+        <FileRow
+          key={f.id}
+          file={f}
+          isManager={manager}
+          onDelete={onDelete}
+          saved={saved?.has(f.id)}
+          onToggleSave={onToggleSave && (() => onToggleSave("material", f))}
+        />
+      ))}
+    </Card>
+  );
+}
+
 // ============================================================================
-// Subject view — one course: Notes / Questions / Books
+// Subject view - one course: Notes / Questions / Books
 // ============================================================================
 export function StudyHubCourse({ sectionId, courseId }) {
   const {
@@ -1439,11 +1883,12 @@ export function StudyHubCourse({ sectionId, courseId }) {
     getStudyBookmarks, toggleStudyBookmark, listings = [],
   } = useApp();
   const toast = useToast();
-  const [tab, setTab] = React.useState("Notes");
+  const [tab, setTab] = React.useState("Class Notes");
   const [uploadOpen, setUploadOpen] = React.useState(false);
   const [qbOpen, setQbOpen] = React.useState(false);
   const [bookOpen, setBookOpen] = React.useState(false);
-  const [confirm, setConfirm] = React.useState(null); // { kind: 'note'|'qb'|'book', item }
+  const [slideOpen, setSlideOpen] = React.useState(false);
+  const [confirm, setConfirm] = React.useState(null); // { kind: 'note'|'slide'|'qb'|'book', item }
   const [confirmBusy, setConfirmBusy] = React.useState(false);
   const [verifyBusy, setVerifyBusy] = React.useState(false);
   const [query, setQuery] = React.useState("");
@@ -1522,7 +1967,9 @@ export function StudyHubCourse({ sectionId, courseId }) {
   const q = query.trim().toLowerCase();
   const byNewest = (a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? "");
   const refine = (list) => list.filter((x) => !q || (x.title ?? "").toLowerCase().includes(q)).sort(byNewest);
-  const files = refine(studyFilesIn(course.id));
+  const allFiles = studyFilesIn(course.id);
+  const notes = refine(allFiles.filter((f) => f.type !== "Lecture Slide" && !["ppt", "pptx"].includes(f.kind)));
+  const slides = refine(allFiles.filter((f) => f.type === "Lecture Slide" || ["ppt", "pptx"].includes(f.kind)));
   const qb = refine(studyQuestionsIn(course.id));
   const books = refine(studyBooksInCourse(course.id));
 
@@ -1544,7 +1991,7 @@ export function StudyHubCourse({ sectionId, courseId }) {
     setConfirmBusy(true);
     try {
       const { kind, item } = confirm;
-      const r = kind === "note" ? await deleteStudyMaterial(item.id)
+      const r = (kind === "note" || kind === "slide") ? await deleteStudyMaterial(item.id)
               : kind === "qb"   ? await deleteStudyQB(item.id)
               :                   await deleteStudyBook(item.id);
       if (!r.ok) { toast({ type: "error", title: "Couldn't remove", message: r.error }); return; }
@@ -1558,7 +2005,7 @@ export function StudyHubCourse({ sectionId, courseId }) {
     }
   }
 
-  const confirmLabel = { note: "note", qb: "question paper", book: "book" }[confirm?.kind] || "item";
+  const confirmLabel = { note: "class note", slide: "lecture slide", qb: "question paper", book: "book" }[confirm?.kind] || "item";
 
   // Marketplace cross-link: Available listings tagged with this course code
   // (0077). Codes compared ignoring case/spacing so "CSE101" matches "CSE 101".
@@ -1604,13 +2051,13 @@ export function StudyHubCourse({ sectionId, courseId }) {
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <FilterTabs
-          options={["Notes", "Questions", "Books"]}
+          options={["Class Notes", "CT Questions", "Books", "Slides"]}
           value={tab}
           onChange={setTab}
-          counts={{ Notes: files.length, Questions: qb.length, Books: books.length }}
+          counts={{ "Class Notes": notes.length, "CT Questions": qb.length, Books: books.length, Slides: slides.length }}
         />
         <div className="flex items-center gap-2">
-          {(files.length > 2 || qb.length > 2 || books.length > 2 || query) && (
+          {(notes.length > 2 || qb.length > 2 || books.length > 2 || slides.length > 2 || query) && (
             <div className="relative w-full sm:w-56">
               <Icon name="Search" size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-3" />
               <input
@@ -1621,18 +2068,19 @@ export function StudyHubCourse({ sectionId, courseId }) {
               />
             </div>
           )}
-          {canUpload && tab === "Notes" && <Button icon="Upload" onClick={() => setUploadOpen(true)}>Upload</Button>}
-          {canUpload && tab === "Questions" && <Button icon="Upload" onClick={() => setQbOpen(true)}>Upload</Button>}
+          {canUpload && tab === "Class Notes" && <Button icon="Upload" onClick={() => setUploadOpen(true)}>Upload note</Button>}
+          {canUpload && tab === "CT Questions" && <Button icon="Upload" onClick={() => setQbOpen(true)}>Upload question</Button>}
           {canUpload && tab === "Books" && <Button icon="Plus" onClick={() => setBookOpen(true)}>Add book</Button>}
+          {canUpload && tab === "Slides" && <Button icon="Presentation" onClick={() => setSlideOpen(true)}>Upload slide</Button>}
         </div>
       </div>
 
-      {tab === "Notes" && (
-        <NotesTab files={files} canUpload={canUpload} manager={manager}
+      {tab === "Class Notes" && (
+        <NotesTab files={notes} canUpload={canUpload} manager={manager}
           onUpload={() => setUploadOpen(true)} onDelete={(item) => setConfirm({ kind: "note", item })}
           saved={saved} onToggleSave={toggleSave} />
       )}
-      {tab === "Questions" && (
+      {tab === "CT Questions" && (
         <QuestionBankTab qb={qb} canEdit={canUpload} isManager={manager}
           onUpload={() => setQbOpen(true)} onVerify={verifyQB} onDelete={(item) => setConfirm({ kind: "qb", item })}
           saved={saved} onToggleSave={toggleSave} />
@@ -1642,10 +2090,16 @@ export function StudyHubCourse({ sectionId, courseId }) {
           onAdd={() => setBookOpen(true)} onDelete={(item) => setConfirm({ kind: "book", item })}
           saved={saved} onToggleSave={toggleSave} />
       )}
+      {tab === "Slides" && (
+        <SlidesTab slides={slides} canUpload={canUpload} manager={manager}
+          onUpload={() => setSlideOpen(true)} onDelete={(item) => setConfirm({ kind: "slide", item })}
+          saved={saved} onToggleSave={toggleSave} />
+      )}
 
       <UploadFileModal open={uploadOpen} onClose={() => setUploadOpen(false)} courseId={course.id} courseCode={course.code} />
       <UploadQBModal open={qbOpen} onClose={() => setQbOpen(false)} courseId={course.id} />
       <AddBookModal open={bookOpen} onClose={() => setBookOpen(false)} courseId={course.id} courseCode={course.code} />
+      <UploadSlideModal open={slideOpen} onClose={() => setSlideOpen(false)} courseId={course.id} courseCode={course.code} />
       <Modal
         open={!!confirm} onClose={() => setConfirm(null)} icon="Trash2" tone="red"
         title={`Remove this ${confirmLabel}?`}

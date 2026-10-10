@@ -629,6 +629,33 @@ Whenever the user instructs to "update memorys" (or "update memories"), the agen
 
 ---
 
+## 21. Study Hub 6-Tier Academic Navigation & Workflow
+
+### 21.1 Academic Hierarchy & Department Scoping Policy
+- **Student Department Scoping Rule:** In Study Hub, students cannot see or browse other departments. All study materials, notes, questions, and section rooms are strictly department-scoped (matching Migration 0051 `study_can_view` security policy).
+- When a student navigates to Study Hub (`/study-hub`), they jump directly into their own enrolled department's archive (Semesters 1-12), with quick-access to their enrolled section at the top. Direct URL attempts to view other departments are blocked by an access guard (`Department Restricted`).
+- For Admin and Staff roles, the university-wide department directory (`/study-hub/browse`) remains accessible.
+
+Study Hub uses a 6-tier academic progression pipeline for discovery and resource sharing:
+1. **Student Department Hub (`/study-hub` or `/study-hub/dept/:deptId`):** The student's enrolled department archive with Semesters 1 through 12, plus active section quick-launch tile and Pinned Notices.
+2. **Semester Directory (`/study-hub/dept/:deptId`):** Semesters 1 through 12 (covering 4 years of undergraduate study). Calculates senior and completed intakes dynamically based on the department's latest intake batch (`maxIntake`).
+3. **Completed Intakes Feed (`/study-hub/dept/:deptId/semester/:semesterNum`):** Lists all senior batches that completed or are currently in that specific semester. Displays alumni/senior status badges (`Graduated Alumni`, `Completed · Now Sem X`, `Current Intake`).
+4. **Sections Directory (`/study-hub/dept/:deptId/semester/:semesterNum/intake/:intakeId` or `/study-hub/intake/:intakeId`):** Section study rooms created for that intake. If no sections exist, displays a friendly empty state with action to request section creation or join by code.
+5. **Courses Directory (`/study-hub/section/:sectionId`):** Courses/subjects added to the section. Displays notes, slides, questions, and books count summary per course. If empty, provides an empty state with action for CR/Editor to add the first course.
+6. **Course Resource Workspace (`/study-hub/section/:sectionId/course/:courseId`):** 4 primary tabs:
+   - **Class Notes:** Lecture notes, lab manuals, assignments, and study guides.
+   - **CT Questions:** Class test and exam papers (CT 1, CT 2, Midterm, Final) with CR verification badge.
+   - **Books:** Textbooks, reference books, syllabuses (file uploads or external links).
+   - **Slides:** Presentation decks, PPT/PPTX slide decks, and instructor PDFs.
+
+### 21.2 Resource Categorization & Upload Flow
+- Class Notes upload uses `UploadFileModal` with type restricted to note categories (`Class Note`, `Assignment`, `Lab Manual`, `Reference`).
+- Lecture Slides upload uses `UploadSlideModal`, automatically tagging items with `type: "Lecture Slide"` and storing in the private `study-materials` bucket.
+- Question papers are stored in `study_question_bank` with exam type tags and CR verification toggles.
+- Textbooks and syllabuses are stored in `study_books`.
+
+---
+
 ## 22. Lost & Found Varsity Architecture & Ergonomics (Mobile Parity)
 
 ### 22.1 Hero Action Bar & Header Ergonomics (`LostFoundBrowseScreen.tsx`)

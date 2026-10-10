@@ -2720,7 +2720,10 @@ export function AppProvider({ children }) {
   const studyAllFilesInSection = (sectionId) => studyCoursesIn(sectionId).flatMap((c) => studyFilesIn(c.id));
   const studySectionFileCount = (section) => studyAllFilesInSection(section.id).length;
 
-  const myStudyMemberships = () => studyMembers.filter((m) => m.userId === currentUser?.id && m.status === "approved");
+  const myStudyMemberships = () =>
+    studyMembers
+      .filter((m) => m.userId === currentUser?.id && m.status === "approved")
+      .sort((a, b) => (b.role === "cr" ? 1 : 0) - (a.role === "cr" ? 1 : 0));
 
   // Enrich a raw section row with the view-derived fields the screens expect.
   // crIds/editorIds are only populated for sections whose roster RLS exposes
