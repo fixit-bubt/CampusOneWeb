@@ -1760,6 +1760,8 @@ export function AppProvider({ children }) {
       section: r.section,
       program: r.program ?? "",        // 0065 — exposed by student_directory()
       bloodGroup: r.blood_group ?? "", // 0065
+      studentId: r.student_id ?? null,
+      isCr: r.is_cr ?? false,
       status: r.status, // 'none' | 'pending_outgoing' | 'pending_incoming' | 'accepted'
       email: r.email,
       whatsapp: r.whatsapp,
@@ -1826,6 +1828,23 @@ export function AppProvider({ children }) {
       .select("id");
     if (error) return { ok: false, error: error.message };
     if (!data || data.length === 0) return { ok: false, error: "This request was already handled." };
+    return { ok: true };
+  }
+
+  // Disconnect from an accepted student connection
+  async function disconnectStudent(targetId) {
+    if (!currentUser) return { ok: false, error: "Not signed in." };
+    const { data, error } = await supabase.rpc("disconnect_student", { p_target_id: targetId });
+    if (error) {
+      const { error: delErr } = await supabase
+        .from("connections")
+        .delete()
+        .eq("status", "accepted")
+        .or(`and(requester_id.eq.${currentUser.id},addressee_id.eq.${targetId}),and(requester_id.eq.${targetId},addressee_id.eq.${currentUser.id})`);
+      if (delErr) return { ok: false, error: delErr.message };
+      return { ok: true };
+    }
+    if (!data) return { ok: false, error: "Connection not found or already removed." };
     return { ok: true };
   }
 
@@ -3544,7 +3563,7 @@ export function AppProvider({ children }) {
     createReport, updateReport, setReportStatus, assignReport, deleteReport,
     campusIssues, reloadCampusIssues: loadCampusIssues, toggleReportVote, setReportBoardVisibility, reportVoteCounts,
     setRole, updateProfile, updatePinnedTools, changePassword, addItem, updateItem, deleteItem, addClaim, setClaimStatus, getContact, getProofUrl,
-    getStudentDirectory, sendConnectionRequest, respondConnection, cancelConnectionRequest,
+    getStudentDirectory, sendConnectionRequest, respondConnection, cancelConnectionRequest, disconnectStudent,
   };
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }

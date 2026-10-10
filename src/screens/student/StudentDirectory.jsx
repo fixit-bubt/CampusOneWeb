@@ -27,7 +27,7 @@ function StatusBadge({ status }) {
 }
 
 export default function StudentDirectory() {
-  const { currentUser, getStudentDirectory, sendConnectionRequest, respondConnection, cancelConnectionRequest } = useApp();
+  const { currentUser, getStudentDirectory, sendConnectionRequest, respondConnection, cancelConnectionRequest, disconnectStudent } = useApp();
   const toast = useToast();
   if (!currentUser) return null;
   const hidden = currentUser.directoryVisible === false;
@@ -98,6 +98,23 @@ export default function StudentDirectory() {
     try {
       const res = await cancelConnectionRequest(s.id);
       if (!res.ok) toast({ type: "error", title: "Couldn't cancel", message: res.error });
+      await refresh();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function disconnect(s) {
+    if (busy) return;
+    setBusy(true);
+    try {
+      const res = await disconnectStudent(s.id);
+      if (res.ok) {
+        toast({ type: "info", title: "Connection removed", message: `You are no longer connected with ${s.name}.` });
+        setSelected(null);
+      } else {
+        toast({ type: "error", title: "Couldn't disconnect", message: res.error });
+      }
       await refresh();
     } finally {
       setBusy(false);
@@ -188,7 +205,11 @@ export default function StudentDirectory() {
                   <Avatar name={s.name} src={s.avatar} size={44} />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-base font-semibold text-ink">{s.name}</p>
-                    <p className="truncate text-xs text-ink-3">{metaLine(s)}</p>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <p className="truncate text-xs text-ink-3">{metaLine(s)}</p>
+                      {s.isCr && <Badge size="sm" tone="amber">CR</Badge>}
+                      {s.bloodGroup && <Badge size="sm" tone="rose">{s.bloodGroup}</Badge>}
+                    </div>
                   </div>
                   <StatusBadge status={s.status} />
                 </button>
@@ -207,6 +228,11 @@ export default function StudentDirectory() {
               <div className="min-w-0">
                 <p className="truncate text-base font-semibold text-ink">{selected.name}</p>
                 <p className="truncate text-xs text-ink-3">{metaLine(selected, true)}</p>
+                <div className="flex items-center gap-1.5 mt-1">
+                  {selected.isCr && <Badge size="sm" tone="amber">CR</Badge>}
+                  {selected.bloodGroup && <Badge size="sm" tone="rose">{selected.bloodGroup}</Badge>}
+                  {selected.studentId && <span className="text-xs text-ink-3 font-mono">ID: {selected.studentId}</span>}
+                </div>
               </div>
             </div>
 
@@ -227,6 +253,11 @@ export default function StudentDirectory() {
                 ) : (
                   <p className="text-xs text-ink-3">This student hasn't shared a WhatsApp number.</p>
                 )}
+                <div className="pt-2 border-t border-brd flex justify-end">
+                  <Button size="sm" variant="ghost" className="text-danger hover:bg-danger-50" disabled={busy} onClick={() => disconnect(selected)}>
+                    Disconnect
+                  </Button>
+                </div>
               </div>
             ) : selected.status === "pending_incoming" ? (
               <div className="space-y-3">
