@@ -1813,6 +1813,7 @@ export function AppProvider({ children }) {
       : await match(supabase.from("connections").delete());
     if (error) return { ok: false, error: error.message };
     if (!data || data.length === 0) return { ok: false, error: "This request is no longer pending." };
+    if (accept) await loadMessages();
     return { ok: true };
   }
 
@@ -1842,9 +1843,11 @@ export function AppProvider({ children }) {
         .eq("status", "accepted")
         .or(`and(requester_id.eq.${currentUser.id},addressee_id.eq.${targetId}),and(requester_id.eq.${targetId},addressee_id.eq.${currentUser.id})`);
       if (delErr) return { ok: false, error: delErr.message };
+      await loadMessages();
       return { ok: true };
     }
     if (!data) return { ok: false, error: "Connection not found or already removed." };
+    await loadMessages();
     return { ok: true };
   }
 

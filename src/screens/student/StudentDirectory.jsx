@@ -132,11 +132,23 @@ export default function StudentDirectory() {
       if (classmatesOnly && currentUser?.intake && currentUser?.section) {
         if (s.intake !== currentUser.intake || s.section !== currentUser.section) return false;
       }
-      const q = query.trim().toLowerCase();
-      if (!q) return true;
-      return [s.name, s.intake, s.section, s.department, s.bloodGroup, s.studentId]
-        .filter((v) => v != null)
-        .some((v) => String(v).toLowerCase().includes(q));
+      const tokens = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+      if (tokens.length === 0) return true;
+      const haystack = [
+        s.name,
+        s.department,
+        s.intake ? `intake ${s.intake} ${s.intake}` : "",
+        s.section ? `section ${s.section} sec ${s.section}` : "",
+        s.intake && s.section ? `${s.intake}-${s.section} ${s.intake}/${s.section}` : "",
+        s.bloodGroup,
+        s.studentId,
+        s.program,
+        s.isCr ? "cr class representative" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return tokens.every((tok) => haystack.includes(tok));
     });
 
   return (
@@ -235,6 +247,20 @@ export default function StudentDirectory() {
               icon={query ? SearchX : Users}
               title={query ? "No students found" : "No students yet"}
               message={query ? "Try a different search." : "No other students are visible in the directory yet."}
+              action={
+                (query || deptFilter !== "All" || classmatesOnly) ? (
+                  <Button
+                    variant="secondary"
+                    onClick={() => {
+                      setQuery("");
+                      setDeptFilter("All");
+                      setClassmatesOnly(false);
+                    }}
+                  >
+                    Clear filters
+                  </Button>
+                ) : undefined
+              }
             />
           ) : (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
