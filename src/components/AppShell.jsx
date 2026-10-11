@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { LogOut, Menu, X, Bell, ChevronDown, Sparkles, MoreVertical } from "lucide-react";
+import { LogOut, Menu, X, Bell, ChevronDown, Sparkles } from "lucide-react";
 import { useApp } from "../data/store.jsx";
 import { navigate, Link, useHashRoute } from "../lib/router.jsx";
 import { Avatar, Badge } from "./ui.jsx";
@@ -9,6 +9,7 @@ import { Logo } from "./Brand.jsx";
 import { AccentTile } from "./featureKit.jsx";
 import { ThemeToggle } from "./ThemeToggle.jsx";
 import { LanguageToggle } from "./LanguageToggle.jsx";
+import { useScroll } from "./ui/use-scroll";
 
 // ============================================================================
 // AppShell — sidebar + top bar + content area for all logged-in screens.
@@ -390,16 +391,21 @@ function activeKeyForPath(path, role) {
 const LayoutContext = React.createContext({ openDrawer: () => { } });
 export function useLayout() { return React.useContext(LayoutContext); }
 
-// buildMegaMenuItems — maps the role-based navigation structure into MegaMenuItem[]
-// for the animated desktop navbar dropdowns.
-function buildMegaMenuItems({ nav, activeKey, onNavigate, badges = {} }) {
+function buildMegaMenuItems({ nav, activeKey, currentPath, onNavigate, badges = {} }) {
   const result = [];
+  const isAtDashboard =
+    activeKey === "dashboard" ||
+    currentPath === "/dashboard" ||
+    currentPath === "/staff" ||
+    currentPath === "/admin" ||
+    currentPath === "/";
 
   for (const group of nav) {
     if (!group.section) {
       // Direct items like Dashboard, Reports, Messages, Annex Portal (excluding profile)
       for (const item of group.items) {
         if (item.key === "profile") continue;
+        if (item.key === "dashboard" && isAtDashboard) continue;
         const count = badges[item.key] || 0;
         result.push({
           id: item.key,
@@ -411,10 +417,13 @@ function buildMegaMenuItems({ nav, activeKey, onNavigate, badges = {} }) {
       }
     } else {
       // Grouped items: direct single list inside dropdown (no multiple sections)
-      const hasActive = group.items.some((i) => i.key === activeKey);
-      const groupTotal = group.items.reduce((sum, i) => sum + (badges[i.key] || 0), 0);
+      // On desktop, individual tools (CGPA, Cover Page, PDF Maker) are already listed directly,
+      // so the redundant tools hub button is omitted from the dropdown.
+      const visibleItems = group.items.filter((item) => item.key !== "tools");
+      const hasActive = visibleItems.some((i) => i.key === activeKey);
+      const groupTotal = visibleItems.reduce((sum, i) => sum + (badges[i.key] || 0), 0);
 
-      const items = group.items.map((item) => {
+      const items = visibleItems.map((item) => {
         const count = badges[item.key] || 0;
         return {
           label: item.label,
@@ -507,104 +516,6 @@ function BottomNavBackdrop({ hasFab = true }) {
   );
 }
 
-function HeaderMenuDropdown({ currentUser, unreadNotifCount = 0, onLogout, onNavigate }) {
-  const [open, setOpen] = useState(false);
-  const ref = React.useRef(null);
-
-  React.useEffect(() => {
-    if (!open) return;
-    const onDown = (e) => {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
-    };
-    const onKey = (e) => {
-      if (e.key === "Escape") setOpen(false);
-    };
-    document.addEventListener("mousedown", onDown);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("mousedown", onDown);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
-
-  return (
-    <div ref={ref} className="relative">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        aria-label="More options"
-        aria-expanded={open}
-        className="relative inline-flex h-9 w-9 items-center justify-center rounded-full text-white/85 hover:bg-white/10 hover:text-white transition-colors"
-      >
-        <MoreVertical size={20} />
-        {unreadNotifCount > 0 && (
-          <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-danger ring-2 ring-[#0a1b42]" />
-        )}
-      </button>
-
-      {open && (
-        <div
-          role="menu"
-          className="absolute right-0 top-full z-50 mt-2 w-60 rounded-2xl border border-brd bg-surface p-2 shadow-2xl text-ink animate-in fade-in zoom-in-95 duration-150"
-        >
-          {/* User profile item */}
-          <button
-            role="menuitem"
-            onClick={() => { setOpen(false); onNavigate("/profile"); }}
-            className="flex w-full items-center gap-3 rounded-xl p-2 text-left hover:bg-surface-2 transition-colors"
-          >
-            <Avatar name={currentUser?.name} src={currentUser?.avatar} size={36} />
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-bold text-ink">{currentUser?.name}</p>
-              <p className="truncate text-xs text-ink-3 capitalize">{currentUser?.role}</p>
-            </div>
-          </button>
-
-          <div className="my-1.5 border-t border-brd" />
-
-          {/* Notifications */}
-          <button
-            role="menuitem"
-            onClick={() => { setOpen(false); onNavigate("/notifications"); }}
-            className="flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-sm font-semibold text-ink-2 hover:bg-surface-2 hover:text-ink transition-colors"
-          >
-            <span className="flex items-center gap-2.5">
-              <Bell size={16} className="text-ink-3" />
-              Notifications
-            </span>
-            {unreadNotifCount > 0 && (
-              <span className="inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-danger px-1 text-[10px] font-bold text-white">
-                {unreadNotifCount > 9 ? "9+" : unreadNotifCount}
-              </span>
-            )}
-          </button>
-
-          {/* Preferences */}
-          <div className="my-1.5 border-t border-brd" />
-          <div className="flex items-center justify-between px-2.5 py-1.5">
-            <span className="text-xs font-semibold text-ink-3">Preferences</span>
-            <div className="flex items-center gap-1">
-              <LanguageToggle />
-              <ThemeToggle />
-            </div>
-          </div>
-
-          <div className="my-1.5 border-t border-brd" />
-
-          {/* Log out */}
-          <button
-            role="menuitem"
-            onClick={() => { setOpen(false); onLogout(); }}
-            className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-semibold text-danger hover:bg-danger-bg transition-colors"
-          >
-            <LogOut size={16} />
-            <span>Log out</span>
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
-
 // AppLayout — persistent frame for all signed-in screens. Rendered ONCE around
 // the routed content (see App.jsx) so the sidebar and its scroll position
 // survive navigation instead of remounting per screen. Active nav is derived
@@ -613,6 +524,7 @@ export function AppLayout({ children }) {
   const { currentUser, logout, totalUnreadMessages = 0, unreadNotifCount = 0 } = useApp();
   const path = useHashRoute();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const scrolled = useScroll(15);
 
   // Close the mobile drawer on Escape (it's a modal dialog).
   React.useEffect(() => {
@@ -645,17 +557,18 @@ export function AppLayout({ children }) {
     return buildMegaMenuItems({
       nav,
       activeKey,
+      currentPath: path,
       onNavigate: go,
       badges: navBadges,
     });
-  }, [currentUser, nav, activeKey, go, navBadges]);
+  }, [currentUser, nav, activeKey, path, go, navBadges]);
 
   if (!currentUser) return <>{children}</>;
   const isChatbotMain = path === "/chatbot" || (path.startsWith("/chatbot/") && path !== "/chatbot/history");
 
   return (
     <LayoutContext.Provider value={{ openDrawer: () => setDrawerOpen(true) }}>
-      <div className={`bg-bg w-full max-w-full ${isChatbotMain ? "fixed inset-0 h-[100dvh] max-h-[100dvh] overflow-hidden flex flex-col" : "min-h-screen overflow-x-hidden"}`}>
+      <div className={`bg-bg w-full max-w-full ${isChatbotMain ? "fixed inset-0 h-[100dvh] max-h-[100dvh] overflow-hidden flex flex-col" : "min-h-screen overflow-x-clip"}`}>
         {/* Mobile top header — fixed to screen across all pages with 3-line menu on left, centered CampusOne + tagline, notifications on right */}
         <header className="fixed top-0 inset-x-0 z-40 flex h-11 w-full items-center justify-between border-b border-[#1d3d7d]/80 bg-gradient-to-r from-[#0a1b42] via-[#0f2862] to-[#0a1b42] px-3 text-white shadow-xs backdrop-blur-md xl:hidden">
           {/* Left: 3-line hamburger button to open the menu drawer */}
@@ -693,9 +606,19 @@ export function AppLayout({ children }) {
         </header>
 
         {/* Floating nav capsule — desktop only (xl and up). On mobile, navigation is at the bottom bar */}
-        <div className="sticky top-0 z-30 hidden px-3 pb-2 pt-3 sm:px-6 sm:pt-4 xl:block shrink-0">
+        <div
+          className={`sticky top-0 z-30 hidden xl:block shrink-0 transition-all duration-300 ease-out ${
+            scrolled ? "px-3 pb-2 pt-2 sm:px-6 sm:pt-2.5" : "px-3 pb-2 pt-3 sm:px-6 sm:pt-4"
+          }`}
+        >
           {/* Width cap is shared with <main> below so the capsule and page content line up cleanly. */}
-          <div className="mx-auto flex h-14 w-full max-w-6xl items-center gap-1.5 rounded-full border border-[#1d3d7d]/80 bg-gradient-to-r from-[#0a1b42]/95 via-[#0f2862]/95 to-[#0a1b42]/95 px-3 shadow-lg shadow-black/20 backdrop-blur-md sm:px-4 text-white">
+          <header
+            className={`mx-auto flex w-full items-center gap-1.5 rounded-full border text-white transition-all duration-300 ease-out ${
+              scrolled
+                ? "h-12 max-w-5xl border-[#2b5be3]/80 dark:border-[#5b85f7]/70 bg-gradient-to-r from-[#0a1b42]/98 via-[#0e2760]/98 to-[#0a1b42]/98 px-2.5 sm:px-3.5 shadow-xl shadow-black/35 backdrop-blur-xl ring-1 ring-white/10"
+                : "h-14 max-w-6xl border-[#1d3d7d]/80 bg-gradient-to-r from-[#0a1b42]/95 via-[#0f2862]/95 to-[#0a1b42]/95 px-3 sm:px-4 shadow-lg shadow-black/20 backdrop-blur-md"
+            }`}
+          >
             <button
               onClick={() => setDrawerOpen(true)}
               aria-label="Open menu"
@@ -710,9 +633,7 @@ export function AppLayout({ children }) {
               <MegaMenu items={desktopMegaItems} />
             </nav>
 
-            <div className="ml-auto flex shrink-0 items-center gap-1">
-              <LanguageToggle className="!text-white/80 hover:!bg-white/10 hover:!text-white !rounded-full !h-8 !px-2 !text-xs" />
-              <ThemeToggle className="!text-white/80 hover:!bg-white/10 hover:!text-white !rounded-full !h-8 !w-8" />
+            <div className="ml-auto flex shrink-0 items-center gap-2 pr-0.5">
               <button
                 onClick={() => navigate("/notifications")}
                 title="Notifications"
@@ -726,17 +647,11 @@ export function AppLayout({ children }) {
                   </span>
                 )}
               </button>
-              <button onClick={() => navigate("/profile")} title="My profile" className="rounded-full ring-2 ring-white/20 hover:ring-white/40 transition-all">
+              <button onClick={() => navigate("/profile")} title="My profile" className="rounded-full ring-2 ring-white/20 hover:ring-white/40 transition-all p-0.5">
                 <Avatar name={currentUser.name} src={currentUser.avatar} size={28} />
               </button>
-              <HeaderMenuDropdown
-                currentUser={currentUser}
-                unreadNotifCount={unreadNotifCount}
-                onLogout={logout}
-                onNavigate={go}
-              />
             </div>
-          </div>
+          </header>
         </div>
 
         {/* Mobile drawer */}
@@ -757,7 +672,7 @@ export function AppLayout({ children }) {
         )}
 
         {/* Main column — full width now that the nav is overhead, not beside. */}
-        <div className={`w-full max-w-full ${isChatbotMain ? "flex-1 min-h-0 flex flex-col overflow-hidden pt-11 pb-[60px] xl:pt-0 xl:pb-4" : "overflow-x-hidden pt-11 pb-16 sm:pb-20 xl:pt-0 xl:pb-0"}`}>
+        <div className={`w-full max-w-full ${isChatbotMain ? "flex-1 min-h-0 flex flex-col overflow-hidden pt-11 pb-[60px] xl:pt-0 xl:pb-4" : "overflow-x-clip pt-11 pb-16 sm:pb-20 xl:pt-0 xl:pb-0"}`}>
           {children}
         </div>
 

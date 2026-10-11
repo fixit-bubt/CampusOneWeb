@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import { Save, Mail, Check, Lock, Info, Share2, ChevronDown } from "lucide-react";
+import { Save, Mail, Check, Lock, Info, Share2, ChevronDown, Sun, Moon, Globe, LogOut } from "lucide-react";
 import { useApp } from "../data/store.jsx";
 import { Card, Button, Field, Input, Select, FileUpload, Avatar, Badge, Spinner, useToast } from "../components/ui.jsx";
 import { AppShell, ROLE_TONE } from "../components/AppShell.jsx";
 import { Icon } from "../components/Icon.jsx";
+import { useTheme } from "../lib/theme.js";
 import { useT } from "../i18n/index.js";
 import { version as appVersion } from "../../package.json";
 
@@ -23,7 +24,8 @@ function Toggle({ checked, onChange, label, hint }) {
 }
 
 export default function Profile() {
-  const { currentUser, updateProfile, changePassword } = useApp();
+  const { currentUser, updateProfile, changePassword, logout, lang, toggleLang } = useApp();
+  const { dark, toggle: toggleTheme } = useTheme();
   const toast = useToast();
   const t = useT();
 
@@ -272,6 +274,78 @@ export default function Profile() {
               </div>
             </form>
           )}
+        </Card>
+
+        {/* App Preferences: Language & Theme */}
+        <Card className="p-3.5 sm:p-4 space-y-3.5">
+          <p className="text-xs font-bold uppercase tracking-wider text-ink-3">Preferences</p>
+
+          {/* Dark Mode */}
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface-2 text-ink">
+                {dark ? <Moon size={16} /> : <Sun size={16} />}
+              </span>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-ink">Dark Mode</p>
+                <p className="text-xs text-ink-3">{dark ? "Dark theme enabled" : "Light theme enabled"}</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${dark ? "bg-brand" : "bg-brd-2"}`}
+              aria-label="Toggle dark mode"
+            >
+              <span className={`inline-block h-4 w-4 transform rounded-full bg-surface shadow transition-transform ${dark ? "translate-x-6" : "translate-x-1"}`} />
+            </button>
+          </div>
+
+          <div className="border-t border-brd" />
+
+          {/* Language */}
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface-2 text-ink">
+                <Globe size={16} />
+              </span>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-ink">Language</p>
+                <p className="text-xs text-ink-3">{lang === "bn" ? "বাংলা (Bengali)" : "English"}</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={toggleLang}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-brd bg-surface px-3 py-1.5 text-xs font-bold text-ink hover:bg-surface-2 transition-colors"
+            >
+              <span className={lang === "en" ? "text-brand" : "text-ink-3"}>EN</span>
+              <span className="text-ink-3">/</span>
+              <span className={lang === "bn" ? "text-brand" : "text-ink-3"}>বাং</span>
+            </button>
+          </div>
+        </Card>
+
+        {/* Account Actions / Log Out */}
+        <Card className="p-3.5 sm:p-4">
+          <button
+            type="button"
+            onClick={logout}
+            className="flex w-full items-center justify-between text-left group"
+          >
+            <div className="flex items-center gap-2.5">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-danger-bg text-danger">
+                <LogOut size={16} />
+              </span>
+              <div>
+                <p className="text-sm font-bold text-danger">Log Out</p>
+                <p className="text-xs text-danger/70">Sign out of this device</p>
+              </div>
+            </div>
+            <span className="rounded-md border border-danger/30 bg-danger-bg/50 px-2.5 py-1 text-xs font-semibold text-danger group-hover:bg-danger-bg transition-colors">
+              Sign Out
+            </span>
+          </button>
         </Card>
 
         {/* Clean Footer info */}

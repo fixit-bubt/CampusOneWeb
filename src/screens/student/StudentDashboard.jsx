@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { PackageSearch, ArrowRight, CircleDot, Loader, CircleCheck, FileText, CirclePlus, Search, X, CalendarDays, Megaphone, Clock, Sparkles, ChevronRight, BookMarked, Calculator, Bus, Moon, Newspaper, Users, Briefcase, Heart, Car, ShoppingBag, Wrench } from "lucide-react";
+import { PackageSearch, ArrowRight, CircleDot, Loader, CircleCheck, FileText, CirclePlus, Search, X, CalendarDays, Megaphone, Clock, Sparkles, ChevronRight, BookMarked, Calculator, Bus, Moon, Newspaper, Users, Briefcase, Heart, Car, ShoppingBag, Wrench, FileBadge, FileStack, Plus, Globe, Check, Link as LinkIcon, ClipboardList, CalendarRange, ExternalLink, Store, Droplet, GraduationCap } from "lucide-react";
 import { useApp } from "../../data/store.jsx";
 import { navigate, Link } from "../../lib/router.jsx";
-import { Button, Card, EmptyState, StatCard, Loading } from "../../components/ui.jsx";
+import { Button, Card, EmptyState, StatCard, Loading, Modal, Input, Field } from "../../components/ui.jsx";
 import { AppShell } from "../../components/AppShell.jsx";
 import { usePrayerSchedule, prayerState } from "../prayer/Prayer.jsx";
 import { nextDeparture, minutesToHHMM, fmtTime, fmtCountdown, toMinutes, useTick } from "../../components/featureKit.jsx";
@@ -72,37 +72,65 @@ const DEFAULT_DASHBOARD_SLIDES = [
   },
 ];
 
-// 4 frequently used campus features (square shaped, horizontal line)
-const FREQUENT_FEATURES = [
-  {
-    id: "study-hub",
-    title: "Study Hub",
-    path: "/study-hub",
-    icon: BookMarked,
-    color: "bg-surface-2 text-ink border-brd",
-  },
-  {
-    id: "routines",
-    title: "Routines",
-    path: "/routines",
-    icon: Clock,
-    color: "bg-surface-2 text-ink border-brd",
-  },
+// 3 default core tools (just like the tools page)
+const DEFAULT_TOOLS = [
   {
     id: "cover-page",
     title: "Cover Page",
+    iconName: "FileBadge",
     path: "/cover-page",
-    icon: FileText,
-    color: "bg-surface-2 text-ink border-brd",
+  },
+  {
+    id: "pdf-maker",
+    title: "PDF Maker",
+    iconName: "FileStack",
+    path: "/pdf-maker",
   },
   {
     id: "cgpa",
-    title: "CGPA Calc",
+    title: "CGPA Calculator",
+    iconName: "Calculator",
     path: "/cgpa",
-    icon: Calculator,
-    color: "bg-surface-2 text-ink border-brd",
   },
 ];
+
+const CAMPUS_FEATURES_CATALOG = [
+  { id: "routines", title: "Class Routines", iconName: "ClipboardList", path: "/routines" },
+  { id: "calendar", title: "Academic Calendar", iconName: "CalendarRange", path: "/calendar" },
+  { id: "study-hub", title: "Study Hub", iconName: "BookMarked", path: "/study-hub" },
+  { id: "annex", title: "Annex Portal", iconName: "ExternalLink", path: "/annex" },
+  { id: "bus", title: "Bus Schedule", iconName: "Bus", path: "/bus" },
+  { id: "prayer", title: "Prayer Times", iconName: "Moon", path: "/prayer" },
+  { id: "lost-found", title: "Lost & Found", iconName: "PackageSearch", path: "/lost-found" },
+  { id: "marketplace", title: "Marketplace", iconName: "Store", path: "/marketplace" },
+  { id: "blood", title: "Blood Registry", iconName: "Droplet", path: "/blood" },
+  { id: "faculty", title: "Faculty Directory", iconName: "GraduationCap", path: "/faculty" },
+];
+
+const TOOL_ICON_MAP = {
+  FileBadge,
+  FileStack,
+  Calculator,
+  ClipboardList,
+  CalendarRange,
+  BookMarked,
+  ExternalLink,
+  Bus,
+  Moon,
+  PackageSearch,
+  Store,
+  Droplet,
+  GraduationCap,
+  Clock,
+  CalendarDays,
+  ShoppingBag,
+  Heart,
+  Users,
+  Globe,
+  FileText,
+  Link: LinkIcon,
+  Sparkles,
+};
 
 const DEFAULT_COMMUNITY_NEWS = [
   {
@@ -167,7 +195,87 @@ export default function StudentDashboard() {
     clubs = [],
     clubPosts = [],
     bloodRequests = [],
+    updatePinnedTools,
   } = useApp();
+
+  // Pinned tools state synced with profile and local storage (shared with Tools page)
+  const [pinnedTools, setPinnedTools] = useState(() => {
+    if (Array.isArray(currentUser?.pinnedTools) && currentUser.pinnedTools.length > 0) {
+      return currentUser.pinnedTools;
+    }
+    try {
+      const saved = localStorage.getItem("campusone.pinnedTools");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    return [];
+  });
+
+  const [addToolModalOpen, setAddToolModalOpen] = useState(false);
+  const [activeToolTab, setActiveToolTab] = useState("features");
+  const [customToolTitle, setCustomToolTitle] = useState("");
+  const [customToolUrl, setCustomToolUrl] = useState("");
+  const [toolFormError, setToolFormError] = useState("");
+
+  useEffect(() => {
+    if (!currentUser) return;
+    const dbTools = Array.isArray(currentUser.pinnedTools) ? currentUser.pinnedTools : [];
+    if (dbTools.length > 0) {
+      setPinnedTools(dbTools);
+    }
+  }, [currentUser?.id, currentUser?.pinnedTools]);
+
+  const savePinned = (newList) => {
+    setPinnedTools(newList);
+    try {
+      localStorage.setItem("campusone.pinnedTools", JSON.stringify(newList));
+    } catch {}
+    if (updatePinnedTools) {
+      updatePinnedTools(newList);
+    }
+  };
+
+  const handleAddCustomTool = (e) => {
+    e.preventDefault();
+    const cleanTitle = customToolTitle.trim();
+    let cleanUrl = customToolUrl.trim();
+
+    if (!cleanTitle) {
+      setToolFormError("Please enter a name for this tool.");
+      return;
+    }
+    if (!cleanUrl) {
+      setToolFormError("Please enter a URL.");
+      return;
+    }
+    if (!cleanUrl.startsWith("http://") && !cleanUrl.startsWith("https://") && !cleanUrl.startsWith("/")) {
+      cleanUrl = "https://" + cleanUrl;
+    }
+
+    const newCustomTool = {
+      id: "custom-" + Date.now(),
+      title: cleanTitle,
+      iconName: "Globe",
+      path: cleanUrl,
+      isExternal: cleanUrl.startsWith("http"),
+    };
+
+    savePinned([...pinnedTools, newCustomTool]);
+    setCustomToolTitle("");
+    setCustomToolUrl("");
+    setAddToolModalOpen(false);
+  };
+
+  const handleToolClick = (tool) => {
+    if (tool.isExternal || tool.path.startsWith("http://") || tool.path.startsWith("https://")) {
+      window.open(tool.path, "_blank", "noopener,noreferrer");
+    } else {
+      navigate(tool.path);
+    }
+  };
+
   if (!currentUser) return null;
   const mine = reports.filter((r) => r.studentId === currentUser.id);
   const count = (s) => mine.filter((r) => r.status === s).length;
@@ -372,7 +480,7 @@ export default function StudentDashboard() {
 
   return (
     <AppShell activeKey="dashboard" title="Dashboard">
-      <div className="mx-auto max-w-3xl">
+      <div className="w-full">
         {/* 1. Search Field (placed before the announcement cards, sleek rectangular shape) */}
         <div className="relative z-10 mb-2.5 pt-1">
           <div className="relative flex items-center">
@@ -747,37 +855,93 @@ export default function StudentDashboard() {
         </div>
       </div>
 
-      {/* Frequently Used Options - 4 square shape buttons in same horizontal line */}
+      {/* Frequently Used Tools & Shortcuts (3 mixed tools + user pinned shortcuts + (+) Add button) */}
       <div className="mt-3 sm:mt-3.5">
         <div className="mb-2 flex items-center justify-between">
           <div className="flex items-center gap-1.5">
             <Sparkles size={14} className="text-ink-3" />
             <h3 className="text-xs font-bold uppercase tracking-[0.06em] text-ink-3">
-              Frequently used
+              Frequently used tools
             </h3>
           </div>
+          <button
+            type="button"
+            onClick={() => navigate("/tools")}
+            className="text-xs font-semibold text-brand hover:underline"
+          >
+            All tools →
+          </button>
         </div>
 
-        {/* 4 Square-shaped buttons in 1 horizontal line */}
-        <div className="grid grid-cols-4 gap-2 sm:gap-2.5">
-          {FREQUENT_FEATURES.map((feat) => {
-            const FeatIcon = feat.icon;
+        {/* 3 Mixed Core Tools + Pinned Shortcuts + (+) Add Tool Button (compact square shape) */}
+        <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-2 sm:gap-2.5">
+          {/* 3 Default Core Tools */}
+          {DEFAULT_TOOLS.map((tool) => {
+            const ToolIcon = TOOL_ICON_MAP[tool.iconName] || FileText;
             return (
-              <button
-                key={feat.id}
-                type="button"
-                onClick={() => navigate(feat.path)}
-                className="group flex aspect-square flex-col items-center justify-center rounded-xl border border-brd bg-surface p-2 text-center shadow-2xs transition-all duration-200 hover:border-ink-3 hover:shadow-xs active:scale-95"
+              <div
+                key={tool.id}
+                onClick={() => handleToolClick(tool)}
+                className="group relative flex aspect-square flex-col items-center justify-center rounded-md border border-brd bg-surface p-1.5 sm:p-2 text-center shadow-2xs transition-all duration-150 hover:-translate-y-0.5 hover:border-ink-3 hover:shadow-xs active:translate-y-0 cursor-pointer select-none"
               >
-                <span className={`flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center rounded-xl border ${feat.color} transition-transform duration-200 group-hover:scale-105`}>
-                  <FeatIcon size={18} className="sm:size-[22px] text-ink" />
-                </span>
-                <span className="mt-1.5 sm:mt-2 text-[11px] sm:text-xs font-bold text-ink truncate w-full transition-colors">
-                  {feat.title}
-                </span>
-              </button>
+                <div className="mb-1 sm:mb-1.5 flex h-7 w-7 sm:h-9 sm:w-9 items-center justify-center rounded-md border border-brd bg-surface-2 text-ink transition-transform duration-150 group-hover:scale-105">
+                  <ToolIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+                </div>
+                <h3 className="line-clamp-1 text-[11px] sm:text-xs font-bold text-ink px-1">
+                  {tool.title}
+                </h3>
+              </div>
             );
           })}
+
+          {/* User's Pinned Shortcuts */}
+          {pinnedTools.map((tool) => {
+            const ToolIcon = TOOL_ICON_MAP[tool.iconName] || Globe;
+            return (
+              <div
+                key={tool.id}
+                onClick={() => handleToolClick(tool)}
+                className="group relative flex aspect-square flex-col items-center justify-center rounded-md border border-brd bg-surface p-1.5 sm:p-2 text-center shadow-2xs transition-all duration-150 hover:-translate-y-0.5 hover:border-ink-3 hover:shadow-xs active:translate-y-0 cursor-pointer select-none"
+              >
+                {/* Remove shortcut button on hover */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    savePinned(pinnedTools.filter((t) => t.id !== tool.id));
+                  }}
+                  title="Remove shortcut"
+                  className="absolute top-1 right-1 inline-flex h-4 w-4 items-center justify-center rounded bg-surface-2 text-ink-3 opacity-0 transition-opacity hover:bg-danger/10 hover:text-danger group-hover:opacity-100"
+                >
+                  <X size={10} />
+                </button>
+                <div className="mb-1 sm:mb-1.5 flex h-7 w-7 sm:h-9 sm:w-9 items-center justify-center rounded-md border border-brd bg-surface-2 text-ink transition-transform duration-150 group-hover:scale-105">
+                  <ToolIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+                </div>
+                <h3 className="line-clamp-1 text-[11px] sm:text-xs font-bold text-ink px-1">
+                  {tool.title}
+                </h3>
+              </div>
+            );
+          })}
+
+          {/* Plus (+) Button to Add Tools/Shortcuts */}
+          <button
+            type="button"
+            onClick={() => {
+              setToolFormError("");
+              setAddToolModalOpen(true);
+            }}
+            aria-label="Add tool or shortcut"
+            className="group relative flex aspect-square flex-col items-center justify-center rounded-md border-2 border-dashed border-brd bg-surface/40 p-1.5 sm:p-2 text-center transition-all duration-150 hover:border-brand hover:bg-surface active:scale-95 cursor-pointer select-none"
+          >
+            <div className="mb-1 sm:mb-1.5 flex h-7 w-7 sm:h-9 sm:w-9 items-center justify-center rounded-md border border-dashed border-brd bg-surface text-ink-3 transition-colors group-hover:border-brand/40 group-hover:text-brand">
+              <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
+            </div>
+            <h3 className="line-clamp-1 text-[11px] sm:text-xs font-bold text-ink-2 group-hover:text-brand px-1">
+              Add Tool
+            </h3>
+          </button>
         </div>
       </div>
 
@@ -877,6 +1041,130 @@ export default function StudentDashboard() {
           </div>
         )}
       </div>
+
+      {/* Modal to Add Features or Custom Shortcuts (Shared with Tools page) */}
+      <Modal
+        open={addToolModalOpen}
+        onClose={() => setAddToolModalOpen(false)}
+        title="Add Tool"
+        size="sm"
+      >
+        {/* Tab Selector */}
+        <div className="mb-3 flex rounded-md border border-brd bg-surface-2 p-1 text-xs font-semibold">
+          <button
+            type="button"
+            onClick={() => {
+              setActiveToolTab("features");
+              setToolFormError("");
+            }}
+            className={`flex-1 rounded py-1.5 transition-colors ${
+              activeToolTab === "features"
+                ? "bg-surface text-ink shadow-xs"
+                : "text-ink-3 hover:text-ink"
+            }`}
+          >
+            Campus Features
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setActiveToolTab("custom");
+              setToolFormError("");
+            }}
+            className={`flex-1 rounded py-1.5 transition-colors ${
+              activeToolTab === "custom"
+                ? "bg-surface text-ink shadow-xs"
+                : "text-ink-3 hover:text-ink"
+            }`}
+          >
+            Custom Link
+          </button>
+        </div>
+
+        {activeToolTab === "features" ? (
+          <div className="max-h-80 overflow-y-auto space-y-1 pr-1">
+            {CAMPUS_FEATURES_CATALOG.map((feat) => {
+              const isPinned = pinnedTools.some((t) => t.id === feat.id);
+              const FeatIcon = TOOL_ICON_MAP[feat.iconName] || Globe;
+
+              return (
+                <button
+                  key={feat.id}
+                  type="button"
+                  onClick={() => {
+                    if (isPinned) {
+                      savePinned(pinnedTools.filter((t) => t.id !== feat.id));
+                    } else {
+                      savePinned([...pinnedTools, feat]);
+                    }
+                  }}
+                  className={`flex w-full items-center justify-between rounded-md p-2 text-left transition-colors ${
+                    isPinned ? "bg-brand/10 border border-brand/30" : "hover:bg-surface-2"
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded border border-brd bg-surface text-ink">
+                      <FeatIcon size={16} />
+                    </span>
+                    <span className="truncate text-xs font-bold text-ink">
+                      {feat.title}
+                    </span>
+                  </div>
+                  <span
+                    className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-[11px] font-semibold transition-colors ${
+                      isPinned
+                        ? "bg-brand text-white"
+                        : "bg-surface-2 text-ink-3 hover:text-ink"
+                    }`}
+                  >
+                    {isPinned ? <><Check size={11} /> Pinned</> : "Pin"}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <form onSubmit={handleAddCustomTool} className="space-y-3">
+            <Field label="Tool Name" htmlFor="custom-tool-title">
+              <Input
+                id="custom-tool-title"
+                placeholder="e.g. BUBT Annex, Drive..."
+                value={customToolTitle}
+                onChange={(e) => {
+                  setToolFormError("");
+                  setCustomToolTitle(e.target.value);
+                }}
+              />
+            </Field>
+
+            <Field label="URL or Web Link" htmlFor="custom-tool-url" error={toolFormError}>
+              <Input
+                id="custom-tool-url"
+                placeholder="https://..."
+                value={customToolUrl}
+                onChange={(e) => {
+                  setToolFormError("");
+                  setCustomToolUrl(e.target.value);
+                }}
+              />
+            </Field>
+
+            <div className="flex justify-end gap-2 pt-1">
+              <Button
+                variant="secondary"
+                size="sm"
+                type="button"
+                onClick={() => setAddToolModalOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button size="sm" type="submit">
+                Add Shortcut
+              </Button>
+            </div>
+          </form>
+        )}
+      </Modal>
     </div>
   </AppShell>
 );

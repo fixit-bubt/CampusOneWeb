@@ -63,6 +63,9 @@ export default function Landing() {
   const t = useT();
   return (
     <div className="min-h-screen bg-surface">
+      {/* Shared with explore pages — fixed overlay that stays pinned on screen while scrolling */}
+      <PublicNav overlay />
+
       {/* Hero — BUBT campus photo under a theme-aware veil, with the nav capsule
           floating ON it. Fits 100dvh so on any display size the user only sees down
           to the bottom line on initial load, with lower sections scrollable beneath. */}
@@ -80,10 +83,6 @@ export default function Landing() {
         </video>
         <div className="hero-photo-veil absolute inset-0" />
         <div className="hero-glow absolute inset-0" />
-
-        {/* Shared with the explore pages (see PublicNav) so the two can't drift;
-            this file used to carry a near-identical copy. */}
-        <PublicNav overlay />
 
         {/* Top clearance for overlaid fixed capsule */}
         <div className="h-24 shrink-0 sm:h-28 md:h-24" />

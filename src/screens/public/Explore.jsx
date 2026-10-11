@@ -8,6 +8,7 @@ import { Logo } from "../../components/Brand.jsx";
 import { ThemeToggle } from "../../components/ThemeToggle.jsx";
 import { CoverPageBody } from "../coverpage/CoverPage.jsx";
 import { CgpaBody } from "../cgpa/Cgpa.jsx";
+import { useScroll } from "../../components/ui/use-scroll";
 
 // ============================================================================
 // Public "explore without an account" screens: Faculty / Events / Bus & Prayer.
@@ -35,10 +36,21 @@ const NAV = EXPLORE_NAV;
 // capsule stays pinned while the page scrolls under it.
 export function PublicNav({ active, overlay = false }) {
   const { currentUser, dashboardPath } = useApp();
+  const scrolled = useScroll(15);
   return (
-    <div className={`${overlay ? "fixed inset-x-0 top-0" : "sticky top-0"} z-40 px-2.5 pb-2 pt-2.5 sm:px-6 sm:pt-4`}>
+    <div
+      className={`${overlay ? "fixed inset-x-0 top-0 pointer-events-none" : "sticky top-0"} z-50 transition-all duration-300 ease-out ${
+        scrolled ? "px-2.5 pb-2 pt-1.5 sm:px-6 sm:pt-2.5" : "px-2.5 pb-2 pt-2.5 sm:px-6 sm:pt-4"
+      }`}
+    >
       {/* Width matches the signed-in app's capsule so the two read as one system. */}
-      <div className="mx-auto flex w-full max-w-6xl items-center gap-1.5 rounded-full border border-[#1d3d7d]/80 bg-gradient-to-r from-[#0a1b42]/95 via-[#0f2862]/95 to-[#0a1b42]/95 px-2.5 py-1.5 sm:px-3 sm:py-2 shadow-lg shadow-black/20 backdrop-blur-md text-white">
+      <header
+        className={`pointer-events-auto mx-auto flex w-full items-center gap-1.5 rounded-full border text-white transition-all duration-300 ease-out ${
+          scrolled
+            ? "h-12 max-w-5xl border-[#2b5be3]/80 dark:border-[#5b85f7]/70 bg-gradient-to-r from-[#0a1b42]/98 via-[#0e2760]/98 to-[#0a1b42]/98 px-2.5 sm:px-3.5 shadow-xl shadow-black/35 backdrop-blur-xl ring-1 ring-white/10"
+            : "h-14 max-w-6xl border-[#1d3d7d]/80 bg-gradient-to-r from-[#0a1b42]/95 via-[#0f2862]/95 to-[#0a1b42]/95 px-2.5 py-1.5 sm:px-4 sm:py-2 shadow-lg shadow-black/20 backdrop-blur-md"
+        }`}
+      >
         <button onClick={() => navigate("/")} aria-label="CampusOne home" className="shrink-0 pl-1 pr-0.5 sm:px-1">
           <Logo size="sm" onDark />
         </button>
@@ -70,9 +82,9 @@ export function PublicNav({ active, overlay = false }) {
             </>
           )}
         </div>
-      </div>
+      </header>
       {/* Mobile nav — cleanly centered pill, non-slidable without scrollbar */}
-      <div className="mx-auto mt-1.5 flex w-fit max-w-full items-center justify-center gap-0.5 sm:gap-1 no-scrollbar rounded-full border border-[#1d3d7d]/80 bg-gradient-to-r from-[#0a1b42]/95 via-[#0f2862]/95 to-[#0a1b42]/95 px-2.5 py-1 shadow-md shadow-black/20 backdrop-blur-md md:hidden text-white">
+      <div className="pointer-events-auto mx-auto mt-1.5 flex w-fit max-w-full items-center justify-center gap-0.5 sm:gap-1 no-scrollbar rounded-full border border-[#1d3d7d]/80 bg-gradient-to-r from-[#0a1b42]/95 via-[#0f2862]/95 to-[#0a1b42]/95 px-2.5 py-1 shadow-md shadow-black/20 backdrop-blur-md md:hidden text-white">
         {NAV.map((l) => (
           <button
             key={l.path}
