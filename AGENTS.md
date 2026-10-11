@@ -135,12 +135,16 @@ All visual styles must strictly flow from `src/theme/` (mobile) or `src/index.cs
 - **Sticky Offsets:** Top floating capsule consumes 84-88px of vertical clearance on desktop; mobile sticky top header consumes 44px (`h-11`). Sticky elements (e.g., CoverPage preview, public CGPA cards) must use `top-24` or higher to clear the capsule.
 
 ### 6.5 Public Navigation Capsule & Landing Architecture (`Explore.jsx` & `Landing.jsx`)
-- **Landing Hero Video:** Uses HTML5 autoplaying background (`src/assets/hero-bg.mp4`) with `autoPlay`, `loop`, `muted`, `playsInline`, and static fallback poster (`bubt-campus.jpg`). Theme-aware overlay `.hero-photo-veil` guarantees WCAG contrast across light and dark modes.
-- **Public Navigation Links (`EXPLORE_NAV`):** Strictly limited to 5 essentials: `Bus Schedule` (`/explore/bus`), `Cover Page` (`/explore/cover-page`), `CGPA` (`/explore/cgpa`), `Prayer` (`/explore/prayer`), and `Faculty` (`/explore/faculty`).
+- **Landing Hero Video & Always-Dark Mode:** Uses HTML5 autoplaying background (`src/assets/hero-bg.mp4`) with `autoPlay`, `loop`, `muted`, `playsInline`, and static fallback poster (`bubt-campus.jpg`). The hero section is permanently dark mode (`dark bg-black text-white`) with a fixed cinematic dark gradient veil (`from-black/85 via-black/60 to-black/95`) ensuring crystal-clear readability and contrast regardless of the user's theme toggle setting. Lower sections continue responding dynamically to light/dark mode toggles.
+- **Hero Collaboration Branding:** Prominent, unencapsulated collaboration branding: official transparent BUBT crest emblem (`BUBT_LOGO_CREST`), a light `✕` separator, and `Campus` with `One` in light green (`text-emerald-400`).
+- **Animated Hero CTA:** "Get Started" uses the `BorderButton` component (`src/components/ui/subtle-button.tsx`) with a pill border, light shimmer sweep, and an animated light green dot (`bg-emerald-400`) featuring a pulse and ripple ping effect. Centered directly above a smooth-scrolling text link to `#explore-without-account`.
+- **Public Navigation Links (`EXPLORE_NAV`):** Strictly limited to 5 essentials in the top floating nav: `Bus Schedule` (`/explore/bus`), `Cover Page` (`/explore/cover-page`), `CGPA` (`/explore/cgpa`), `Prayer` (`/explore/prayer`), and `Faculty` (`/explore/faculty`).
 - **Responsive Capsule Layout:**
   - Desktop / Tablet (`md` and above): Links render centered inside the top floating capsule (`hidden md:flex`).
-  - Mobile (< `md`): Secondary sub-capsule renders links as a compact, centered pill (`w-fit mx-auto`).
-  - **No Scrollbar / Non-Slidable:** Mobile sub-capsule must never use `overflow-x-auto` or slider tracks. Utilizes `.no-scrollbar` and tight padding (`px-2 py-1 text-xs sm:text-sm`).
+  - Mobile (< `md`): Secondary sub-capsule renders links as an ultra-compact, razor-thin transparent glass pill (`border-white/20 bg-white/10 px-1 py-0.5 backdrop-blur-md text-[11px]`).
+  - **No Scrollbar / Non-Slidable:** Mobile sub-capsule must never use `overflow-x-auto` or slider tracks.
+- **No-Account Public Grid (10 items):** The "Try it before you sign up" grid renders all 10 services usable without logging in: Bus Schedule, Cover Page, CGPA Calculator, Prayer Times, Faculty Directory, Class Routines, Campus Events, Campus Notices, Academic Calendar, and BUBT Annex (opening `annex.bubt.edu.bd` in a new tab).
+- **Authenticated Services Grid (12 items):** The "One login. Every campus service." section details all 12 services requiring user authentication (Issues, Lost & Found, Study Hub, Marketplace, Rides, Blood Donation, Clubs, Jobs, Fixi AI, Student Directory, Messages, Medical Center) using natural, student-friendly copy.
 - **Top Card Mobile Constraint:** Logo uses `size="sm"` on public nav (`Logo size="sm" onDark`). Auth buttons use `size="sm"` and `!rounded-full` (`!h-8 !rounded-full !px-3`) so Sign Up / Log In buttons never poke out or overflow the curved capsule boundaries on narrow viewports.
 
 ---

@@ -81,14 +81,14 @@ export function PublicNav({ active, overlay = false }) {
           )}
         </div>
       </header>
-      {/* Mobile nav — cleanly centered pill, non-slidable without scrollbar */}
-      <div className="pointer-events-auto mx-auto mt-1.5 flex w-fit max-w-full items-center justify-center gap-0.5 sm:gap-1 no-scrollbar rounded-full border border-[#1d3d7d]/80 bg-[#0a1b42] bg-gradient-to-r from-[#0a1b42] via-[#0f2862] to-[#0a1b42] px-2.5 py-1 shadow-md shadow-black/20 backdrop-blur-md md:hidden text-white">
+      {/* Mobile nav — ultra-compact, thin transparent glass pill */}
+      <div className="pointer-events-auto mx-auto mt-1 flex w-fit max-w-[96vw] items-center justify-center gap-0.5 no-scrollbar rounded-full border border-white/20 bg-white/10 px-1 py-0.5 shadow-xs backdrop-blur-md md:hidden text-white">
         {NAV.map((l) => (
           <button
             key={l.path}
             onClick={() => navigate(l.path)}
-            className={`whitespace-nowrap rounded-full px-2.5 py-1 text-xs sm:text-sm font-semibold transition-colors ${
-              active === l.path ? "bg-brand text-white shadow-xs" : "text-white/80 hover:bg-white/10 hover:text-white"
+            className={`whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] leading-tight font-medium transition-colors ${
+              active === l.path ? "bg-brand text-white shadow-xs font-semibold" : "text-white/80 hover:bg-white/15 hover:text-white"
             }`}
           >
             {l.label}
