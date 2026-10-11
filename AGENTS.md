@@ -141,7 +141,7 @@ All visual styles must strictly flow from `src/theme/` (mobile) or `src/index.cs
 - **Public Navigation Links (`EXPLORE_NAV`):** Strictly limited to 5 essentials in the top floating nav: `Bus Schedule` (`/explore/bus`), `Cover Page` (`/explore/cover-page`), `CGPA` (`/explore/cgpa`), `Prayer` (`/explore/prayer`), and `Faculty` (`/explore/faculty`).
 - **Responsive Capsule Layout:**
   - Desktop / Tablet (`md` and above): Links render centered inside the top floating capsule (`hidden md:flex`).
-  - Mobile (< `md`): Secondary sub-capsule renders links as an ultra-compact, razor-thin transparent glass pill (`border-white/20 bg-white/10 px-1 py-0.5 backdrop-blur-md text-[11px]`).
+  - Mobile (< `md`): Secondary sub-capsule renders links as an ultra-compact transparent glass pill using the BorderButton transparent border aesthetic (`border-2 border-white/70 px-1.5 py-0.5 backdrop-blur-sm text-[11px]`, transparent background, no blinking dot).
   - **No Scrollbar / Non-Slidable:** Mobile sub-capsule must never use `overflow-x-auto` or slider tracks.
 - **No-Account Public Grid (10 items):** The "Try it before you sign up" grid renders all 10 services usable without logging in: Bus Schedule, Cover Page, CGPA Calculator, Prayer Times, Faculty Directory, Class Routines, Campus Events, Campus Notices, Academic Calendar, and BUBT Annex (opening `annex.bubt.edu.bd` in a new tab).
 - **Authenticated Services Grid (12 items):** The "One login. Every campus service." section details all 12 services requiring user authentication (Issues, Lost & Found, Study Hub, Marketplace, Rides, Blood Donation, Clubs, Jobs, Fixi AI, Student Directory, Messages, Medical Center) using natural, student-friendly copy.
