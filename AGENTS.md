@@ -146,6 +146,7 @@ All visual styles must strictly flow from `src/theme/` (mobile) or `src/index.cs
 - **No-Account Public Grid (10 items):** The "Try it before you sign up" grid renders all 10 services usable without logging in: Bus Schedule, Cover Page, CGPA Calculator, Prayer Times, Faculty Directory, Class Routines, Campus Events, Campus Notices, Academic Calendar, and BUBT Annex (opening `annex.bubt.edu.bd` in a new tab).
 - **Authenticated Services Grid (12 items):** The "One login. Every campus service." section details all 12 services requiring user authentication (Issues, Lost & Found, Study Hub, Marketplace, Rides, Blood Donation, Clubs, Jobs, Fixi AI, Student Directory, Messages, Medical Center) using natural, student-friendly copy.
 - **Top Card Mobile Constraint:** Logo uses `size="sm"` on public nav (`Logo size="sm" onDark`). Auth buttons use `size="sm"` and `!rounded-full` (`!h-8 !rounded-full !px-3`) so Sign Up / Log In buttons never poke out or overflow the curved capsule boundaries on narrow viewports.
+- **Hero Feature Velocity Ticker:** Bottom hero ticker uses `ScrollVelocityRow` with transparent background (`bg-transparent`, no border or backdrop box) and a relaxed, easily readable crawl velocity (`baseVelocity={0.8}`).
 
 ---
 

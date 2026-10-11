@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { Info } from "lucide-react";
 import { useApp } from "../../data/store.jsx";
 import { navigate, Link } from "../../lib/router.jsx";
 import { Button, Field, Input, Spinner, useToast } from "../../components/ui.jsx";
@@ -95,10 +94,6 @@ export default function Register() {
         <Field label={t.auth.register.confirmPassword} htmlFor="reg-confirm" required error={errors.confirm}>
           <Input id="reg-confirm" type="password" placeholder="••••••••" value={form.confirm} error={!!errors.confirm} onChange={set("confirm")} />
         </Field>
-        <div className="flex items-center gap-2 rounded-md bg-surface-2 px-3 py-2.5 text-xs text-ink-3">
-          <Info size={14} className="shrink-0" />
-          {t.auth.register.roleNotice} <span className="font-semibold text-ink-2">{t.auth.register.roleNoticeRole}</span> {t.auth.register.roleNoticeRest}
-        </div>
         <Button type="submit" full disabled={loading || googleLoading}>
           {loading ? <Spinner size={16} className="border-white/40 border-t-white" /> : t.auth.register.submit}
         </Button>

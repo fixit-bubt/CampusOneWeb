@@ -160,8 +160,8 @@ export default function Landing() {
         </div>
 
         {/* Moving features at the bottom of hero section */}
-        <div className="relative w-full border-t border-white/10 bg-black/50 backdrop-blur-xs py-3.5 sm:py-4 overflow-hidden select-none">
-          <ScrollVelocityRow baseVelocity={3}>
+        <div className="relative w-full bg-transparent py-3 sm:py-4 overflow-hidden select-none">
+          <ScrollVelocityRow baseVelocity={0.8}>
             {CAMPUS_FEATURES.map((feature) => (
               <span
                 key={feature}
