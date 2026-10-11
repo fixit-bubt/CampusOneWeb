@@ -645,6 +645,10 @@ Whenever the user instructs to "update memorys" (or "update memories"), the agen
   - `trg_notify_blood_request_fulfilled` (UPDATE on `blood_requests` when `is_fulfilled = true`): Notifies all pledged donors that blood has been arranged with a thank-you note.
 - **Direct Coordination & WhatsApp:**
   - Pre-filled WhatsApp coordination messages integrated through `ContactSheet.tsx` (`whatsAppMessage`), providing immediate context without manual typing.
+- **In-App Direct Messaging & Privacy Protection:**
+  - Integrated `inAppChatAction` into `ContactSheet.tsx` for blood requests and donor directory lookups.
+  - RPC `open_dm_thread(p_code, p_context_type, p_target)` extended to support `context_type in ('blood', 'donor')` with automatic 90-day grant in `dm_grants`.
+  - Enables private student-to-student coordination without exposing phone numbers.
 
 ---
 
