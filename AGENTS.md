@@ -227,8 +227,8 @@ The live Supabase database (`xhgpxvyqrufbbuivttmi`) is the single source of trut
 |---|---|---|
 | **Marketplace** | `listings` (NOT `marketplace`) | Status: `'Available'` / `'Sold'`. Contact reveal via `listing_contact(p_code)` RPC. Upload to `photos` bucket (`marketplace/{user_id}/`). |
 | **Rides** | `rides` (NOT `ride_shares`) | Columns: `origin`, `destination`, `date`, `time`, `seats_total`, `fare`, `driver_id`, `code`. Contact via `ride_contact(p_code, p_target)`. Call `delete_expired_rides()` before fetch. |
-| **Blood Donors** | `donors` (NOT `blood_donors`) | Columns: `user_id`, `blood_group`, `area`, `last_donated`. No phone column (phone is in `profiles.whatsapp`). Contact via `donor_contact(p_user_id)` RPC. 90-day wait enforced. |
-| **Blood Pledges** | `blood_pledges` | Columns: `request_id`, `donor_id`. Used when a student pledges "I can help". |
+| **Blood Donors** | `donors` (NOT `blood_donors`) | Columns: `user_id`, `blood_group`, `area`, `last_donated`, `alert_urgency` (`'urgent_only'`, `'today_plus'`, `'all'`). No phone column (phone is in `profiles.whatsapp`). Contact via `donor_contact(p_user_id)` RPC. 90/120-day wait enforced. |
+| **Blood Pledges** | `blood_pledges` | Columns: `request_id`, `donor_id`. Triggers `trg_notify_blood_pledge` and `trg_notify_blood_pledge_cancelled` notify requester. `trg_notify_blood_request_fulfilled` on `blood_requests` notifies all pledged donors when resolved. |
 | **Events** | `events` | Date column is `date` (NOT `event_date`); location is `venue` (NOT `location`). Whitelist: `event_organizers`. |
 | **Clubs** | `clubs` & `club_posts` | `clubs.about` (NOT `description`), filter `is_active = true`. Posts: `club_posts.body` (NOT `content`), `author_id`. |
 | **Jobs** | `jobs` | **NO status column**. Removed jobs have `deleted_at IS NOT NULL`. Withdraw a job by setting `deleted_at = now()`. |
@@ -626,6 +626,25 @@ Whenever the user instructs to "update memorys" (or "update memories"), the agen
   - Fixed selection check to exact match (`selectedArea.trim().toLowerCase() === item.name.trim().toLowerCase()`), preventing all 8 Mirpur variations from checking simultaneously.
 - **Cache Invalidation Lifecycle:**
   - Automated invalidation of `CacheKeys.BLOOD_FEED(userId)` and `CacheKeys.HOME_STATUS(userId)` upon request posting, donor registration/updates, and request fulfillment.
+
+### 20.8 Blood Donation Notification System & Life-Saving Dispatch Loop
+- **Emergency Priority Architecture:**
+  - Dedicated Android high-priority channel `emergency_blood` (`AndroidImportance.MAX`, double-pulse vibration `[0, 500, 200, 500]`, lockscreen heads-up display). FCM push notifications for blood are routed directly to this channel via Edge Function `send-push`.
+- **Urgency Sensitivity & Fatigue Prevention:**
+  - `public.donors` table contains `alert_urgency` column (`'urgent_only'`, `'today_plus'`, `'all'`) defaulting to `'all'`.
+  - Registered donors can customize alert sensitivity in both `DonorRegisterScreen` and `NotifSettingsScreen`:
+    - `urgent_only`: Critical emergencies only (`urgency = 'urgent'`).
+    - `today_plus`: Emergencies and today's needs (`urgency IN ('urgent', 'today')`).
+    - `all`: All matching requests.
+- **Dhaka Area Matching with City-Wide Fallback:**
+  - `notify_blood_request()` matches compatible donors located in patient's `area` first who are eligible to donate.
+  - If fewer than 3 donors are found in that specific area, the query automatically falls back city-wide across Dhaka so urgent requests are never left unanswered.
+- **Two-Way Notification & Fulfillment Loop:**
+  - `trg_notify_blood_pledge` (INSERT on `blood_pledges`): Alerts requester immediately with donor's name and blood group.
+  - `trg_notify_blood_pledge_cancelled` (DELETE on `blood_pledges`): Alerts requester if a donor cancels.
+  - `trg_notify_blood_request_fulfilled` (UPDATE on `blood_requests` when `is_fulfilled = true`): Notifies all pledged donors that blood has been arranged with a thank-you note.
+- **Direct Coordination & WhatsApp:**
+  - Pre-filled WhatsApp coordination messages integrated through `ContactSheet.tsx` (`whatsAppMessage`), providing immediate context without manual typing.
 
 ---
 
