@@ -524,7 +524,7 @@ export function AppLayout({ children }) {
   const { currentUser, logout, totalUnreadMessages = 0, unreadNotifCount = 0 } = useApp();
   const path = useHashRoute();
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const scrolled = useScroll(15);
+  const scrolled = useScroll(40, 15);
 
   // Close the mobile drawer on Escape (it's a modal dialog).
   React.useEffect(() => {
@@ -570,7 +570,7 @@ export function AppLayout({ children }) {
     <LayoutContext.Provider value={{ openDrawer: () => setDrawerOpen(true) }}>
       <div className={`bg-bg w-full max-w-full ${isChatbotMain ? "fixed inset-0 h-[100dvh] max-h-[100dvh] overflow-hidden flex flex-col" : "min-h-screen overflow-x-clip"}`}>
         {/* Mobile top header — fixed to screen across all pages with 3-line menu on left, centered CampusOne + tagline, notifications on right */}
-        <header className="fixed top-0 inset-x-0 z-40 flex h-11 w-full items-center justify-between border-b border-[#1d3d7d]/80 bg-gradient-to-r from-[#0a1b42] via-[#0f2862] to-[#0a1b42] px-3 text-white shadow-xs backdrop-blur-md xl:hidden">
+        <header className="fixed top-0 inset-x-0 z-40 flex h-11 w-full items-center justify-between border-b border-[#1d3d7d]/80 bg-[#0a1b42] bg-gradient-to-r from-[#0a1b42] via-[#0f2862] to-[#0a1b42] px-3 text-white shadow-xs backdrop-blur-md xl:hidden">
           {/* Left: 3-line hamburger button to open the menu drawer */}
           <button
             onClick={() => setDrawerOpen(true)}
@@ -607,16 +607,14 @@ export function AppLayout({ children }) {
 
         {/* Floating nav capsule — desktop only (xl and up). On mobile, navigation is at the bottom bar */}
         <div
-          className={`sticky top-0 z-30 hidden xl:block shrink-0 transition-all duration-300 ease-out ${
-            scrolled ? "px-3 pb-2 pt-2 sm:px-6 sm:pt-2.5" : "px-3 pb-2 pt-3 sm:px-6 sm:pt-4"
-          }`}
+          className="sticky top-0 z-30 hidden xl:block shrink-0 px-3 sm:px-6 pt-2.5 sm:pt-3 pb-2 transition-all duration-300 ease-out"
         >
           {/* Width cap is shared with <main> below so the capsule and page content line up cleanly. */}
           <header
             className={`mx-auto flex w-full items-center gap-1.5 rounded-full border text-white transition-all duration-300 ease-out ${
               scrolled
-                ? "h-12 max-w-5xl border-[#2b5be3]/80 dark:border-[#5b85f7]/70 bg-gradient-to-r from-[#0a1b42]/98 via-[#0e2760]/98 to-[#0a1b42]/98 px-2.5 sm:px-3.5 shadow-xl shadow-black/35 backdrop-blur-xl ring-1 ring-white/10"
-                : "h-14 max-w-6xl border-[#1d3d7d]/80 bg-gradient-to-r from-[#0a1b42]/95 via-[#0f2862]/95 to-[#0a1b42]/95 px-3 sm:px-4 shadow-lg shadow-black/20 backdrop-blur-md"
+                ? "h-12 max-w-5xl border-[#2b5be3]/80 dark:border-[#5b85f7]/70 bg-[#0a1b42] bg-gradient-to-r from-[#0a1b42] via-[#0f2862] to-[#0a1b42] px-2.5 sm:px-3.5 shadow-xl shadow-black/35 backdrop-blur-xl ring-1 ring-white/10"
+                : "h-14 max-w-6xl border-[#1d3d7d]/80 bg-[#0a1b42] bg-gradient-to-r from-[#0a1b42] via-[#0f2862] to-[#0a1b42] px-3 sm:px-4 shadow-lg shadow-black/20 backdrop-blur-md"
             }`}
           >
             <button
