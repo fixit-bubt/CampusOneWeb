@@ -1,9 +1,9 @@
 {
-  "name": "fixit",
+  "name": "campusone-web",
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "FixIt — campus management web app (issue reporting + lost & found) for BUBT.",
+  "description": "CampusOne — All-in-one campus companion web application for BUBT.",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
