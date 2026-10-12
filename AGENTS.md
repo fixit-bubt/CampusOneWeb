@@ -45,7 +45,7 @@ This document is the single, authoritative reference for any AI agent or develop
 ### 2.3 Working Directories
 - **React Native Project Root:** `c:\Users\dracu\Desktop\CampusOne\CampusOne`
 - **Outer Wrapper / Workspace:** `c:\Users\dracu\Desktop\CampusOne` (contains Capstone Thesis Word document and backup files)
-- **Web App Root:** `c:\Users\dracu\Desktop\fix it sdp\fixit-campus`
+- **Web App Root:** `c:\Users\dracu\Desktop\CampusOneWeb\CampusOneWeb`
 
 ---
 
