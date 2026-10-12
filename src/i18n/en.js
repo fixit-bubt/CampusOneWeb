@@ -15,7 +15,7 @@ export const en = {
     badge: "BUBT Campus",
     heroTitle1: "Your whole campus,",
     heroTitle2: "in one app.",
-    heroBody: "CampusOne is the single place for the BUBT community - report issues, browse faculty, bus schedule, buy and sell, find blood donors, and much more.",
+    heroBody: "The unified digital ecosystem for BUBT. Connecting students, faculty, and campus services into one seamless everyday experience.",
     getStarted: "Get started",
     browseFaculty: "or explore campus pages without an account →",
   },

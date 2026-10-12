@@ -27,6 +27,7 @@ import AllReports from "./screens/admin/AllReports.jsx";
 import ManageUsers from "./screens/admin/ManageUsers.jsx";
 import ManageFaculty from "./screens/admin/ManageFaculty.jsx";
 import ManageStudyHub from "./screens/admin/ManageStudyHub.jsx";
+import ManageBanner from "./screens/admin/ManageBanner.jsx";
 
 import LostFoundBrowse from "./screens/lostfound/LostFoundBrowse.jsx";
 import PostItem from "./screens/lostfound/PostItem.jsx";
@@ -207,6 +208,7 @@ function AuthedRoutes({ path }) {
   if (path === "/admin/faculty") return <RequireRole role="Admin"><ManageFaculty /></RequireRole>;
   if (path === "/admin/study-hub") return <RequireRole role="Admin"><ManageStudyHub /></RequireRole>;
   if (path === "/admin/clubs") return <RequireRole role="Admin"><AdminManageClubs /></RequireRole>;
+  if (path === "/admin/banner") return <RequireRole role="Admin"><ManageBanner /></RequireRole>;
 
   // ---- Messages (students only; DMs need connections, group chats need
   // club/section membership). Literal before :param. ----

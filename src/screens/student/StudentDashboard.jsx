@@ -400,44 +400,63 @@ export default function StudentDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
 
-  // Combined slides for events & announcements — strictly require a real photo
+  // Combined slides for announcements curated by Admin (strictly max 6)
   const combinedSlides = useMemo(() => {
     const list = [];
-    if (events && events.length > 0) {
-      events.forEach((e, i) => {
-        const realBanner = e.banner || e.bannerUrl || e.banner_url || null;
-        if (!realBanner) return; // rule: cannot be shown in banner without a photo
-        list.push({
-          id: `ev-${e.id || i}`,
-          type: "Event",
-          tag: e.category ? `${e.category} Event` : "Campus Event",
-          title: e.title,
-          subtitle: `${e.venue || "Campus"} ${e.time ? `· ${e.time}` : ""}`,
-          path: e.id ? `/events/${e.id}` : "/events",
-          btnText: "View Event",
-          icon: CalendarDays,
-          image: realBanner,
-        });
+
+    // Filter announcements with real cover photos
+    const withPhoto = (announcements || []).filter((a) => {
+      const realImage = a.image || a.imageUrl || a.image_url || (a.attachmentUrl && /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(a.attachmentUrl) ? a.attachmentUrl : null);
+      return Boolean(realImage);
+    });
+
+    // Check if an explicit banner order is saved
+    let bannerOrder = [];
+    try {
+      const raw = localStorage.getItem("campusone.banner_order");
+      if (raw) bannerOrder = JSON.parse(raw);
+    } catch {}
+
+    const selectedAnnouncements = [];
+
+    // 1. Add according to saved order
+    if (Array.isArray(bannerOrder) && bannerOrder.length > 0) {
+      bannerOrder.forEach((code) => {
+        const found = withPhoto.find((a) => a.id === code);
+        if (found && !selectedAnnouncements.some((x) => x.id === found.id)) {
+          selectedAnnouncements.push(found);
+        }
       });
     }
-    if (announcements && announcements.length > 0) {
-      announcements.forEach((a, i) => {
-        const realImage = a.image || a.imageUrl || a.image_url || (a.attachmentUrl && /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(a.attachmentUrl) ? a.attachmentUrl : null) || null;
-        if (!realImage) return; // rule: an announcement cannot be shown in banner if it doesn't have a photo
-        list.push({
-          id: `ann-${a.id || i}`,
-          type: "Notice",
-          tag: a.priority ? `${a.priority} Notice` : "Notice",
-          title: a.title,
-          subtitle: a.department ? `${a.department} Department` : "BUBT Announcement",
-          path: a.id ? `/announcements/${a.id}` : "/announcements",
-          btnText: "Read Notice",
-          icon: Megaphone,
-          image: realImage,
-        });
+
+    // 2. Add any announcement with inBanner or pinned that was not in saved order
+    withPhoto.forEach((a) => {
+      if ((a.inBanner || a.pinned) && !selectedAnnouncements.some((x) => x.id === a.id)) {
+        selectedAnnouncements.push(a);
+      }
+    });
+
+    // If admin curated banner items, use those; otherwise fallback to first 6 with photo
+    const finalSelection = selectedAnnouncements.length > 0
+      ? selectedAnnouncements.slice(0, 6)
+      : withPhoto.slice(0, 6);
+
+    finalSelection.forEach((a, i) => {
+      const realImage = a.image || a.imageUrl || a.image_url || (a.attachmentUrl && /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(a.attachmentUrl) ? a.attachmentUrl : null);
+      list.push({
+        id: `ann-${a.id || i}`,
+        type: "Notice",
+        tag: a.priority ? `${a.priority} Notice` : "Notice",
+        title: a.title,
+        subtitle: a.department ? `${a.department} Department` : "BUBT Announcement",
+        path: a.id ? `/announcements/${a.id}` : "/announcements",
+        btnText: "Read Notice",
+        icon: Megaphone,
+        image: realImage,
       });
-    }
-    return list.length > 0 ? list : DEFAULT_DASHBOARD_SLIDES;
+    });
+
+    return list.length > 0 ? list.slice(0, 6) : DEFAULT_DASHBOARD_SLIDES.slice(0, 6);
   }, [events, announcements]);
 
   // Carousel auto rotation state
@@ -580,10 +599,10 @@ export default function StudentDashboard() {
               className="group py-1 px-0.5 focus:outline-none"
             >
               <span
-                className={`block h-[2px] rounded-full transition-all duration-300 ${
+                className={`block h-[3px] rounded-full transition-all duration-300 ${
                   currentSlide === idx
-                    ? "w-6 bg-brand"
-                    : "w-3 bg-ink/35 dark:bg-white/40 group-hover:bg-brand/60"
+                    ? "w-6 bg-brand shadow-xs"
+                    : "w-3.5 bg-slate-400 dark:bg-white/40 group-hover:bg-brand/70"
                 }`}
               />
             </button>

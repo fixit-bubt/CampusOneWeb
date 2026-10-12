@@ -132,6 +132,7 @@ const NAV_BY_ROLE = {
     {
       section: "Manage", items: [
         { key: "users", label: "Users", icon: "Users", path: "/admin/users", tone: "directory", sub: "Manage user roles & access" },
+        { key: "banner-admin", label: "Dashboard Banner", icon: "Image", path: "/admin/banner", tone: "events", sub: "Select & remove banner slides" },
         { key: "faculty-admin", label: "Faculty Profiles", icon: "GraduationCap", path: "/admin/faculty", tone: "faculty", sub: "Teacher directory records" },
         { key: "studyhub-admin", label: "Study Hub", icon: "BookMarked", path: "/admin/study-hub", tone: "study", sub: "Departments & sections" },
         { key: "clubs-admin", label: "Clubs", icon: "UsersRound", path: "/admin/clubs", tone: "clubs", sub: "Approve & manage clubs" },

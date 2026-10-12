@@ -123,6 +123,18 @@ function toClaim(r) {
 // DB announcement row -> screen shape. `id` is the code (routing); `readBy`
 // only needs to reflect whether THIS user has read it (RLS hides others' reads).
 function toAnnouncement(r, readByMe, userId) {
+  let isBanner = false;
+  try {
+    const savedOrder = JSON.parse(localStorage.getItem("campusone.banner_order") || "null");
+    if (Array.isArray(savedOrder) && savedOrder.length > 0) {
+      isBanner = savedOrder.includes(r.code);
+    } else {
+      isBanner = r.in_banner !== undefined && r.in_banner !== null ? Boolean(r.in_banner) : Boolean(r.pinned);
+    }
+  } catch {
+    isBanner = r.in_banner !== undefined && r.in_banner !== null ? Boolean(r.in_banner) : Boolean(r.pinned);
+  }
+
   return {
     id: r.code,
     uuid: r.id,
@@ -131,6 +143,7 @@ function toAnnouncement(r, readByMe, userId) {
     department: r.department,
     priority: r.priority,
     pinned: r.pinned,
+    inBanner: isBanner,
     image: r.image_url || null,            // inline notice photo/scan
     attachment: r.attachment_name || null, // display filename (PDF)
     attachmentUrl: r.attachment_url || null, // real download URL
@@ -1937,6 +1950,83 @@ export function AppProvider({ children }) {
     return { ok: true };
   }
 
+  // Update whether an announcement is featured in the dashboard banner carousel (admin only).
+  async function updateAnnouncementBannerStatus(id, inBanner) {
+    if (!currentUser || currentUser.role !== "Admin") {
+      return { ok: false, error: "Only admins can manage dashboard banners" };
+    }
+
+    // Optimistic UI update
+    setAnnouncements((prev) =>
+      prev.map((a) => (a.id === id ? { ...a, inBanner: !!inBanner, pinned: !!inBanner } : a))
+    );
+
+    // Save to localStorage banner_order list
+    try {
+      const savedOrder = JSON.parse(localStorage.getItem("campusone.banner_order") || "[]");
+      let nextOrder = Array.isArray(savedOrder) ? savedOrder : [];
+      if (inBanner) {
+        if (!nextOrder.includes(id)) nextOrder = [...nextOrder, id].slice(-6);
+      } else {
+        nextOrder = nextOrder.filter((item) => item !== id);
+      }
+      localStorage.setItem("campusone.banner_order", JSON.stringify(nextOrder));
+    } catch {}
+
+    // Update live in Supabase: attempt in_banner + pinned
+    let { error } = await supabase
+      .from("announcements")
+      .update({ in_banner: !!inBanner, pinned: !!inBanner })
+      .eq("code", id);
+
+    if (error) {
+      // Fallback: if in_banner doesn't exist yet, update pinned column
+      const fallback = await supabase
+        .from("announcements")
+        .update({ pinned: !!inBanner })
+        .eq("code", id);
+      if (fallback.error) {
+        await loadAnnouncements(); // roll back
+        return { ok: false, error: fallback.error.message };
+      }
+    }
+
+    await loadAnnouncements();
+    return { ok: true };
+  }
+
+  // Reorder and save exact sequence of active banner announcements (admin only).
+  async function saveBannerOrder(orderedIds) {
+    if (!currentUser || currentUser.role !== "Admin") {
+      return { ok: false, error: "Only admins can manage dashboard banners" };
+    }
+    const cleanIds = (orderedIds || []).slice(0, 6);
+    try {
+      localStorage.setItem("campusone.banner_order", JSON.stringify(cleanIds));
+    } catch {}
+
+    setAnnouncements((prev) =>
+      prev.map((a) => ({
+        ...a,
+        inBanner: cleanIds.includes(a.id),
+      }))
+    );
+
+    // Update pinned in Supabase for all active items
+    for (const code of cleanIds) {
+      let { error } = await supabase
+        .from("announcements")
+        .update({ in_banner: true, pinned: true })
+        .eq("code", code);
+      if (error) {
+        await supabase.from("announcements").update({ pinned: true }).eq("code", code);
+      }
+    }
+
+    await loadAnnouncements();
+    return { ok: true };
+  }
+
   // ---- notifications (LIVE Supabase) ----
   // The default for a sector with no saved pref row is "everything on".
   const DEFAULT_NOTIF_PREF = { enabled: true, push: true, email: false, inapp: true };
@@ -3563,6 +3653,7 @@ export function AppProvider({ children }) {
   const value = {
     users, reports, items, claims,
     announcements, addAnnouncement, markAnnouncementRead, deleteAnnouncement,
+    updateAnnouncementBannerStatus, saveBannerOrder,
     // notifications
     notifications, notifPrefs, unreadNotifCount: notifications.filter((n) => !n.read).length,
     reloadNotifications: loadNotifications, markNotifRead, markAllNotifsRead, deleteNotification,
