@@ -4,6 +4,7 @@ CampusOne is a responsive campus mobile & web companion designed for the Banglad
 
 Built with **React + Vite + Tailwind CSS** on the frontend and **Supabase** (PostgreSQL 15 + Auth + Row-Level Security + Storage + Edge Functions) on the backend.
 
+- **Live Website:** https://campusonebubt.vercel.app
 - **Stack:** React 18, Vite 6, Tailwind CSS, Lucide Icons, Supabase, Vercel
 - **Backend:** Shared Supabase database powering both CampusOne Web and CampusOne Android
 
