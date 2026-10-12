@@ -10,7 +10,7 @@ This document is the single, authoritative reference for any AI agent or develop
 - **Institution:** Bangladesh University of Business & Technology (BUBT), Dhaka, Bangladesh
 - **Context:** University Capstone Project
 - **Purpose:** An all-in-one campus mobile companion for BUBT students, faculty, and administrative staff. Covers everyday university life: bus schedules, prayer times, lost & found, peer-to-peer marketplace, campus rides, class routines, study hub, clubs, events, blood donation, student jobs, campus maintenance reporting, AI assistance, academic calendar, and BUBT Annex portal access.
-- **Sibling Web App:** "FixIt — Campus Management" (`Desktop/fix it sdp/fixit-campus`), built with React + Vite + Tailwind JS. Both mobile and web share the **exact same Supabase backend** and database tables.
+- **Sibling Web App:** "CampusOne Web" (`Desktop/CampusOneWeb/CampusOneWeb`), built with React + Vite + Tailwind JS. Both mobile and web share the **exact same Supabase backend** and database tables.
 - **1:1 Feature Parity:** The website and mobile app share the **exact same core feature set and business logic**:
   - **Campus Maintenance & Issues:** Report infrastructure problems, track status, trade assignment to staff.
   - **Lost & Found:** Post items, claim with proof photos, pre-post matching.
@@ -37,15 +37,25 @@ This document is the single, authoritative reference for any AI agent or develop
 - **STRICT PROHIBITION:** Never touch or push to any repository containing `evergreen`, `evergreenweb`, or personal non-CampusOne repositories.
 
 ### 2.2 Supabase Backend
-- **Project Ref:** `xhgpxvyqrufbbuivttmi` (Dashboard name: `fixit-campus`, Region: `ap-south-1`)
+- **Project Ref:** `xhgpxvyqrufbbuivttmi` (Dashboard name: `campusone` [formerly `fixit-campus`], Organization: `campusone`, Region: `ap-south-1` / Mumbai)
+- **Master Admin/Team Email:** `campusone2026@gmail.com` (Owner of Supabase, Vercel, Google Cloud)
 - **API URL:** `https://xhgpxvyqrufbbuivttmi.supabase.co`
 - **Anon Key:** Configured in `src/lib/supabase.ts` (safe for client bundle)
+- **Auth URL Configuration:**
+  - Site URL: `https://campusonebubt.vercel.app`
+  - Redirect URLs: `https://campusonebubt.vercel.app/**`, `https://campusonebubt.vercel.app/#/auth/callback`
 - **MCP Database Changes:** Allowed via project-scoped `.mcp.json`. Always verify the project ref is `xhgpxvyqrufbbuivttmi` before running any DDL or migration.
 
-### 2.3 Working Directories
+### 2.3 Web Deployment & Domain
+- **Live Production URL:** `https://campusonebubt.vercel.app`
+- **Hosting Provider:** Vercel (branch: `main`, connected to `fixit-bubt/CampusOneWeb`)
+- **Master Team Account:** `campusone2026@gmail.com`
+
+### 2.4 Working Directories
 - **React Native Project Root:** `c:\Users\dracu\Desktop\CampusOne\CampusOne`
 - **Outer Wrapper / Workspace:** `c:\Users\dracu\Desktop\CampusOne` (contains Capstone Thesis Word document and backup files)
-- **Web App Root:** `c:\Users\dracu\Desktop\fix it sdp\fixit-campus`
+- **Web App Root:** `c:\Users\dracu\Desktop\CampusOneWeb\CampusOneWeb`
+- **Web Outer Workspace:** `c:\Users\dracu\Desktop\CampusOneWeb`
 
 ---
 
