@@ -61,7 +61,10 @@ export function EventCard({ ev, onOpen }) {
     <button onClick={onOpen} className="group flex flex-col overflow-hidden rounded-md border border-brd bg-surface text-left shadow-sm transition-all hover:border-brd-2 hover:shadow-md">
       <div className="relative h-32 w-full overflow-hidden">
         <EventBanner ev={ev} className="h-full w-full" />
-        <div className="absolute left-3 top-3"><Badge tone="fuchsia" icon={EVENT_CATEGORY_ICON[ev.category]}>{ev.category}</Badge></div>
+        <div className="absolute left-3 top-3 flex gap-1.5">
+          <Badge tone="fuchsia" icon={EVENT_CATEGORY_ICON[ev.category]}>{ev.category}</Badge>
+          {(ev.source === "bubt_news" || ev.source === "official") && <Badge tone="blue">Official</Badge>}
+        </div>
         <div className="absolute right-3 top-3"><Badge tone={EVENT_STATUS_TONE[status]}>{status}</Badge></div>
       </div>
       <div className="flex flex-1 flex-col p-4">
@@ -214,6 +217,7 @@ export function EventDetail({ id }) {
             <EventBanner ev={ev} className="h-full w-full" />
             <div className="absolute left-4 top-4 flex gap-2">
               <Badge tone="fuchsia" icon={EVENT_CATEGORY_ICON[ev.category]}>{ev.category}</Badge>
+              {(ev.source === "bubt_news" || ev.source === "official") && <Badge tone="blue">Official</Badge>}
               <Badge tone={EVENT_STATUS_TONE[status]}>{status}</Badge>
             </div>
           </div>
@@ -222,6 +226,11 @@ export function EventDetail({ id }) {
               <div>
                 <h2 className="text-3xl font-bold tracking-tight text-ink sm:text-4xl">{ev.title}</h2>
                 <p className="mt-1 text-base text-ink-3">Organized by {ev.organizer}</p>
+                {ev.externalUrl && (
+                  <a href={ev.externalUrl} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-fuchsia-600 dark:text-fuchsia-400 hover:underline">
+                    <Icon name="ExternalLink" size={13} /> View on official BUBT portal
+                  </a>
+                )}
               </div>
               {canManage && <Button variant="secondary" icon="Trash2" className="text-danger" onClick={() => setConfirmDelete(true)}>Delete</Button>}
             </div>
