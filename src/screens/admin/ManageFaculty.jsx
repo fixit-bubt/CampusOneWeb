@@ -11,6 +11,7 @@ const shortDept = (name = "") => name.replace(/^Department of\s+/i, "");
 function EditModal({ faculty: f, deptName, onClose, onSave, onUploadPhoto }) {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [shortCode, setShortCode] = useState(f.shortCode || "");
   const [photoPreview, setPhotoPreview] = useState(f.photo || null);
   const [photoFile, setPhotoFile] = useState(null);
   const [removePhoto, setRemovePhoto] = useState(false);
@@ -51,6 +52,9 @@ function EditModal({ faculty: f, deptName, onClose, onSave, onUploadPhoto }) {
 
       const updates = {};
       if (removePhoto && !photoFile) updates.photo_url = null;
+      if (shortCode.trim() !== (f.shortCode || "")) {
+        updates.short_code = shortCode.trim().toUpperCase() || null;
+      }
       const result = await onSave(f.id, updates);
       if (result.ok) {
         toast({ type: "success", title: "Saved", message: `${f.name}'s profile updated.` });
@@ -122,6 +126,16 @@ function EditModal({ faculty: f, deptName, onClose, onSave, onUploadPhoto }) {
           </div>
         </div>
 
+        {/* Faculty code */}
+        <Field label="Faculty Code / Routine Initial" hint="Short code used in class routines, e.g. SR, DALM, MMA">
+          <Input
+            value={shortCode}
+            onChange={(e) => setShortCode(e.target.value.toUpperCase())}
+            placeholder="e.g. SR"
+            maxLength={10}
+            className="font-mono uppercase font-bold"
+          />
+        </Field>
       </div>
 
       <div className="mt-6 flex justify-end gap-3">
@@ -154,6 +168,7 @@ export default function ManageFaculty() {
         return (
           (f.name ?? "").toLowerCase().includes(q) ||
           (f.designation ?? "").toLowerCase().includes(q) ||
+          (f.shortCode ?? "").toLowerCase().includes(q) ||
           (dept && (dept.name ?? "").toLowerCase().includes(q))
         );
       })
@@ -203,6 +218,11 @@ export default function ManageFaculty() {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="text-base font-semibold text-ink truncate">{f.name}</p>
+                    {f.shortCode && (
+                      <span className="inline-flex items-center gap-1 rounded bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800/60 px-1.5 py-0.5 font-mono text-[11px] font-bold text-indigo-700 dark:text-indigo-300">
+                        Code: {f.shortCode}
+                      </span>
+                    )}
                     {!f.photo && (
                       <span className="inline-flex items-center gap-1 rounded-full bg-warn-bg px-2 py-0.5 text-[11px] font-semibold text-warn">
                         <Icon name="ImageOff" size={11} /> No photo

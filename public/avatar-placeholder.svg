@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b" />
+      <stop offset="50%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#020617" />
+    </linearGradient>
+    <linearGradient id="headGrad" x1="30%" y1="0%" x2="70%" y2="100%">
+      <stop offset="0%" stop-color="#94a3b8" />
+      <stop offset="60%" stop-color="#64748b" />
+      <stop offset="100%" stop-color="#475569" />
+    </linearGradient>
+    <linearGradient id="torsoGrad" x1="20%" y1="0%" x2="80%" y2="100%">
+      <stop offset="0%" stop-color="#64748b" />
+      <stop offset="70%" stop-color="#475569" />
+      <stop offset="100%" stop-color="#334155" />
+    </linearGradient>
+    <radialGradient id="rimLight" cx="50%" cy="30%" r="50%">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.25" />
+      <stop offset="100%" stop-color="#0f172a" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+  <!-- Background circle with subtle studio rim lighting -->
+  <rect width="100" height="100" rx="50" fill="url(#bgGrad)" />
+  <circle cx="50" cy="40" r="45" fill="url(#rimLight)" />
+  <!-- Head -->
+  <circle cx="50" cy="38" r="17" fill="url(#headGrad)" />
+  <!-- Neck -->
+  <rect x="44" y="50" width="12" height="12" rx="2" fill="url(#torsoGrad)" opacity="0.9" />
+  <!-- Shoulders & Suit with subtle collar cutout -->
+  <path d="M 14 100 C 16 75 30 64 42 62 L 46 72 L 50 76 L 54 72 L 58 62 C 70 64 84 75 86 100 Z" fill="url(#torsoGrad)" />
+  <!-- Inner rim outline -->
+  <circle cx="50" cy="50" r="49" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="1.5" />
+</svg>

@@ -330,13 +330,24 @@ export function Card({ className = "", children, ...rest }) {
 }
 
 // ---------------------------------------------------------------------------
-// Avatar — initials only, no photos
+// Avatar — displays profile photo or a high-quality studio placeholder photo
 // ---------------------------------------------------------------------------
-export function Avatar({ name = "", src, size = 36, className = "" }) {
+export function Avatar({
+  name = "",
+  src,
+  size = 36,
+  className = "",
+  placeholderSrc = "/avatar-placeholder.jpg",
+  fallback = "photo",
+}) {
   const [failed, setFailed] = useState(false);
-  // Reset the error state when the src changes, so a re-uploaded/corrected
-  // photo replaces the initials fallback instead of being stuck on it.
-  useEffect(() => { setFailed(false); }, [src]);
+  const [placeholderFailed, setPlaceholderFailed] = useState(false);
+
+  useEffect(() => {
+    setFailed(false);
+  }, [src]);
+
+  // Primary: uploaded or linked photo
   if (src && !failed) {
     return (
       <img
@@ -348,6 +359,22 @@ export function Avatar({ name = "", src, size = 36, className = "" }) {
       />
     );
   }
+
+  // Secondary: professional studio portrait placeholder
+  if (fallback === "photo" && !placeholderFailed && placeholderSrc) {
+    return (
+      <img
+        src={placeholderSrc}
+        alt={name || "Profile placeholder"}
+        onError={() => setPlaceholderFailed(true)}
+        className={`inline-block shrink-0 rounded-full object-cover select-none ${className}`}
+        style={{ width: size, height: size }}
+        loading="lazy"
+      />
+    );
+  }
+
+  // Tertiary fallback: initials badge
   const initials = name
     .split(" ")
     .filter(Boolean)
@@ -357,7 +384,7 @@ export function Avatar({ name = "", src, size = 36, className = "" }) {
     .toUpperCase();
   return (
     <span
-      className={`inline-flex shrink-0 items-center justify-center rounded-full bg-brand-100 font-bold text-brand-700 ${className}`}
+      className={`inline-flex shrink-0 items-center justify-center rounded-full bg-brand-100 font-bold text-brand-700 select-none ${className}`}
       style={{ width: size, height: size, fontSize: size * 0.4 }}
     >
       {initials || "?"}

@@ -478,6 +478,11 @@ function toFaculty(f) {
     departmentId: f.department_id,
     name: f.name,
     designation: f.designation,
+    shortCode: f.short_code || f.faculty_code || null,
+    roomNumber: f.room_number || null,
+    building: f.building || null,
+    floor: f.floor || null,
+    counselingHours: f.counseling_hours || null,
     email: f.email || "",
     phone: f.phone || "",
     photo: f.photo_url || null,
@@ -2726,11 +2731,11 @@ export function AppProvider({ children }) {
     return { ok: true, url: publicUrl };
   }
 
-  // Admin-only: update editable fields on a faculty row (linkedin_url, photo_url, etc.).
+  // Admin-only: update editable fields on a faculty row (short_code, linkedin_url, photo_url, etc.).
   async function updateFaculty(id, updates) {
     // Allowlist the columns the admin editor may write — never trust a raw object.
     const patch = {};
-    for (const k of ["linkedin_url", "photo_url"]) if (k in updates) patch[k] = updates[k];
+    for (const k of ["linkedin_url", "photo_url", "short_code"]) if (k in updates) patch[k] = updates[k];
     const { error } = await supabase.from("faculty").update(patch).eq("id", id);
     if (error) return { ok: false, error: error.message };
     setFaculty((prev) => prev.map((f) => {
@@ -2738,6 +2743,7 @@ export function AppProvider({ children }) {
       return {
         ...f,
         ...(updates.photo_url !== undefined && { photo: updates.photo_url || null }),
+        ...(updates.short_code !== undefined && { shortCode: updates.short_code || null }),
         ...(updates.linkedin_url !== undefined && {
           links: { ...f.links, linkedin: updates.linkedin_url || null },
         }),

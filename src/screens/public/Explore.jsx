@@ -227,27 +227,60 @@ export function PublicFaculty() {
     return m;
   }, [q.data]);
 
+  function getPublicFacultyCode(f) {
+    if (!f) return "";
+    const code = f.short_code || f.shortCode || f.faculty_code;
+    if (!code || typeof code !== "string") return "";
+    return code.trim().toUpperCase();
+  }
+
   const filtered = useMemo(() => {
     let list = q.data?.fac || [];
     if (deptId !== "all") list = list.filter((f) => f.department_id === deptId);
     const s = search.trim().toLowerCase();
+    const sUpper = search.trim().toUpperCase();
     if (s) {
-      list = list.filter(
-        (f) =>
-          f.name.toLowerCase().includes(s) ||
-          f.designation.toLowerCase().includes(s) ||
-          (f.research_interests || []).some((r) => r.toLowerCase().includes(s))
-      );
+      list = list.filter((f) => {
+        if (f.name && f.name.toLowerCase().includes(s)) return true;
+        if (f.designation && f.designation.toLowerCase().includes(s)) return true;
+        if ((f.research_interests || []).some((r) => r.toLowerCase().includes(s))) return true;
+
+        const code = getPublicFacultyCode(f);
+        if (code && code.includes(sUpper)) return true;
+
+        return false;
+      });
     }
     return list;
   }, [q.data, deptId, search]);
+
+  function parsePublicQualification(raw = "") {
+    const text = String(raw).trim();
+    const lower = text.toLowerCase();
+    let badgeTone = "indigo";
+    let badgeLabel = "Degree";
+    if (lower.includes("ph.d") || lower.includes("phd") || lower.includes("doctor")) {
+      badgeTone = "purple";
+      badgeLabel = "Ph.D.";
+    } else if (lower.includes("m.sc") || lower.includes("msc") || lower.includes("master") || lower.includes("m.eng") || lower.includes("meng") || lower.includes("mba") || lower.includes("llm") || lower.includes("pgd")) {
+      badgeTone = "blue";
+      badgeLabel = "Master's";
+    } else if (lower.includes("b.sc") || lower.includes("bsc") || lower.includes("bachelor") || lower.includes("bba") || lower.includes("llb") || lower.includes("b.a") || lower.includes("ba") || lower.includes("b.com")) {
+      badgeTone = "emerald";
+      badgeLabel = "Bachelor's";
+    }
+    const parts = text.split(",").map((p) => p.trim()).filter(Boolean);
+    const title = parts[0] || text;
+    const institution = parts.slice(1).join(", ");
+    return { title, institution, badgeTone, badgeLabel };
+  }
 
   return (
     <ExploreShell active="/explore/faculty">
       <PageHead
         Icon={GraduationCap}
         title="Faculty Directory"
-        sub={`Browse ${q.data ? q.data.fac.length : "400+"} BUBT teachers across ${q.data ? q.data.depts.length : 13} departments — no account needed.`}
+        sub={`Browse ${q.data ? q.data.fac.length : "400+"} BUBT teachers across ${q.data ? q.data.depts.length : 13} departments - no account needed.`}
       />
       <LoadState {...q}>
         <div className="mb-6 flex flex-col gap-3 sm:flex-row">
@@ -256,7 +289,7 @@ export function PublicFaculty() {
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by name, designation, or research area…"
+              placeholder="Search by name, faculty code (e.g. SR), designation, or research area…"
               className="h-11 w-full rounded-md border border-brd bg-surface pl-9 pr-3 text-base text-ink placeholder:text-ink-3 focus:border-brand focus:outline-none"
             />
           </div>
@@ -278,78 +311,136 @@ export function PublicFaculty() {
           </p>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {filtered.map((f) => (
-              <Card
-                key={f.id}
-                onClick={() => setSelected(f)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setSelected(f); } }}
-                className="flex min-w-0 cursor-pointer items-start gap-4 p-5 transition-all duration-150 hover:-translate-y-0.5 hover:border-brd-2 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-              >
-                <Avatar name={f.name} src={f.photo_url} size={52} />
-                <div className="min-w-0">
-                  <p className="truncate text-lg font-bold text-ink">
-                    {f.name}
-                    {f.is_chairman && <Badge tone="blue" className="ml-2 align-middle">Chairman</Badge>}
-                    {f.on_leave && <Badge tone="amber" className="ml-2 align-middle">On leave</Badge>}
-                  </p>
-                  <p className="truncate text-base text-ink-2">{f.designation}</p>
-                  <p className="truncate text-sm text-ink-3">{deptById[f.department_id]?.name || "—"}</p>
-                  {(f.research_interests || []).length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-1.5">
-                      {f.research_interests.slice(0, 3).map((r) => (
-                        <span key={r} className="rounded-full bg-surface-3 px-2 py-0.5 text-xs font-semibold text-ink-2">{r}</span>
-                      ))}
+            {filtered.map((f) => {
+              const code = getPublicFacultyCode(f);
+              return (
+                <Card
+                  key={f.id}
+                  onClick={() => setSelected(f)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setSelected(f); } }}
+                  className="flex min-w-0 cursor-pointer items-start gap-4 p-5 transition-all duration-150 hover:-translate-y-0.5 hover:border-brd-2 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                >
+                  <div className="relative shrink-0">
+                    <Avatar name={f.name} src={f.photo_url} size={52} />
+                    <span
+                      className={`absolute bottom-0 right-0 h-3 w-3 rounded-full ring-2 ring-surface ${
+                        f.on_leave ? "bg-amber-400" : "bg-emerald-500"
+                      }`}
+                    />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <p className="truncate text-lg font-bold text-ink">
+                        {(f.name || "").replace(/&amp;/g, "&")}
+                      </p>
+                      {code && (
+                        <span
+                          title={`Faculty Code / Routine Initial: ${code}`}
+                          className="inline-flex items-center gap-1 rounded bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800/60 px-1.5 py-0.5 font-mono text-[11px] font-bold text-indigo-700 dark:text-indigo-300"
+                        >
+                          <span className="text-[9px] uppercase font-semibold text-indigo-500/80 dark:text-indigo-400/80">Code:</span>
+                          {code}
+                        </span>
+                      )}
+                      {f.is_chairman && <Badge tone="blue" className="ml-1 align-middle">Chairman</Badge>}
+                      {f.on_leave && <Badge tone="amber" className="ml-1 align-middle">On leave</Badge>}
                     </div>
-                  )}
-                </div>
-              </Card>
-            ))}
+                    <p className="truncate text-base text-ink-2 mt-0.5">{(f.designation || "").replace(/&amp;/g, "&")}</p>
+                    <p className="truncate text-sm text-indigo-600 dark:text-indigo-400 font-medium">
+                      {deptById[f.department_id]?.name || "BUBT Department"}
+                    </p>
+                  </div>
+                </Card>
+              );
+            })}
           </div>
         )}
       </LoadState>
 
-      {/* Faculty detail — anon can't see email/phone (RLS), so show public info + links */}
-      <Modal open={!!selected} onClose={() => setSelected(null)} title="Faculty details" size="md">
+      {/* Faculty detail - organized academic profile preview */}
+      <Modal open={!!selected} onClose={() => setSelected(null)} title="Faculty Profile" size="md">
         {selected && (
-          <div>
-            <div className="flex items-start gap-4">
-              <Avatar name={selected.name} src={selected.photo_url} size={64} />
-              <div className="min-w-0">
-                <p className="text-xl font-bold text-ink">{selected.name}</p>
-                <p className="text-base text-ink-2">{selected.designation}</p>
-                <p className="text-sm text-ink-3">{deptById[selected.department_id]?.name || "—"}</p>
-                <div className="mt-1.5 flex flex-wrap gap-1.5">
+          <div className="space-y-5">
+            {/* Header Identity Card */}
+            <div className="flex items-start gap-4 pb-4 border-b border-brd">
+              <div className="relative shrink-0">
+                <Avatar name={selected.name} src={selected.photo_url} size={72} className="ring-2 ring-surface border border-brd shadow-xs" />
+                <span
+                  className={`absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full ring-2 ring-surface ${
+                    selected.on_leave ? "bg-amber-400" : "bg-emerald-500"
+                  }`}
+                  title={selected.on_leave ? "On study leave" : "Active faculty"}
+                />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h3 className="text-xl font-extrabold text-ink leading-tight">{selected.name}</h3>
+                <p className="text-sm font-semibold text-ink-2 mt-0.5">{selected.designation}</p>
+                <p className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 mt-0.5">
+                  {deptById[selected.department_id]?.name || "BUBT Department"}
+                </p>
+                <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                  {getPublicFacultyCode(selected) && (
+                    <span
+                      title="Faculty Code / Routine Initial"
+                      className="inline-flex items-center gap-1 rounded bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800/60 px-2 py-0.5 font-mono text-xs font-bold text-indigo-700 dark:text-indigo-300"
+                    >
+                      Code: {getPublicFacultyCode(selected)}
+                    </span>
+                  )}
                   {selected.is_chairman && <Badge tone="blue">Chairman</Badge>}
-                  {selected.on_leave && <Badge tone="amber">On leave</Badge>}
+                  {selected.on_leave ? (
+                    <Badge tone="amber">On Study Leave</Badge>
+                  ) : (
+                    <Badge tone="emerald">Active on Campus</Badge>
+                  )}
                 </div>
               </div>
             </div>
 
+            {/* Qualifications */}
             {Array.isArray(selected.qualifications) && selected.qualifications.length > 0 && (
-              <div className="mt-5">
-                <p className="text-sm font-bold uppercase tracking-wider text-ink-3">Qualifications</p>
-                <ul className="mt-1.5 list-inside list-disc text-base text-ink-2">
-                  {selected.qualifications.map((qual, i) => <li key={i}>{qual}</li>)}
-                </ul>
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wider text-ink-3">Academic Qualifications</p>
+                <div className="mt-2 space-y-2">
+                  {selected.qualifications.map((qual, i) => {
+                    const q = parsePublicQualification(qual);
+                    return (
+                      <div key={i} className="flex items-start gap-2.5 rounded-lg border border-brd bg-surface-2 p-2.5 text-xs">
+                        <GraduationCap size={16} className="mt-0.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-ink">{q.title}</span>
+                            <Badge tone={q.badgeTone}>{q.badgeLabel}</Badge>
+                          </div>
+                          {q.institution && <p className="text-ink-3 mt-0.5">{q.institution}</p>}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
 
+            {/* Research interests */}
             {(selected.research_interests || []).length > 0 && (
-              <div className="mt-5">
-                <p className="text-sm font-bold uppercase tracking-wider text-ink-3">Research interests</p>
-                <div className="mt-1.5 flex flex-wrap gap-1.5">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wider text-ink-3">Research Domains</p>
+                <div className="mt-2 flex flex-wrap gap-1.5">
                   {selected.research_interests.map((r) => (
-                    <span key={r} className="rounded-full bg-surface-3 px-2.5 py-0.5 text-sm font-semibold text-ink-2">{r}</span>
+                    <span key={r} className="rounded-full bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-200 dark:border-indigo-800/40 px-2.5 py-1 text-xs font-semibold text-indigo-700 dark:text-indigo-300">
+                      {r}
+                    </span>
                   ))}
                 </div>
               </div>
             )}
 
+            {/* Scholarly Links */}
             {FAC_LINKS.some(([k]) => selected[k]) && (
-              <div className="mt-5">
-                <p className="text-sm font-bold uppercase tracking-wider text-ink-3">Links</p>
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wider text-ink-3">Scholarly Profiles</p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {FAC_LINKS.filter(([k]) => selected[k]).map(([k, label]) => (
                     <a
@@ -357,19 +448,36 @@ export function PublicFaculty() {
                       href={selected[k]}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-1.5 rounded-md border border-brd bg-surface px-3 py-1.5 text-base font-semibold text-ink-2 hover:bg-surface-2 hover:text-ink"
+                      className="inline-flex items-center gap-1.5 rounded-md border border-brd bg-surface px-3 py-1.5 text-xs font-semibold text-ink-2 hover:bg-surface-2 hover:text-ink transition-colors shadow-xs"
                     >
-                      <ExternalLink size={14} /> {label}
+                      <ExternalLink size={13} /> {label}
                     </a>
                   ))}
                 </div>
               </div>
             )}
 
-            <p className="mt-5 text-sm text-ink-3">
-              Contact details (email, phone) are visible to signed-in members.{" "}
-              <button onClick={() => navigate("/register")} className="font-semibold text-brand hover:underline">Create an account</button>.
-            </p>
+            {/* Sign in prompt for full institutional contact */}
+            <div className="rounded-lg border border-brd bg-surface-2 p-4 text-xs">
+              <p className="font-semibold text-ink">Want to contact this faculty member?</p>
+              <p className="mt-0.5 text-ink-3">
+                Official institutional email and phone numbers are available to registered students and staff.
+              </p>
+              <div className="mt-3 flex items-center gap-2">
+                <button
+                  onClick={() => navigate("/register")}
+                  className="inline-flex h-8 items-center gap-1.5 rounded-md bg-brand px-3 text-xs font-bold text-white hover:bg-brand-700 transition-colors shadow-xs"
+                >
+                  Create Student Account
+                </button>
+                <button
+                  onClick={() => navigate("/login")}
+                  className="inline-flex h-8 items-center gap-1.5 rounded-md border border-brd bg-surface px-3 text-xs font-semibold text-ink-2 hover:bg-surface-2 transition-colors shadow-xs"
+                >
+                  Log In
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </Modal>

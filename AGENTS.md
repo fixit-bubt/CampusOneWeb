@@ -874,3 +874,19 @@ The following screens contain segmented control bars slated for this animated pa
   - `uploadProof`: Auto-compresses claim proof photos with `standard` preset.
   - Pre-Upload Size Guards: Rejects documents exceeding `MAX_FILE_SIZE_MB` (10MB) and images exceeding `MAX_IMAGE_SIZE_MB` (5MB).
 
+---
+
+## 26. Faculty Directory Architecture & Official Codes Standard
+
+### 26.1 Official Routine Codes & Zero Synthetic Synthesis
+- **Database Column:** `public.faculty.short_code` (migration `20261018000000_faculty_360_enhancements.sql`), mapped to `shortCode` in `toFaculty` within `src/data/store.jsx`.
+- **Strict Ground Truth Rule:** Routine initial codes (e.g. `SR`, `DALM`, `SAM`, `MMA`) are official university routine committee identifiers. **Under NO circumstances should any code or abbreviation be algorithmically generated or guessed from a teacher's name** (no fallback initials synthesis).
+- **Graceful Null Handling:** If `short_code` is absent or null in the database, `getFacultyCode(f)` returns empty string `""` and no code badge is rendered in the directory or profile.
+- **Search Matching:** `matchesFaculty` checks teacher name, designation, research interests, email, and official `short_code` (case-insensitive substring).
+
+### 26.2 Profile Card Layout & Visual Hierarchy (`Faculty.jsx` & `Explore.jsx`)
+- **No Cover Banner:** Eliminated bulky cover photos to ensure teacher name, designation, and department are immediately prominent and readable without vertical obstruction.
+- **Single Save Control:** Unified shortlist action into a single "Save Teacher" / "Saved in Shortlist" button.
+- **Avatar Fallback:** Uses studio bust portrait placeholder (`/avatar-placeholder.jpg`) whenever a teacher lacks a profile photo, replacing raw text initials.
+- **Academic Tabs:** Organized into Overview, Academic Background, Research & Publications, and Contact & Office information.
+
