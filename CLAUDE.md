@@ -77,8 +77,11 @@ The project is consolidating all third-party services and infrastructure under t
    - **Android App OAuth:** Create an Android OAuth Client ID in the same Google Cloud project with package name `com.bubt.campusone` and release keystore SHA-1 fingerprint.
    - **Mobile App Config Sync:** Update `GOOGLE_WEB_CLIENT_ID` in `src/lib/googleAuth.ts` on Android to match the new Web Client ID once generated.
    - **Firebase & Push Notifications:** Link Firebase project for FCM v1 push notification credentials in `send-push` edge function.
-4. **Vercel Account Transfer (Pending / Roadmap):**
-   - Transfer project ownership or add `campusone2026@gmail.com` to Vercel team. Currently, deployments continue uninterrupted via GitHub CI/CD.
+4. **Vercel Account Transfer (Completed):**
+   - Transferred & deployed directly under master team account `campusone2026@gmail.com` (username `campusone2026-4009`).
+   - Project: `campusonebubt`.
+   - Production URL: `https://campusonebubt.vercel.app`.
+   - CI/CD connected to `fixit-bubt/CampusOneWeb` on `main`, auto-deploying on every push with `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` configured.
 
 ---
 
