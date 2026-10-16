@@ -116,7 +116,7 @@ The app is graded and reviewed by university teachers who actively check for AI-
 | **Web Framework** | React 19 + Vite 6 + Tailwind CSS | JavaScript, HashRouter |
 | **Mobile Navigation** | React Navigation 7 | Native Stack + Bottom Tabs |
 | **Backend / DB** | Supabase JS v2.107.0 | PostgreSQL 15, Auth, Storage, Realtime, Edge Functions |
-| **Push Notifications** | Direct FCM v1 | Firebase project `campusone-853e6` + `send-push` edge function |
+| **Push Notifications** | Direct FCM v1 | Firebase project `campusone-511812` + `send-push` edge function |
 | **AI Assistant** | Google Gemini | `gemini-flash-lite-latest` via Supabase Edge Function (`chat`) |
 | **PDF Processing** | `pdf-lib` + vendored `pdf.js` | On-device assembly + hidden offscreen WebView rasterizer |
 | **Storage / Cache** | `@react-native-async-storage/async-storage` & `expo-secure-store` | Session persistence and preferences |
@@ -358,7 +358,7 @@ In `RootNavigator.tsx`, students who have not completed onboarding (`!profile?.s
 - **Zero Schema Change:** Does not touch Supabase or upload files.
 
 ### 11.3 Direct FCM Push Notifications
-- **Firebase Project:** `campusone-853e6`
+- **Firebase Project:** `campusone-511812`
 - **Mechanism:** Trigger on `notifications` table (`trg_push_on_notification`) → `pg_net` HTTP post → `send-push` Edge Function → Google Service Account OAuth → FCM v1.
 - **Device Registration:** Handled via `register_push_token` RPC in `src/lib/push.ts`.
 - **Diagnosis:** If push fails, check `push_tokens` table and `net._http_response` first. `{"sent": 0}` means the target user has no registered device token.
